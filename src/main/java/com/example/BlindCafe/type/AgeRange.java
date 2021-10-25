@@ -1,7 +1,7 @@
 package com.example.BlindCafe.type;
 
 import com.example.BlindCafe.exception.BlindCafeException;
-import com.example.BlindCafe.exception.ErrorCode;
+import com.example.BlindCafe.exception.CodeAndMessage;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -45,6 +45,6 @@ public enum AgeRange {
         else if (range.equals("100~109"))
             return R110;
         else
-            throw new BlindCafeException(ErrorCode.INVALID_REQUEST);
+            throw new BlindCafeException(CodeAndMessage.INVALID_REQUEST);
     }
 }

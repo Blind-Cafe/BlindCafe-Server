@@ -9,8 +9,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import javax.servlet.http.HttpServletRequest;
 
-import static com.example.BlindCafe.exception.ErrorCode.INTERNAL_SERVER_ERROR;
-import static com.example.BlindCafe.exception.ErrorCode.INVALID_REQUEST;
+import static com.example.BlindCafe.exception.CodeAndMessage.INTERNAL_SERVER_ERROR;
+import static com.example.BlindCafe.exception.CodeAndMessage.INVALID_REQUEST;
 
 @Slf4j
 @RestControllerAdvice
@@ -36,7 +36,7 @@ public class ExceptionController {
             MethodArgumentNotValidException.class
     })
     public ErrorResponse handleBadRequest(
-            BlindCafeException e, HttpServletRequest request
+            Exception e, HttpServletRequest request
     ) {
         log.error("url : {}, message : {}",
                 request.getRequestURI(), e.getMessage());

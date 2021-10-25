@@ -3,6 +3,7 @@ package com.example.BlindCafe.service;
 import com.example.BlindCafe.dto.LoginDto;
 import com.example.BlindCafe.entity.User;
 import com.example.BlindCafe.exception.BlindCafeException;
+import com.example.BlindCafe.exception.CodeAndMessage;
 import com.example.BlindCafe.repository.UserRepository;
 import com.example.BlindCafe.type.AgeRange;
 import com.example.BlindCafe.type.Gender;
@@ -20,12 +21,15 @@ import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 import java.net.URI;
 import java.util.Map;
+import java.util.Optional;
 
 import static com.example.BlindCafe.auth.variable.KAKAO_AUTH;
-import static com.example.BlindCafe.exception.ErrorCode.*;
+import static com.example.BlindCafe.exception.CodeAndMessage.*;
+import static com.example.BlindCafe.jwt.JwtUtils.createToken;
 import static com.example.BlindCafe.type.AgeRange.getAgeRange;
 import static com.example.BlindCafe.type.Gender.*;
 import static com.example.BlindCafe.type.Social.KAKAO;
+import static com.example.BlindCafe.type.status.UserStatus.SUSPENDED;
 import static com.example.BlindCafe.type.status.UserStatus.NORMAL;
 
 @Service
@@ -36,19 +40,31 @@ public class UserService {
     private final UserRepository userRepository;
 
     @Transactional
-    public void signinByKakao(LoginDto.Request request) {
+    public LoginDto.Response signinByKakao(LoginDto.Request request) {
         LoginDto.KaKaoResponse kaKaoResponse = getInfoByKakaoToken(request.getToken());
 
-        User user = User.builder()
-                .socialId(kaKaoResponse.getSocialId())
-                .socialType(kaKaoResponse.getSocialType())
-                .ageRange(kaKaoResponse.getAgeRange())
-                .myGender(kaKaoResponse.getMyGender())
-                .status(NORMAL)
-                .build();
-        userRepository.save(user);
+         Optional<User> userOptional = userRepository.findBySocialId(kaKaoResponse.getSocialId());
+         boolean isRegistered = userOptional.isPresent();
 
-        System.out.println(user);
+         if (isRegistered) {
+             User user = userOptional.get();
+             // 신고 유저
+             if (user.getStatus().equals(SUSPENDED))
+                 throw new BlindCafeException(SUSPENDED_USER);
+             // 로그인
+             return getLoginResponse(user, SIGN_IN);
+         } else {
+             // 회원가입
+             User user = User.builder()
+                     .socialId(kaKaoResponse.getSocialId())
+                     .socialType(kaKaoResponse.getSocialType())
+                     .ageRange(kaKaoResponse.getAgeRange())
+                     .myGender(kaKaoResponse.getMyGender())
+                     .status(NORMAL)
+                     .build();
+             userRepository.save(user);
+             return getLoginResponse(user, SIGN_UP);
+         }
     }
 
     /**
@@ -86,5 +102,16 @@ public class UserService {
         } catch (Exception e) {
             throw new BlindCafeException(UNAUTHORIZED_KAKAO_TOKEN);
         }
+    }
+
+    /**
+     * 토큰 생성 및 반환하기
+     */
+    private LoginDto.Response getLoginResponse(User user, CodeAndMessage codeAndMessage) {
+        String token = createToken(user);
+        return LoginDto.Response.builder()
+                .codeAndMessage(codeAndMessage)
+                .jwt(token)
+                .build();
     }
 }

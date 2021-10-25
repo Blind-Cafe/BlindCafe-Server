@@ -1,5 +1,6 @@
 package com.example.BlindCafe.dto;
 
+import com.example.BlindCafe.exception.CodeAndMessage;
 import com.example.BlindCafe.type.AgeRange;
 import com.example.BlindCafe.type.Gender;
 import com.example.BlindCafe.type.Social;
@@ -29,5 +30,17 @@ public class LoginDto {
         private Social socialType;
         private AgeRange ageRange;
         private Gender myGender;
+    }
+
+    @Getter
+    @Setter
+    public static class Response extends ApiResponse {
+        private String jwt;
+
+        @Builder
+        public Response(CodeAndMessage codeAndMessage, String jwt) {
+            super(codeAndMessage.getCode(), codeAndMessage.getMessage());
+            this.jwt = jwt;
+        }
     }
 }

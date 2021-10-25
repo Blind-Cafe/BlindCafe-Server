@@ -18,10 +18,9 @@ public class UserController {
     private final UserService userService;
 
     @PostMapping("/api/kakao")
-    public void signupKakao(@Valid @RequestBody LoginDto.Request request) {
+    public LoginDto.Response signupKakao(@Valid @RequestBody LoginDto.Request request) {
         log.info("POST /api/kakao - request : " + request);
-
-        userService.signinByKakao(request);
+        return userService.signinByKakao(request);
     }
 
 }

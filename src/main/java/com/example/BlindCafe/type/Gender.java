@@ -1,11 +1,10 @@
 package com.example.BlindCafe.type;
 
 import com.example.BlindCafe.exception.BlindCafeException;
-import com.example.BlindCafe.exception.ErrorCode;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
-import static com.example.BlindCafe.exception.ErrorCode.INVALID_REQUEST;
+import static com.example.BlindCafe.exception.CodeAndMessage.INVALID_REQUEST;
 
 @Getter
 @AllArgsConstructor

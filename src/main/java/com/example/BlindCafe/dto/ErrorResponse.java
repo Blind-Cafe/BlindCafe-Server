@@ -1,14 +1,13 @@
 package com.example.BlindCafe.dto;
 
-import com.example.BlindCafe.exception.ErrorCode;
 import lombok.*;
 
 @Getter
 @Setter
-@AllArgsConstructor
-@NoArgsConstructor
-@Builder
-public class ErrorResponse {
-    private String code;
-    private String message;
+public class ErrorResponse extends ApiResponse {
+
+    @Builder
+    public ErrorResponse(String code, String message) {
+        super(code, message);
+    }
 }
