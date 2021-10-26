@@ -1,4 +1,4 @@
-package com.example.BlindCafe.jwt;
+package com.example.BlindCafe.auth.jwt;
 
 /**
  * Todo

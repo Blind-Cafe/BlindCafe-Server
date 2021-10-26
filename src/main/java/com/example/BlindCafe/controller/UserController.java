@@ -2,6 +2,7 @@ package com.example.BlindCafe.controller;
 
 import com.example.BlindCafe.dto.LoginDto;
 import com.example.BlindCafe.service.UserService;
+import com.example.BlindCafe.type.Social;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -9,6 +10,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
+
+import static com.example.BlindCafe.type.Social.KAKAO;
 
 @Slf4j
 @RestController
@@ -20,7 +23,7 @@ public class UserController {
     @PostMapping("/api/kakao")
     public LoginDto.Response signupKakao(@Valid @RequestBody LoginDto.Request request) {
         log.info("POST /api/kakao - request : " + request);
-        return userService.signinByKakao(request);
+        return userService.signin(request, KAKAO);
     }
 
 }

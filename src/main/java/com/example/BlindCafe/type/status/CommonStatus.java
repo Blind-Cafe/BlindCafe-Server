@@ -7,6 +7,7 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum CommonStatus {
 
+    SELECTED("사용"),
     NORMAL("일반"),
     DELETED("삭제");
 

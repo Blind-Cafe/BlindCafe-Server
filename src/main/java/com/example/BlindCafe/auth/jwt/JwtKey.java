@@ -1,4 +1,4 @@
-package com.example.BlindCafe.jwt;
+package com.example.BlindCafe.auth.jwt;
 
 import io.jsonwebtoken.security.Keys;
 import org.springframework.data.util.Pair;

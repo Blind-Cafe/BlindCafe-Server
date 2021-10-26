@@ -1,4 +1,4 @@
-package com.example.BlindCafe.jwt;
+package com.example.BlindCafe.auth.jwt;
 
 import com.example.BlindCafe.entity.User;
 import io.jsonwebtoken.Claims;

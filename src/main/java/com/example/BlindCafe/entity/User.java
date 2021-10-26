@@ -1,6 +1,5 @@
 package com.example.BlindCafe.entity;
 
-import com.example.BlindCafe.type.AgeRange;
 import com.example.BlindCafe.type.Gender;
 import com.example.BlindCafe.type.Social;
 import com.example.BlindCafe.type.status.UserStatus;
@@ -28,9 +27,7 @@ public class User extends BaseTimeEntity {
     @Column(length = 10)
     private String nickname;
 
-    @Enumerated(STRING)
-    @Column(length = 10)
-    private AgeRange ageRange;
+    private int age;
 
     @Enumerated(STRING)
     @Column(length = 10)

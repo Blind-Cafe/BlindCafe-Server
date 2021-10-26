@@ -1,11 +1,11 @@
 package com.example.BlindCafe.dto;
 
 import com.example.BlindCafe.exception.CodeAndMessage;
-import com.example.BlindCafe.type.AgeRange;
 import com.example.BlindCafe.type.Gender;
 import com.example.BlindCafe.type.Social;
 import lombok.*;
 
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
 public class LoginDto {
@@ -25,11 +25,11 @@ public class LoginDto {
     @AllArgsConstructor
     @NoArgsConstructor
     @Builder
-    public static class KaKaoResponse {
+    public static class SocialResponse {
+        @NotNull
         private String socialId;
+        @NotNull
         private Social socialType;
-        private AgeRange ageRange;
-        private Gender myGender;
     }
 
     @Getter
