@@ -16,5 +16,6 @@ public class Badge {
     @Column(name = "badge_id")
     private Long id;
 
+    @Column(length = 20, nullable = false)
     private String name;
 }

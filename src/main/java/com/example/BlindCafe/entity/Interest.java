@@ -17,6 +17,7 @@ public class Interest {
     @Column(name = "interest_id")
     private Long id;
 
+    @Column(length = 10, nullable = false)
     private String name;
 
     @ManyToOne(fetch = LAZY)
