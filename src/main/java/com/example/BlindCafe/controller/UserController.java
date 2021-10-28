@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
 
+import static com.example.BlindCafe.type.Social.APPLE;
 import static com.example.BlindCafe.type.Social.KAKAO;
 
 @Slf4j
@@ -22,8 +23,14 @@ public class UserController {
 
     @PostMapping("/api/kakao")
     public LoginDto.Response signupKakao(@Valid @RequestBody LoginDto.Request request) {
-        log.info("POST /api/kakao - request : " + request);
+        log.info("POST /api/kakao");
         return userService.signin(request, KAKAO);
+    }
+
+    @PostMapping("/api/apple")
+    public LoginDto.Response signupApple(@Valid @RequestBody LoginDto.Request request) {
+        log.info("POST /api/apple");
+        return userService.signin(request, APPLE);
     }
 
 }

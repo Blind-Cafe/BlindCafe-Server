@@ -7,6 +7,7 @@ import com.example.BlindCafe.exception.CodeAndMessage;
 import com.example.BlindCafe.repository.UserRepository;
 import com.example.BlindCafe.type.Social;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.java.Log;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.Optional;
@@ -65,8 +66,10 @@ public class UserService {
                     .socialType(KAKAO)
                     .build();
         } else if (social.equals(APPLE)) {
-            // 애플 로그인
-            throw new BlindCafeException(INTERNAL_SERVER_ERROR);
+            return LoginDto.SocialResponse.builder()
+                    .socialId(verifyAppleToken(token))
+                    .socialType(APPLE)
+                    .build();
         } else {
             throw new BlindCafeException(INTERNAL_SERVER_ERROR);
         }
