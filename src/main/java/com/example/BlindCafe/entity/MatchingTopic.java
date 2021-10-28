@@ -29,7 +29,7 @@ public class MatchingTopic extends BaseTimeEntity {
     private Topic topic;
 
     @Column(nullable = false)
-    private int sequence;
+    private Integer sequence;
 
     @Enumerated(EnumType.STRING)
     @Column(columnDefinition = "varchar(10) default 'WAIT'")

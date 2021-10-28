@@ -27,5 +27,5 @@ public class InterestOrder extends BaseTimeEntity {
     @JoinColumn(name = "interest_id")
     private Interest interest;
 
-    private int priority;
+    private Integer priority;
 }

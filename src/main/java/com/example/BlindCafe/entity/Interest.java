@@ -20,6 +20,8 @@ public class Interest {
     @Column(length = 10, nullable = false)
     private String name;
 
+    private Boolean isParent;
+
     @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "parent_id")
     private Interest parent;
