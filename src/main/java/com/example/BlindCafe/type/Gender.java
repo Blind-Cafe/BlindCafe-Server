@@ -15,15 +15,4 @@ public enum Gender {
     N("상관없음");
 
     private final String description;
-
-    public static Gender getGender(String gender) {
-        if (gender.equals("male"))
-            return M;
-        else if (gender.equals("female"))
-            return F;
-        else if (gender.equals("none"))
-            return N;
-        else
-            throw new BlindCafeException(INVALID_REQUEST);
-    }
 }
