@@ -26,7 +26,7 @@ public class JwtUtils {
         return Jwts.builder()
                 .setClaims(claims) // 정보 저장
                 .setIssuedAt(now) // 토큰 발행 시간 정보
-                .setExpiration(new Date(now.getTime() + JwtProperties.EXPIRATION_TIME)) // 토큰 만료 시간 설정
+                .setExpiration(new Date(now.getTime() + JwtProperties.EXPIRATION_TIME * 60 * 1000)) // 토큰 만료 시간 설정
                 .setHeaderParam(JwsHeader.KEY_ID, key.getFirst()) // kid
                 .signWith(key.getSecond()) // signature
                 .compact();

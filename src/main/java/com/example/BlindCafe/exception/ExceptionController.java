@@ -1,6 +1,8 @@
 package com.example.BlindCafe.exception;
 
 import com.example.BlindCafe.dto.ErrorResponse;
+import com.fasterxml.jackson.databind.exc.InvalidFormatException;
+import io.jsonwebtoken.ExpiredJwtException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -9,8 +11,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import javax.servlet.http.HttpServletRequest;
 
-import static com.example.BlindCafe.exception.CodeAndMessage.INTERNAL_SERVER_ERROR;
-import static com.example.BlindCafe.exception.CodeAndMessage.INVALID_REQUEST;
+import static com.example.BlindCafe.exception.CodeAndMessage.*;
 
 @Slf4j
 @RestControllerAdvice
@@ -33,7 +34,8 @@ public class ExceptionController {
     // 잘못 요청
     @ExceptionHandler(value = {
             HttpRequestMethodNotSupportedException.class,
-            MethodArgumentNotValidException.class
+            MethodArgumentNotValidException.class,
+            InvalidFormatException.class
     })
     public ErrorResponse handleBadRequest(
             Exception e, HttpServletRequest request
