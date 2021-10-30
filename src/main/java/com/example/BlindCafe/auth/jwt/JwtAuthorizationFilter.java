@@ -51,8 +51,6 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
         if (token != null) {
             Authentication authentication = getUsernamePasswordAuthenticationToken(token);
             SecurityContextHolder.getContext().setAuthentication(authentication);
-        } else {
-            throw new BlindCafeException(FAILED_AUTHORIZATION);
         }
         chain.doFilter(request, response);
     }

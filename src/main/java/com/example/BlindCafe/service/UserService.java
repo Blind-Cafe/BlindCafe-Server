@@ -1,28 +1,28 @@
 package com.example.BlindCafe.service;
 
 import com.example.BlindCafe.dto.CreateUserInfoDto;
+import com.example.BlindCafe.dto.UserHomeDto;
 import com.example.BlindCafe.dto.LoginDto;
-import com.example.BlindCafe.entity.InterestOrder;
-import com.example.BlindCafe.entity.User;
-import com.example.BlindCafe.entity.UserInterest;
+import com.example.BlindCafe.entity.*;
 import com.example.BlindCafe.exception.BlindCafeException;
 import com.example.BlindCafe.exception.CodeAndMessage;
-import com.example.BlindCafe.repository.InterestOrderRepository;
-import com.example.BlindCafe.repository.InterestRepository;
-import com.example.BlindCafe.repository.UserInterestRepository;
-import com.example.BlindCafe.repository.UserRepository;
+import com.example.BlindCafe.repository.*;
 import com.example.BlindCafe.type.Social;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.example.BlindCafe.exception.CodeAndMessage.*;
 import static com.example.BlindCafe.auth.jwt.JwtUtils.createToken;
 import static com.example.BlindCafe.type.Gender.N;
 import static com.example.BlindCafe.type.Social.APPLE;
 import static com.example.BlindCafe.type.Social.KAKAO;
+import static com.example.BlindCafe.type.status.MatchingStatus.*;
 import static com.example.BlindCafe.type.status.UserStatus.SUSPENDED;
 import static com.example.BlindCafe.type.status.UserStatus.NORMAL;
 import static com.example.BlindCafe.auth.SocialUtils.*;
@@ -110,6 +110,7 @@ public class UserService {
         user.setMyGender(request.getMyGender());
         user.setNickname(request.getNickname());
         user.setPartnerGender(request.getPartnerGender());
+        userRepository.save(user);
 
         // 관심사 저장
         index = 0;
@@ -127,7 +128,7 @@ public class UserService {
                 UserInterest subInterest = UserInterest.builder()
                         .user(user)
                         .interest(interestRepository.findById(sub)
-                            .orElseThrow(()-> new BlindCafeException(INVALID_SUB_INTEREST)))
+                                .orElseThrow(()-> new BlindCafeException(INVALID_SUB_INTEREST)))
                         .build();
                 userInterestRepository.save(subInterest);
                 count++;
@@ -183,5 +184,56 @@ public class UserService {
             public int compare(int[] o1, int[] o2) {
                 return o2[1] - o1[1];
         }});
+    }
+
+    @Transactional
+    public UserHomeDto.Response userHome(Long userId) {
+
+        User user = userRepository.findById(userId)
+                .filter(u -> u.getStatus().equals(NORMAL))
+                .orElseThrow(() -> new BlindCafeException(NO_USER));
+
+        // 매칭 상태 확인
+        List<UserMatching> matchings = user.getUserMatchings().stream()
+                .filter(userMatching ->
+                        userMatching.getStatus().equals(WAIT) ||
+                        userMatching.getStatus().equals(MATCHING))
+                .collect(Collectors.toList());
+
+        if (matchings.size() < 1) {
+            // 요청 없음
+            return UserHomeDto.Response.noneMatchingBuilder()
+                    .codeAndMessage(SUCCESS)
+                    .matchingStatus(NONE)
+                    .build();
+        } else {
+            UserMatching validMatching = matchings.get(0);
+            if (validMatching.getStatus().equals(WAIT)) {
+                return UserHomeDto.Response.noneMatchingBuilder()
+                        .codeAndMessage(SUCCESS)
+                        .matchingStatus(WAIT)
+                        .build();
+            } else {
+                Matching matching = validMatching.getMatching();
+                List<UserMatching> userMatchings = matching.getUserMatchings()
+                        .stream()
+                        .filter(mat -> !mat.equals(validMatching))
+                        .collect(Collectors.toList());
+                UserMatching partnerMatching = userMatchings.get(0);
+
+                LocalDateTime ldt = matching.getStartTime();
+                Timestamp timestamp = Timestamp.valueOf(ldt);
+                String startTime = String.valueOf(timestamp.getTime() / 1000);
+
+                return UserHomeDto.Response.matchingBuilder()
+                        .codeAndMessage(SUCCESS)
+                        .matchingStatus(MATCHING)
+                        .matchingId(matching.getId())
+                        .partnerId(partnerMatching.getUser().getId())
+                        .partnerNickname(partnerMatching.getUser().getNickname())
+                        .startTime(startTime)
+                        .build();
+            }
+        }
     }
 }

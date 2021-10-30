@@ -29,6 +29,7 @@ public class ExceptionHandlerFilter extends OncePerRequestFilter {
         try{
             filterChain.doFilter(request,response);
         } catch (BlindCafeException e){
+            e.printStackTrace();
             log.error("exception exception handler filter");
             setErrorResponse(UNAUTHORIZED, response, e);
         } catch (RuntimeException e){
