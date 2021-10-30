@@ -1,19 +1,26 @@
 package com.example.BlindCafe.service;
 
+import com.example.BlindCafe.dto.CreateUserInfoDto;
 import com.example.BlindCafe.dto.LoginDto;
+import com.example.BlindCafe.entity.InterestOrder;
 import com.example.BlindCafe.entity.User;
+import com.example.BlindCafe.entity.UserInterest;
 import com.example.BlindCafe.exception.BlindCafeException;
 import com.example.BlindCafe.exception.CodeAndMessage;
+import com.example.BlindCafe.repository.InterestOrderRepository;
+import com.example.BlindCafe.repository.InterestRepository;
+import com.example.BlindCafe.repository.UserInterestRepository;
 import com.example.BlindCafe.repository.UserRepository;
 import com.example.BlindCafe.type.Social;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.java.Log;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import java.util.Optional;
+
+import java.util.*;
 
 import static com.example.BlindCafe.exception.CodeAndMessage.*;
 import static com.example.BlindCafe.auth.jwt.JwtUtils.createToken;
+import static com.example.BlindCafe.type.Gender.N;
 import static com.example.BlindCafe.type.Social.APPLE;
 import static com.example.BlindCafe.type.Social.KAKAO;
 import static com.example.BlindCafe.type.status.UserStatus.SUSPENDED;
@@ -26,6 +33,14 @@ import static com.example.BlindCafe.auth.SocialUtils.*;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final InterestRepository interestRepository;
+    private final UserInterestRepository userInterestRepository;
+    private final InterestOrderRepository interestOrderRepository;
+
+    private final static int USER_INTEREST_LENGTH = 3;
+    private static int[][] interestOrderArr = new int[USER_INTEREST_LENGTH][2];
+    private static int index;
+    private static int count;
 
     @Transactional
     public LoginDto.Response signin(LoginDto.Request request, Social social) {
@@ -84,5 +99,89 @@ public class UserService {
                 .codeAndMessage(codeAndMessage)
                 .jwt(token)
                 .build();
+    }
+
+    @Transactional
+    public CreateUserInfoDto.Response addUserInfo(User user, CreateUserInfoDto.Request request) {
+        validateAddUserInfo(request);
+
+        // 유저 정보 저장
+        user.setAge(request.getAge());
+        user.setMyGender(request.getMyGender());
+        user.setNickname(request.getNickname());
+        user.setPartnerGender(request.getPartnerGender());
+
+        // 관심사 저장
+        index = 0;
+        request.getInterests().forEach(interest -> {
+            count = 0;
+            // 메인
+            UserInterest mainInterest = UserInterest.builder()
+                    .user(user)
+                    .interest(interestRepository.findById(interest.getMain())
+                            .orElseThrow(()-> new BlindCafeException(INVALID_MAIN_INTEREST)))
+                    .build();
+            userInterestRepository.save(mainInterest);
+            // 세부
+            interest.getSub().forEach(sub -> {
+                UserInterest subInterest = UserInterest.builder()
+                        .user(user)
+                        .interest(interestRepository.findById(sub)
+                            .orElseThrow(()-> new BlindCafeException(INVALID_SUB_INTEREST)))
+                        .build();
+                userInterestRepository.save(subInterest);
+                count++;
+            });
+
+            interestOrderArr[index][0] = interest.getMain().intValue();
+            interestOrderArr[index][1] = count;
+            index++;
+        });
+
+        // 관심사 순위 저장
+        sortBySubInterestCount();
+        for (int priority=0; priority<USER_INTEREST_LENGTH; priority++) {
+            InterestOrder interestOrder = InterestOrder.builder()
+                    .user(user)
+                    .interest(
+                            interestRepository.findById(
+                                    Long.valueOf(interestOrderArr[priority][0])
+                            ).orElseThrow(()-> new BlindCafeException(INVALID_MAIN_INTEREST)))
+                    .priority(priority+1)
+                    .build();
+            interestOrderRepository.save(interestOrder);
+        }
+
+        return CreateUserInfoDto.Response.builder()
+                .codeAndMessage(SUCCESS).build();
+    }
+
+    private void validateAddUserInfo(CreateUserInfoDto.Request request) {
+        if (request.getMyGender().equals(N))
+            throw new BlindCafeException(INVALID_REQUEST);
+
+        ArrayList<CreateUserInfoDto.Interest> interests = request.getInterests();
+
+        /**
+         * Todo
+         * 지금은 쿼리 많이 쏘는데 나중에 한 번만(main, sub) 쏴서 찾기
+         */
+        for (CreateUserInfoDto.Interest interest: interests) {
+            Long interestId = interest.getMain();
+            interestRepository.findByIdAndParentId(interestId, interestId)
+                    .orElseThrow(() -> new BlindCafeException(INVALID_MAIN_INTEREST));
+            interest.getSub().forEach(sub -> {
+                interestRepository.findByIdAndParentId(sub, interestId)
+                        .orElseThrow(() -> new BlindCafeException(INVALID_SUB_INTEREST));
+            });
+        }
+    }
+
+    private void sortBySubInterestCount() {
+        Arrays.sort(interestOrderArr, new Comparator<int[]>() {
+            @Override
+            public int compare(int[] o1, int[] o2) {
+                return o2[1] - o1[1];
+        }});
     }
 }

@@ -1,10 +1,12 @@
 package com.example.BlindCafe.controller;
 
+import com.example.BlindCafe.dto.CreateUserInfoDto;
 import com.example.BlindCafe.dto.LoginDto;
+import com.example.BlindCafe.entity.User;
 import com.example.BlindCafe.service.UserService;
-import com.example.BlindCafe.type.Social;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -31,6 +33,16 @@ public class UserController {
     public LoginDto.Response signupApple(@Valid @RequestBody LoginDto.Request request) {
         log.info("POST /api/apple");
         return userService.signin(request, APPLE);
+    }
+
+    @PostMapping("/api/user")
+    public CreateUserInfoDto.Response addUserInfo(
+            Authentication authentication,
+            @Valid @RequestBody CreateUserInfoDto.Request request
+    ) {
+        log.info("POST /api/user");
+        User user = (User) authentication.getPrincipal();
+        return userService.addUserInfo(user, request);
     }
 
 }

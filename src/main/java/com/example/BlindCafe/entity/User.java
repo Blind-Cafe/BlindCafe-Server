@@ -27,7 +27,7 @@ public class User extends BaseTimeEntity {
     @Column(length = 10)
     private String nickname;
 
-    private Integer age;
+    private int age;
 
     @Enumerated(STRING)
     @Column(length = 10)

@@ -1,11 +1,9 @@
 package com.example.BlindCafe.dto;
 
 import com.example.BlindCafe.exception.CodeAndMessage;
-import com.example.BlindCafe.type.Gender;
 import com.example.BlindCafe.type.Social;
 import lombok.*;
 
-import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
 public class LoginDto {

@@ -1,12 +1,12 @@
 package com.example.BlindCafe.repository;
 
-import com.example.BlindCafe.entity.User;
+import com.example.BlindCafe.entity.Interest;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
 @Repository
-public interface UserRepository extends JpaRepository<User, Long> {
-    Optional<User> findBySocialId(String socialId);
+public interface InterestRepository extends JpaRepository<Interest, Long> {
+    Optional<Interest> findByIdAndParentId(Long id, Long parentId);
 }
