@@ -15,7 +15,6 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 import static com.example.BlindCafe.exception.CodeAndMessage.FORBIDDEN_AUTHORIZATION;
-import static com.example.BlindCafe.exception.CodeAndMessage.NON_AUTHORIZATION;
 
 @Slf4j
 @Component

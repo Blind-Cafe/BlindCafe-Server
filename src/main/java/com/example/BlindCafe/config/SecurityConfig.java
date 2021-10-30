@@ -3,8 +3,8 @@ package com.example.BlindCafe.config;
 import com.example.BlindCafe.auth.jwt.JwtAccessDeniedHandler;
 import com.example.BlindCafe.auth.jwt.JwtAuthenticationEntryPoint;
 import com.example.BlindCafe.auth.jwt.JwtAuthorizationFilter;
+import com.example.BlindCafe.exception.ExceptionHandlerFilter;
 import com.example.BlindCafe.repository.UserRepository;
-import com.example.BlindCafe.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Configuration;
@@ -21,8 +21,8 @@ import org.springframework.security.web.authentication.www.BasicAuthenticationFi
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     private final UserRepository userRepository;
-    private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
-    private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
+    private final ExceptionHandlerFilter exceptionHandlerFilter;
+    private final JwtAuthorizationFilter jwtAuthorizationFilter;
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
@@ -39,15 +39,10 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         http.addFilterBefore(
                 new JwtAuthorizationFilter(userRepository),
                 BasicAuthenticationFilter.class
-        );
+        ).addFilterBefore(exceptionHandlerFilter, JwtAuthorizationFilter.class);;
         // authorization
         http.authorizeRequests()
-                .antMatchers("/", "/api/kakao", "/api/apple").permitAll()
-                .anyRequest().authenticated();
-        // exception handling
-        http.exceptionHandling()
-                .authenticationEntryPoint(jwtAuthenticationEntryPoint)
-                .accessDeniedHandler(jwtAccessDeniedHandler);
+                .antMatchers("/", "/api/kakao", "/api/apple").permitAll();
     }
 
     @Override

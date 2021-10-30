@@ -13,7 +13,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 
-import static com.example.BlindCafe.exception.CodeAndMessage.NON_AUTHORIZATION;
+import static com.example.BlindCafe.exception.CodeAndMessage.FAILED_AUTHORIZATION;
 
 @Slf4j
 @Component
@@ -25,12 +25,12 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
             HttpServletResponse response,
             AuthenticationException authException) throws IOException {
 
-        log.error("code : 4001, url : {}, message : {}",
-                request.getRequestURI(), authException.getMessage());
+        log.error("code : 4001, request : [{}] {}, message : {}",
+                request.getMethod(), request.getRequestURI(), authException.getMessage());
 
         ErrorResponse errorResponse = ErrorResponse.builder()
-                .code(NON_AUTHORIZATION.getCode())
-                .message(NON_AUTHORIZATION.getMessage())
+                .code(FAILED_AUTHORIZATION.getCode())
+                .message(FAILED_AUTHORIZATION.getMessage())
                 .build();
 
         byte[] responseToSend = restResponseBytes(errorResponse);
