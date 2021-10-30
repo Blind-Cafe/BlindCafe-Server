@@ -35,14 +35,14 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         // stateless
         http.sessionManagement()
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+        // authorization
+        http.authorizeRequests()
+                .antMatchers("/", "/api/kakao", "/api/apple").permitAll();
         // jwt filter
         http.addFilterBefore(
                 new JwtAuthorizationFilter(userRepository),
                 BasicAuthenticationFilter.class
         ).addFilterBefore(exceptionHandlerFilter, JwtAuthorizationFilter.class);;
-        // authorization
-        http.authorizeRequests()
-                .antMatchers("/", "/api/kakao", "/api/apple").permitAll();
     }
 
     @Override
