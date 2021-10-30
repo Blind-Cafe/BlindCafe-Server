@@ -6,6 +6,6 @@ package com.example.BlindCafe.auth.jwt;
  * refresh token
  */
 public class JwtProperties {
-    public static final int EXPIRATION_TIME = 6 * 30 * 24 * 60;
+    public static final long EXPIRATION_TIME = 6 * 30 * 24 * 60 * 60 * 1000L;
     public static final String HEADER_NAME = "X-ACCESS_TOKEN";
 }
