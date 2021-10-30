@@ -1,6 +1,5 @@
 package com.example.BlindCafe.entity;
 
-import com.example.BlindCafe.type.AgeRange;
 import com.example.BlindCafe.type.Gender;
 import com.example.BlindCafe.type.Social;
 import com.example.BlindCafe.type.status.UserStatus;
@@ -25,21 +24,24 @@ public class User extends BaseTimeEntity {
     @Column(name = "user_id")
     private Long id;
 
+    @Column(length = 10)
     private String nickname;
 
-    @Enumerated(STRING)
-    private AgeRange ageRange;
+    private int age;
 
     @Enumerated(STRING)
+    @Column(length = 10)
     private Gender myGender;
 
     @Enumerated(STRING)
+    @Column(length = 10)
     private Gender partnerGender;
 
-    @Column(name="social_id" , unique=true)
+    @Column(name="social_id" , length = 100, unique=true)
     private String socialId;
 
     @Enumerated(STRING)
+    @Column(length = 10, nullable = false)
     private Social socialType;
 
     @OneToMany(mappedBy = "user", cascade = ALL)
@@ -59,8 +61,11 @@ public class User extends BaseTimeEntity {
     @OneToMany(mappedBy = "user", cascade = ALL)
     private List<UserBadge> userBadges = new ArrayList<>();
 
-    @OneToMany(mappedBy = "plaintiff", cascade = ALL)
+    @OneToMany(mappedBy = "user", cascade = ALL)
     private List<Report> myReport = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = ALL)
+    private List<Reported> reported = new ArrayList<>();
 
     @Embedded
     private Address address;

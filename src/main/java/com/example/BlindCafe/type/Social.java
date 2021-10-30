@@ -6,8 +6,9 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum Social {
-    KAKAO("카카오"),
-    APPLE("애플");
+    KAKAO("KAKAO", "카카오"),
+    APPLE("APPLE", "애플");
 
-    private final String description;
+    private final String eng;
+    private final String kor;
 }

@@ -28,5 +28,6 @@ public class ProfileImage extends BaseTimeEntity {
     private String src;
 
     @Enumerated(STRING)
+    @Column(columnDefinition = "varchar(10) default 'NORMAL'")
     private CommonStatus status;
 }

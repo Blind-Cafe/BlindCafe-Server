@@ -1,7 +1,6 @@
 package com.example.BlindCafe.entity;
 
 import com.example.BlindCafe.type.status.MatchingStatus;
-import com.example.BlindCafe.type.status.MatchingValid;
 import lombok.*;
 
 import javax.persistence.*;
@@ -39,9 +38,10 @@ public class Matching extends BaseTimeEntity {
 
     private LocalDateTime startTime;
 
-    @Enumerated(STRING)
-    private MatchingValid isValid;
+    @Column(columnDefinition = "boolean default true", nullable = false)
+    private Boolean isValid;
 
     @Enumerated(STRING)
+    @Column(columnDefinition = "varchar(20) default 'SUCCESS_STAGE_ONE'", nullable = false)
     private MatchingStatus status;
 }

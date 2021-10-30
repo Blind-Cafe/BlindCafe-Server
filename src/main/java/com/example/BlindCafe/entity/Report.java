@@ -27,15 +27,12 @@ public class Report extends BaseTimeEntity {
 
     @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "user_id")
-    private User plaintiff;
-
-    @ManyToOne(fetch = LAZY)
-    @JoinColumn(name = "reported_id")
-    private Reported defendant;
+    private User user;
 
     private String reason;
 
     @Enumerated(STRING)
+    @Column(length = 10, nullable = false)
     private ReportStatus status;
 
 }

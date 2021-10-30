@@ -28,8 +28,10 @@ public class MatchingTopic extends BaseTimeEntity {
     @JoinColumn(name = "topic_id")
     private Topic topic;
 
-    private int sequence;
+    @Column(nullable = false)
+    private Integer sequence;
 
     @Enumerated(EnumType.STRING)
+    @Column(columnDefinition = "varchar(10) default 'WAIT'")
     private TopicStatus status;
 }

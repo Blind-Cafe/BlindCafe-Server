@@ -31,8 +31,10 @@ public class UserMatching extends BaseTimeEntity {
     private Matching matching;
 
     @Enumerated(STRING)
+    @Column(length = 20, nullable = false)
     private Drink drink;
 
     @Enumerated(STRING)
+    @Column(length = 20, nullable = false)
     private MatchingStatus status;
 }
