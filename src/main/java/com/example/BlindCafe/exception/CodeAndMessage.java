@@ -17,6 +17,7 @@ public enum CodeAndMessage {
     INVALID_APPLE_ACCESS("1005", "애플 로그인 서버에 접근 중 예외가 발생했습니다."),
     INVALID_APPLE_TOKEN("1006", "애플 Identity Token이 유효하지 않습니다."),
     SUSPENDED_USER("1007", "신고로 정지된 유저입니다."),
+    NO_USER("1008", "해당되는 유저가 없습니다."),
 
     INVALID_MAIN_INTEREST("1011", "메인 관심사가 유효하지 않습니다."),
     INVALID_SUB_INTEREST("1012", "세부 관심사가 유효하지 않습니다."),
