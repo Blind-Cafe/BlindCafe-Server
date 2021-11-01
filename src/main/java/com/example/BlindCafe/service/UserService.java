@@ -1,6 +1,7 @@
 package com.example.BlindCafe.service;
 
 import com.example.BlindCafe.dto.CreateUserInfoDto;
+import com.example.BlindCafe.dto.UserDetailDto;
 import com.example.BlindCafe.dto.UserHomeDto;
 import com.example.BlindCafe.dto.LoginDto;
 import com.example.BlindCafe.entity.*;
@@ -235,5 +236,11 @@ public class UserService {
                         .build();
             }
         }
+    }
+
+    public UserDetailDto getUserDetail(Long userId) {
+        return userRepository.findById(userId)
+                .map(UserDetailDto::fromEntity)
+                .orElseThrow(() -> new BlindCafeException(NO_USER));
     }
 }

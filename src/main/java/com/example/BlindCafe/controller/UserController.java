@@ -1,6 +1,7 @@
 package com.example.BlindCafe.controller;
 
 import com.example.BlindCafe.dto.CreateUserInfoDto;
+import com.example.BlindCafe.dto.UserDetailDto;
 import com.example.BlindCafe.dto.UserHomeDto;
 import com.example.BlindCafe.dto.LoginDto;
 import com.example.BlindCafe.entity.User;
@@ -37,6 +38,12 @@ public class UserController {
         return userService.signin(request, APPLE);
     }
 
+    @GetMapping("/api/user")
+    public UserDetailDto getUserDetail(Authentication authentication) {
+        log.info("GET /api/user");
+        return userService.getUserDetail(getUserId(authentication));
+    }
+
     @PostMapping("/api/user")
     public CreateUserInfoDto.Response addUserInfo(
             Authentication authentication,
@@ -50,8 +57,11 @@ public class UserController {
     @GetMapping("/api/user/home")
     public UserHomeDto.Response userHome(Authentication authentication) {
         log.info("GET /api/user/home");
-        User user = (User) authentication.getPrincipal();
-        return userService.userHome(user.getId());
+        return userService.userHome(getUserId(authentication));
     }
 
+    private Long getUserId(Authentication authentication) {
+        User user = (User) authentication.getPrincipal();
+        return user.getId();
+    }
 }

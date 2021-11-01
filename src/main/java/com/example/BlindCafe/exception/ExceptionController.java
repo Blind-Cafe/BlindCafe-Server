@@ -54,7 +54,8 @@ public class ExceptionController {
             Exception e, HttpServletRequest request
     ) {
         log.error("url : {}, message : {}",
-                request.getRequestURI(), e.getMessage());
+                request.getRequestURI(), e.getClass());
+        e.printStackTrace();
 
         return ErrorResponse.builder()
                 .code(INTERNAL_SERVER_ERROR.getCode())
