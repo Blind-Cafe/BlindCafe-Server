@@ -206,6 +206,7 @@ public class UserService {
         List<UserMatching> matchings = user.getUserMatchings().stream()
                 .filter(userMatching ->
                         userMatching.getStatus().equals(WAIT) ||
+                        userMatching.getStatus().equals(FOUND) ||
                         userMatching.getStatus().equals(MATCHING))
                 .collect(Collectors.toList());
 
@@ -236,7 +237,7 @@ public class UserService {
 
                 return UserHomeDto.Response.matchingBuilder()
                         .codeAndMessage(SUCCESS)
-                        .matchingStatus(MATCHING)
+                        .matchingStatus(validMatching.getStatus())
                         .matchingId(matching.getId())
                         .partnerId(partnerMatching.getUser().getId())
                         .partnerNickname(partnerMatching.getUser().getNickname())
