@@ -70,6 +70,8 @@ public class User extends BaseTimeEntity {
     @Embedded
     private Address address;
 
+    private String deviceId;
+
     @Enumerated(STRING)
     private UserStatus status;
 }

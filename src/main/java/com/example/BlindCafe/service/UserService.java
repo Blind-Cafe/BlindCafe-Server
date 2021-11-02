@@ -46,6 +46,7 @@ public class UserService {
     @Transactional
     public LoginDto.Response signin(LoginDto.Request request, Social social) {
         LoginDto.SocialResponse socialResponse = getInfoByToken(request.getToken(), social);
+        String deviceId = request.getDeviceId();
 
         Optional<User> userOptional = userRepository.findBySocialId(socialResponse.getSocialId());
         boolean isRegistered = userOptional.isPresent();
@@ -55,13 +56,20 @@ public class UserService {
              // 신고 유저
              if (user.getStatus().equals(SUSPENDED))
                  throw new BlindCafeException(SUSPENDED_USER);
-             // 로그인
-             return getLoginResponse(user, SIGN_IN);
+             else {
+                 // 로그인
+                 if (!user.getDeviceId().equals(deviceId)) {
+                     user.setDeviceId(deviceId);
+                     userRepository.save(user);
+                 }
+                 return getLoginResponse(user, SIGN_IN);
+             }
          } else {
              // 회원가입
              User user = User.builder()
                      .socialId(socialResponse.getSocialId())
                      .socialType(socialResponse.getSocialType())
+                     .deviceId(deviceId)
                      .status(NORMAL)
                      .build();
              userRepository.save(user);

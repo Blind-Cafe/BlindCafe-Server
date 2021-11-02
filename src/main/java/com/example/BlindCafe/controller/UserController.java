@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
 
+import static com.example.BlindCafe.config.SecurityConfig.getUserId;
 import static com.example.BlindCafe.type.Social.APPLE;
 import static com.example.BlindCafe.type.Social.KAKAO;
 
@@ -58,10 +59,5 @@ public class UserController {
     public UserHomeDto.Response userHome(Authentication authentication) {
         log.info("GET /api/user/home");
         return userService.userHome(getUserId(authentication));
-    }
-
-    private Long getUserId(Authentication authentication) {
-        User user = (User) authentication.getPrincipal();
-        return user.getId();
     }
 }
