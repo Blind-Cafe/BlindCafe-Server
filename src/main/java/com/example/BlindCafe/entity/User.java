@@ -59,7 +59,7 @@ public class User extends BaseTimeEntity {
     private List<ProfileImage> profileImages = new ArrayList<>();
 
     @OneToMany(mappedBy = "user", cascade = ALL)
-    private List<UserBadge> userBadges = new ArrayList<>();
+    private List<UserDrink> userDrinks = new ArrayList<>();
 
     @OneToMany(mappedBy = "user", cascade = ALL)
     private List<Report> myReport = new ArrayList<>();

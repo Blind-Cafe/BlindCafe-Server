@@ -25,7 +25,7 @@ public class UserDetailDto {
     private int age;
     private String region;
     private List<Long> interests;
-    private List<Long> badges;
+    private List<Long> drinks;
 
     public static UserDetailDto fromEntity(User user) {
         ProfileImage profileImage = user.getProfileImages()
@@ -48,9 +48,9 @@ public class UserDetailDto {
                         .stream().map(InterestOrder::getInterest)
                         .map(Interest::getId).collect(Collectors.toList())
                 )
-                .badges(
-                        user.getUserBadges()
-                        .stream().map(UserBadge::getId)
+                .drinks(
+                        user.getUserDrinks()
+                        .stream().map(UserDrink::getId)
                         .collect(Collectors.toList())
                 )
                 .build();
