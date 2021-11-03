@@ -28,15 +28,17 @@ public class UserDetailDto {
     private List<Long> badges;
 
     public static UserDetailDto fromEntity(User user) {
-        List<ProfileImage> profileImages = user.getProfileImages()
+        ProfileImage profileImage = user.getProfileImages()
                 .stream().filter(pi -> pi.getStatus().equals(SELECTED))
-                .collect(Collectors.toList());
+                .findAny()
+                .orElse(null);
+        String src = profileImage != null ?
+                profileImage.getSrc() : null;
         String region = user.getAddress() != null ?
                 user.getAddress().toString() : null;
 
         return UserDetailDto.builder()
-                .profileImage(profileImages.size() > 0 ?
-                        profileImages.get(0).getSrc() : null)
+                .profileImage(src)
                 .nickname(user.getNickname())
                 .myGender(user.getMyGender())
                 .age(user.getAge())
