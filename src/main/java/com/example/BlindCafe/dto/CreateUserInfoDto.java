@@ -41,7 +41,7 @@ public class CreateUserInfoDto {
         @NotNull
         private Long main;
         @NotNull
-        private ArrayList<Long> sub;
+        private ArrayList<String> sub;
     }
 
     public static class Response extends ApiResponse {
