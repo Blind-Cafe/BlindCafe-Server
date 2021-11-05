@@ -1,6 +1,7 @@
 package com.example.BlindCafe.service;
 
 import com.example.BlindCafe.dto.CreateUserInfoDto;
+import com.example.BlindCafe.dto.UserDetailDto;
 import com.example.BlindCafe.dto.UserHomeDto;
 import com.example.BlindCafe.dto.LoginDto;
 import com.example.BlindCafe.entity.*;
@@ -40,11 +41,11 @@ public class UserService {
     private final static int USER_INTEREST_LENGTH = 3;
     private static int[][] interestOrderArr = new int[USER_INTEREST_LENGTH][2];
     private static int index;
-    private static int count;
 
     @Transactional
     public LoginDto.Response signin(LoginDto.Request request, Social social) {
         LoginDto.SocialResponse socialResponse = getInfoByToken(request.getToken(), social);
+        String deviceId = request.getDeviceId();
 
         Optional<User> userOptional = userRepository.findBySocialId(socialResponse.getSocialId());
         boolean isRegistered = userOptional.isPresent();
@@ -54,13 +55,20 @@ public class UserService {
              // 신고 유저
              if (user.getStatus().equals(SUSPENDED))
                  throw new BlindCafeException(SUSPENDED_USER);
-             // 로그인
-             return getLoginResponse(user, SIGN_IN);
+             else {
+                 // 로그인
+                 if (!user.getDeviceId().equals(deviceId)) {
+                     user.setDeviceId(deviceId);
+                     userRepository.save(user);
+                 }
+                 return getLoginResponse(user, SIGN_IN);
+             }
          } else {
              // 회원가입
              User user = User.builder()
                      .socialId(socialResponse.getSocialId())
                      .socialType(socialResponse.getSocialType())
+                     .deviceId(deviceId)
                      .status(NORMAL)
                      .build();
              userRepository.save(user);
@@ -115,27 +123,31 @@ public class UserService {
         // 관심사 저장
         index = 0;
         request.getInterests().forEach(interest -> {
-            count = 0;
             // 메인
-            UserInterest mainInterest = UserInterest.builder()
+            Interest mainInterest = interestRepository.findById(interest.getMain())
+                    .orElseThrow(()-> new BlindCafeException(INVALID_MAIN_INTEREST));
+
+            UserInterest userInterest = UserInterest.builder()
                     .user(user)
-                    .interest(interestRepository.findById(interest.getMain())
-                            .orElseThrow(()-> new BlindCafeException(INVALID_MAIN_INTEREST)))
+                    .interest(mainInterest)
                     .build();
-            userInterestRepository.save(mainInterest);
+            userInterestRepository.save(userInterest);
+
             // 세부
             interest.getSub().forEach(sub -> {
                 UserInterest subInterest = UserInterest.builder()
                         .user(user)
-                        .interest(interestRepository.findById(sub)
-                                .orElseThrow(()-> new BlindCafeException(INVALID_SUB_INTEREST)))
+                        .interest(mainInterest.getChild()
+                                .stream()
+                                .filter(si -> si.getName().equals(sub))
+                                .findAny().orElseThrow(() -> new BlindCafeException(INVALID_SUB_INTEREST))
+                        )
                         .build();
                 userInterestRepository.save(subInterest);
-                count++;
             });
 
             interestOrderArr[index][0] = interest.getMain().intValue();
-            interestOrderArr[index][1] = count;
+            interestOrderArr[index][1] = interest.getSub().size();
             index++;
         });
 
@@ -161,21 +173,21 @@ public class UserService {
         if (request.getMyGender().equals(N))
             throw new BlindCafeException(INVALID_REQUEST);
 
-        ArrayList<CreateUserInfoDto.Interest> interests = request.getInterests();
+       //  ArrayList<CreateUserInfoDto.Interest> interests = request.getInterests();
 
         /**
          * Todo
          * 지금은 쿼리 많이 쏘는데 나중에 한 번만(main, sub) 쏴서 찾기
          */
-        for (CreateUserInfoDto.Interest interest: interests) {
-            Long interestId = interest.getMain();
-            interestRepository.findByIdAndParentId(interestId, interestId)
-                    .orElseThrow(() -> new BlindCafeException(INVALID_MAIN_INTEREST));
-            interest.getSub().forEach(sub -> {
-                interestRepository.findByIdAndParentId(sub, interestId)
-                        .orElseThrow(() -> new BlindCafeException(INVALID_SUB_INTEREST));
-            });
-        }
+//        for (CreateUserInfoDto.Interest interest: interests) {
+//            Long interestId = interest.getMain();
+//            interestRepository.findByIdAndParentId(interestId, interestId)
+//                    .orElseThrow(() -> new BlindCafeException(INVALID_MAIN_INTEREST));
+//            interest.getSub().forEach(sub -> {
+//                interestRepository.findByIdAndParentId(sub, interestId)
+//                        .orElseThrow(() -> new BlindCafeException(INVALID_SUB_INTEREST));
+//            });
+//        }
     }
 
     private void sortBySubInterestCount() {
@@ -197,6 +209,7 @@ public class UserService {
         List<UserMatching> matchings = user.getUserMatchings().stream()
                 .filter(userMatching ->
                         userMatching.getStatus().equals(WAIT) ||
+                        userMatching.getStatus().equals(FOUND) ||
                         userMatching.getStatus().equals(MATCHING))
                 .collect(Collectors.toList());
 
@@ -227,7 +240,7 @@ public class UserService {
 
                 return UserHomeDto.Response.matchingBuilder()
                         .codeAndMessage(SUCCESS)
-                        .matchingStatus(MATCHING)
+                        .matchingStatus(validMatching.getStatus())
                         .matchingId(matching.getId())
                         .partnerId(partnerMatching.getUser().getId())
                         .partnerNickname(partnerMatching.getUser().getNickname())
@@ -235,5 +248,11 @@ public class UserService {
                         .build();
             }
         }
+    }
+
+    public UserDetailDto getUserDetail(Long userId) {
+        return userRepository.findById(userId)
+                .map(UserDetailDto::fromEntity)
+                .orElseThrow(() -> new BlindCafeException(NO_USER));
     }
 }

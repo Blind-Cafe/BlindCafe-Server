@@ -16,6 +16,8 @@ public class LoginDto {
     public static class Request {
         @NotNull
         private String token;
+        @NotNull
+        private String deviceId;
     }
 
     @Getter

@@ -9,11 +9,11 @@ import javax.persistence.Id;
 
 @Entity
 @Getter
-public class Badge {
+public class Drink {
 
     @Id
     @GeneratedValue
-    @Column(name = "badge_id")
+    @Column(name = "drink_id")
     private Long id;
 
     @Column(length = 20, nullable = false)

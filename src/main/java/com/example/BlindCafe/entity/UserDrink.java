@@ -12,11 +12,11 @@ import static javax.persistence.FetchType.LAZY;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class UserBadge extends BaseTimeEntity {
+public class UserDrink extends BaseTimeEntity {
 
     @Id
     @GeneratedValue
-    @Column(name = "user_badge_id")
+    @Column(name = "user_drink_id")
     private Long id;
 
     @ManyToOne(fetch = LAZY)
@@ -24,6 +24,6 @@ public class UserBadge extends BaseTimeEntity {
     private User user;
 
     @ManyToOne(fetch = LAZY)
-    @JoinColumn(name = "badge_id")
-    private Badge badge;
+    @JoinColumn(name = "drink_id")
+    private Drink drink;
 }
