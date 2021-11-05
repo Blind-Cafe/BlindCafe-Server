@@ -13,5 +13,4 @@ public class IndexController {
         log.info("GET /");
         return "index";
     }
-
 }

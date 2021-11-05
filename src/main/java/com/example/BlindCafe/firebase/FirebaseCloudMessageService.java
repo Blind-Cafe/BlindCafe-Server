@@ -17,8 +17,8 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class FirebaseCloudMessageService {
-    private final String KEY_PATH = "firebase/firebase-service-key.json";
-    private final String API_URL = "https://fcm.googleapis.com/v1/projects/fcm-test-6c962/messages:send";
+    private final String KEY_PATH = "firebase/blind-cafe-firebase-key.json";
+    private final String API_URL = "https://fcm.googleapis.com/v1/projects/blind-cafe/messages:send";
     private final String AUTH_URL = "https://www.googleapis.com/auth/cloud-platform";
 
     private final ObjectMapper objectMapper;
@@ -55,7 +55,10 @@ public class FirebaseCloudMessageService {
                                 .image(null)
                                 .build()
                         )
-                        .path(path)
+                        .data(FcmMessageDto.FcmData.builder()
+                                .path(path)
+                                .build()
+                        )
                         .build()
                 ).validate_only(false).build();
 

@@ -17,7 +17,7 @@ public class FcmMessageDto {
     public static class Message {
         private String token;
         private Notification notification;
-        private String path;
+        private FcmData data;
     }
 
     @Getter
@@ -27,5 +27,12 @@ public class FcmMessageDto {
         private String title;
         private String body;
         private String image;
+    }
+
+    @Getter
+    @AllArgsConstructor
+    @Builder
+    public static class FcmData {
+        private String path;
     }
 }
