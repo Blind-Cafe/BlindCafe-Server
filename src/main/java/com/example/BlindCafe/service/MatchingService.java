@@ -3,9 +3,10 @@ package com.example.BlindCafe.service;
 import com.example.BlindCafe.dto.CreateMatchingDto;
 import com.example.BlindCafe.entity.*;
 import com.example.BlindCafe.exception.BlindCafeException;
-import com.example.BlindCafe.repository.DrinkRepository;
+import com.example.BlindCafe.firebase.FirebaseCloudMessageService;
 import com.example.BlindCafe.repository.MatchingRepository;
 import com.example.BlindCafe.repository.UserMatchingRepository;
+import com.example.BlindCafe.type.FcmMessage;
 import com.example.BlindCafe.type.Gender;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -26,6 +27,8 @@ import static java.util.Comparator.comparing;
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class MatchingService {
+
+    private final FirebaseCloudMessageService fcm;
 
     private final UserMatchingRepository userMatchingRepository;
     private final MatchingRepository matchingRepository;
@@ -72,6 +75,18 @@ public class MatchingService {
              * Todo
              * FCM
              */
+            fcm.sendMessageTo(
+                    user.getDeviceId(),
+                    FcmMessage.MATCHING.getTitle(),
+                    FcmMessage.MATCHING.getBody(),
+                    FcmMessage.MATCHING.getPath()
+            );
+            fcm.sendMessageTo(
+                    partner.getDeviceId(),
+                    FcmMessage.MATCHING.getTitle(),
+                    FcmMessage.MATCHING.getBody(),
+                    FcmMessage.MATCHING.getPath()
+            );
 
             return CreateMatchingDto.Response.matchingBuilder()
                     .matchingStatus(userMatching.getStatus())

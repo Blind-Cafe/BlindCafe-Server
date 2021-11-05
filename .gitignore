@@ -35,3 +35,9 @@ out/
 
 ### VS Code ###
 .vscode/
+
+/src/main/resources/application-dev.yml
+/src/main/resources/application-prod1.yml
+/src/main/resources/application-prod2.yml
+/src/main/resources/application-edit.yml
+/src/main/resources/firebase
