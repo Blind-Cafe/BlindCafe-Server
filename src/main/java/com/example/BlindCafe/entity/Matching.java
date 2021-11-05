@@ -42,6 +42,6 @@ public class Matching extends BaseTimeEntity {
     private Boolean isValid;
 
     @Enumerated(STRING)
-    @Column(columnDefinition = "varchar(20) default 'SUCCESS_STAGE_ONE'", nullable = false)
+    @Column(columnDefinition = "varchar(20) default 'MATCHING'", nullable = false)
     private MatchingStatus status;
 }

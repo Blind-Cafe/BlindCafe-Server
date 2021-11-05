@@ -1,6 +1,5 @@
 package com.example.BlindCafe.entity;
 
-import com.example.BlindCafe.type.Drink;
 import com.example.BlindCafe.type.status.MatchingStatus;
 import lombok.*;
 
@@ -30,8 +29,8 @@ public class UserMatching extends BaseTimeEntity {
     @JoinColumn(name = "matching_id")
     private Matching matching;
 
-    @Enumerated(STRING)
-    @Column(length = 20, nullable = false)
+    @ManyToOne(fetch = LAZY)
+    @JoinColumn(name = "drink_id")
     private Drink drink;
 
     @Enumerated(STRING)
