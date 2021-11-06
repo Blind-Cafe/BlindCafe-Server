@@ -106,6 +106,7 @@ public class UserService {
         return LoginDto.Response.builder()
                 .codeAndMessage(codeAndMessage)
                 .jwt(token)
+                .id(user.getId())
                 .build();
     }
 
