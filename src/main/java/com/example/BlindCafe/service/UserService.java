@@ -1,9 +1,6 @@
 package com.example.BlindCafe.service;
 
-import com.example.BlindCafe.dto.CreateUserInfoDto;
-import com.example.BlindCafe.dto.UserDetailDto;
-import com.example.BlindCafe.dto.UserHomeDto;
-import com.example.BlindCafe.dto.LoginDto;
+import com.example.BlindCafe.dto.*;
 import com.example.BlindCafe.entity.*;
 import com.example.BlindCafe.exception.BlindCafeException;
 import com.example.BlindCafe.exception.CodeAndMessage;
@@ -41,6 +38,7 @@ public class UserService {
     private final static int USER_INTEREST_LENGTH = 3;
     private static int[][] interestOrderArr = new int[USER_INTEREST_LENGTH][2];
     private static int index;
+    private static int editIndex;
 
     @Transactional
     public LoginDto.Response signin(LoginDto.Request request, Social social) {
@@ -173,22 +171,6 @@ public class UserService {
     private void validateAddUserInfo(CreateUserInfoDto.Request request) {
         if (request.getMyGender().equals(N))
             throw new BlindCafeException(INVALID_REQUEST);
-
-       //  ArrayList<CreateUserInfoDto.Interest> interests = request.getInterests();
-
-        /**
-         * Todo
-         * 지금은 쿼리 많이 쏘는데 나중에 한 번만(main, sub) 쏴서 찾기
-         */
-//        for (CreateUserInfoDto.Interest interest: interests) {
-//            Long interestId = interest.getMain();
-//            interestRepository.findByIdAndParentId(interestId, interestId)
-//                    .orElseThrow(() -> new BlindCafeException(INVALID_MAIN_INTEREST));
-//            interest.getSub().forEach(sub -> {
-//                interestRepository.findByIdAndParentId(sub, interestId)
-//                        .orElseThrow(() -> new BlindCafeException(INVALID_SUB_INTEREST));
-//            });
-//        }
     }
 
     private void sortBySubInterestCount() {
@@ -255,5 +237,64 @@ public class UserService {
         return userRepository.findById(userId)
                 .map(UserDetailDto::fromEntity)
                 .orElseThrow(() -> new BlindCafeException(NO_USER));
+    }
+
+    /**
+     * Todo
+     * 지금은 예전 관심사 그냥 삭제하는데
+     * 나중에는 예전 관심사 보관하기
+     * + 유저 엔티티에서 연관관계 메소드로 현재 관심사만 가져오기
+     */
+    @Transactional
+    public EditInterestDto.Response editInterest(User user, EditInterestDto.Request request) {
+        userInterestRepository.deleteAllByUserId(user.getId());
+
+        // 관심사 저장
+        editIndex = 0;
+        request.getInterests().forEach(interest -> {
+            // 메인
+            Interest mainInterest = interestRepository.findById(interest.getMain())
+                    .orElseThrow(()-> new BlindCafeException(INVALID_MAIN_INTEREST));
+
+            UserInterest userInterest = UserInterest.builder()
+                    .user(user)
+                    .interest(mainInterest)
+                    .build();
+            userInterestRepository.save(userInterest);
+
+            // 세부
+            interest.getSub().forEach(sub -> {
+                UserInterest subInterest = UserInterest.builder()
+                        .user(user)
+                        .interest(mainInterest.getChild()
+                                .stream()
+                                .filter(si -> si.getName().equals(sub))
+                                .findAny().orElseThrow(() -> new BlindCafeException(INVALID_SUB_INTEREST))
+                        )
+                        .build();
+                userInterestRepository.save(subInterest);
+            });
+
+            interestOrderArr[editIndex][0] = interest.getMain().intValue();
+            interestOrderArr[editIndex][1] = interest.getSub().size();
+            editIndex++;
+        });
+
+        // 관심사 순위 저장
+        sortBySubInterestCount();
+        for (int priority=0; priority<USER_INTEREST_LENGTH; priority++) {
+            InterestOrder interestOrder = InterestOrder.builder()
+                    .user(user)
+                    .interest(
+                            interestRepository.findById(
+                                    Long.valueOf(interestOrderArr[priority][0])
+                            ).orElseThrow(()-> new BlindCafeException(INVALID_MAIN_INTEREST)))
+                    .priority(priority+1)
+                    .build();
+            interestOrderRepository.save(interestOrder);
+        }
+
+        return EditInterestDto.Response.builder()
+                .codeAndMessage(SUCCESS).build();
     }
 }

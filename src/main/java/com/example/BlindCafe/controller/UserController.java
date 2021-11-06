@@ -1,9 +1,6 @@
 package com.example.BlindCafe.controller;
 
-import com.example.BlindCafe.dto.CreateUserInfoDto;
-import com.example.BlindCafe.dto.UserDetailDto;
-import com.example.BlindCafe.dto.UserHomeDto;
-import com.example.BlindCafe.dto.LoginDto;
+import com.example.BlindCafe.dto.*;
 import com.example.BlindCafe.entity.User;
 import com.example.BlindCafe.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -42,5 +39,15 @@ public class UserController {
     public UserHomeDto.Response userHome(Authentication authentication) {
         log.info("GET /api/user/home");
         return userService.userHome(getUserId(authentication));
+    }
+
+    @PutMapping("interest")
+    public EditInterestDto.Response editInterest(
+            Authentication authentication,
+            @Valid @RequestBody EditInterestDto.Request request
+    ) {
+        log.info("PUT /api/user/interest");
+        User user = (User) authentication.getPrincipal();
+        return userService.editInterest(user, request);
     }
 }
