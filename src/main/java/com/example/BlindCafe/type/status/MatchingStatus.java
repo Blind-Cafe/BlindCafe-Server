@@ -10,6 +10,7 @@ public enum MatchingStatus {
     NONE("매칭 없음"),
     WAIT("매칭 대기 중"),
     FOUND("대화 상대 찾음, 음료수 미선택"),
+    MATCHING_NOT_START("음료수 미선택인 매칭"),
     MATCHING("3일간 대화"),
     MATCHING_CONTINUE("7일간 대화"),
     CANCEL_REQUEST("요청 취소"),

@@ -36,11 +36,13 @@ public class LoginDto {
     @Setter
     public static class Response extends ApiResponse {
         private String jwt;
+        private Long id;
 
         @Builder
-        public Response(CodeAndMessage codeAndMessage, String jwt) {
+        public Response(CodeAndMessage codeAndMessage, String jwt, Long id) {
             super(codeAndMessage.getCode(), codeAndMessage.getMessage());
             this.jwt = jwt;
+            this.id = id;
         }
     }
 }

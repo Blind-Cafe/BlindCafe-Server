@@ -1,11 +1,11 @@
 package com.example.BlindCafe.service;
 
 import com.example.BlindCafe.dto.CreateMatchingDto;
+import com.example.BlindCafe.dto.DrinkDto;
 import com.example.BlindCafe.entity.*;
 import com.example.BlindCafe.exception.BlindCafeException;
 import com.example.BlindCafe.firebase.FirebaseCloudMessageService;
-import com.example.BlindCafe.repository.MatchingRepository;
-import com.example.BlindCafe.repository.UserMatchingRepository;
+import com.example.BlindCafe.repository.*;
 import com.example.BlindCafe.type.FcmMessage;
 import com.example.BlindCafe.type.Gender;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.example.BlindCafe.exception.CodeAndMessage.INVALID_INTEREST_SET;
+import static com.example.BlindCafe.exception.CodeAndMessage.*;
 import static com.example.BlindCafe.type.Gender.N;
 import static com.example.BlindCafe.type.status.MatchingStatus.*;
 import static java.util.Comparator.comparing;
@@ -30,13 +30,18 @@ public class MatchingService {
 
     private final FirebaseCloudMessageService fcm;
 
+    private final UserRepository userRepository;
     private final UserMatchingRepository userMatchingRepository;
     private final MatchingRepository matchingRepository;
+    private final DrinkRepository drinkRepository;
 
     private final static Long MAX_WAIT_TIME = 24L;
 
     @Transactional
-    public CreateMatchingDto.Response createMatching(User user) {
+    public CreateMatchingDto.Response createMatching(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BlindCafeException(NO_USER));
+
         UserMatching partnerMatching = searchAbleMatching(user);
 
         UserMatching userMatching = UserMatching.builder()
@@ -66,10 +71,14 @@ public class MatchingService {
                     .interest(commonInterest)
                     .topics(topics)
                     .isValid(true)
-                    .status(MATCHING)
+                    .status(MATCHING_NOT_START)
                     .build();
             matching = matchingRepository.save(matching);
-            // userMatchingRepository.save(partnerMatching);
+
+            userMatching.setMatching(matching);
+            partnerMatching.setMatching(matching);
+            userMatchingRepository.save(userMatching);
+            userMatchingRepository.save(partnerMatching);
 
             /**
              * Todo
@@ -95,7 +104,7 @@ public class MatchingService {
                     .partnerNickname(partner.getNickname())
                     .build();
         } else {
-            // userMatchingRepository.save(userMatching);
+            userMatchingRepository.save(userMatching);
             return CreateMatchingDto.Response.noneMatchingBuilder()
                     .matchingStatus(userMatching.getStatus())
                     .build();
@@ -199,5 +208,33 @@ public class MatchingService {
 
     private boolean isMatched(UserMatching userMatching, List<User> pastPartners) {
         return pastPartners.contains(userMatching.getUser());
+    }
+
+    @Transactional
+    public DrinkDto.Response setDrink(User user, DrinkDto.Request request) {
+        Drink drink = drinkRepository.findById(request.getDrink())
+                .orElseThrow(() -> new BlindCafeException(NO_DRINK));
+
+        Matching matching = matchingRepository.findById(request.getMatchingId())
+                .orElseThrow(() -> new BlindCafeException(NO_MATCHING));
+
+        UserMatching userMatching = matching.getUserMatchings()
+                .stream()
+                .filter(m -> m.getUser().getId().equals(user.getId()))
+                .findAny()
+                .orElseThrow(() -> new BlindCafeException(NO_USER_MATCHING));
+
+        userMatching.setDrink(drink);
+        userMatching.setStatus(MATCHING);
+
+        if (!matching.getStatus().equals(MATCHING)) {
+            matching.setStatus(MATCHING);
+            matching.setStartTime(LocalDateTime.now());
+        }
+
+        userMatchingRepository.save(userMatching);
+        matchingRepository.save(matching);
+
+        return DrinkDto.Response.builder().codeAndMessage(SUCCESS).build();
     }
 }
