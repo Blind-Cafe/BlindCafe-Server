@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
 
+import static com.example.BlindCafe.config.SecurityConfig.getUserId;
+
 @Slf4j
 @RestController
 @RequiredArgsConstructor
@@ -24,7 +26,6 @@ public class MatchingController {
     @PostMapping
     public CreateMatchingDto.Response createMatching(Authentication authentication) {
         log.info("POST /api/matching");
-        User user = (User) authentication.getPrincipal();
-        return matchingService.createMatching(user);
+        return matchingService.createMatching(getUserId(authentication));
     }
 }

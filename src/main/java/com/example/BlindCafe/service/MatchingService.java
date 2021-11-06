@@ -6,6 +6,7 @@ import com.example.BlindCafe.exception.BlindCafeException;
 import com.example.BlindCafe.firebase.FirebaseCloudMessageService;
 import com.example.BlindCafe.repository.MatchingRepository;
 import com.example.BlindCafe.repository.UserMatchingRepository;
+import com.example.BlindCafe.repository.UserRepository;
 import com.example.BlindCafe.type.FcmMessage;
 import com.example.BlindCafe.type.Gender;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +20,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static com.example.BlindCafe.exception.CodeAndMessage.INVALID_INTEREST_SET;
+import static com.example.BlindCafe.exception.CodeAndMessage.NO_USER;
 import static com.example.BlindCafe.type.Gender.N;
 import static com.example.BlindCafe.type.status.MatchingStatus.*;
 import static java.util.Comparator.comparing;
@@ -30,13 +32,17 @@ public class MatchingService {
 
     private final FirebaseCloudMessageService fcm;
 
+    private final UserRepository userRepository;
     private final UserMatchingRepository userMatchingRepository;
     private final MatchingRepository matchingRepository;
 
     private final static Long MAX_WAIT_TIME = 24L;
 
     @Transactional
-    public CreateMatchingDto.Response createMatching(User user) {
+    public CreateMatchingDto.Response createMatching(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BlindCafeException(NO_USER));
+
         UserMatching partnerMatching = searchAbleMatching(user);
 
         UserMatching userMatching = UserMatching.builder()
@@ -69,7 +75,8 @@ public class MatchingService {
                     .status(MATCHING)
                     .build();
             matching = matchingRepository.save(matching);
-            // userMatchingRepository.save(partnerMatching);
+            userMatchingRepository.save(userMatching);
+            userMatchingRepository.save(partnerMatching);
 
             /**
              * Todo
@@ -95,7 +102,7 @@ public class MatchingService {
                     .partnerNickname(partner.getNickname())
                     .build();
         } else {
-            // userMatchingRepository.save(userMatching);
+            userMatchingRepository.save(userMatching);
             return CreateMatchingDto.Response.noneMatchingBuilder()
                     .matchingStatus(userMatching.getStatus())
                     .build();
