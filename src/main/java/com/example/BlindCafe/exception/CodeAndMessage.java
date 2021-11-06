@@ -26,6 +26,9 @@ public enum CodeAndMessage {
     INVALID_INTEREST_SET("1021", "관심사 설정이 부족합니다."),
     PAST_PARTNER_SEARCH_ERROR("1022", "이전 대화 상대 조회 중 오류가 발생했습니다."),
 
+    NO_MATCHING("1030", "해당되는 매칭이 없습니다."),
+    NO_USER_MATCHING("1031", "유효한 매칭이 아닙니다."),
+
     INVALID_REQUEST("4000", "잘못된 요청입니다."),
     FAILED_AUTHORIZATION("4001", "검증에 실패했습니다."),
     EXPIRED_TOKEN("4002", "토큰의 기한이 만료되었습니다."),
