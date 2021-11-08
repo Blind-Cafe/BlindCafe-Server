@@ -25,9 +25,11 @@ public class ProfileImage extends BaseTimeEntity {
     @JoinColumn(name = "user_id")
     private User user;
 
+    @Column(columnDefinition = "TEXT")
     private String src;
 
+    private int priority;
+
     @Enumerated(STRING)
-    @Column(columnDefinition = "varchar(10) default 'NORMAL'")
     private CommonStatus status;
 }
