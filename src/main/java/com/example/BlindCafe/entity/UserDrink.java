@@ -15,7 +15,7 @@ import static javax.persistence.FetchType.LAZY;
 public class UserDrink extends BaseTimeEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue
     @Column(name = "user_drink_id")
     private Long id;
 

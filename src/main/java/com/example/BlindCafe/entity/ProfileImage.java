@@ -17,7 +17,7 @@ import static javax.persistence.FetchType.*;
 public class ProfileImage extends BaseTimeEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue
     @Column(name = "profile_image_id")
     private Long id;
 

@@ -15,7 +15,7 @@ import static javax.persistence.FetchType.LAZY;
 public class InterestOrder extends BaseTimeEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue
     @Column(name = "interest_order_id")
     private Long id;
 
