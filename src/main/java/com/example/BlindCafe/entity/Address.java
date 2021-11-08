@@ -7,6 +7,8 @@ import javax.persistence.Embeddable;
 @Embeddable
 @Getter
 @Setter
+@AllArgsConstructor
+@NoArgsConstructor
 public class Address {
 
     private String state;

@@ -306,4 +306,12 @@ public class UserService {
         user.setNickname(request.getNickname());
         return EditNicknameDto.Response.fromEntity(user);
     }
+
+    @Transactional
+    public EditAddressDto.Response editAddress(Long userId, EditAddressDto.Request request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BlindCafeException(NO_USER));
+        user.setAddress(new Address(request.getState(), request.getRegion()));
+        return EditAddressDto.Response.fromEntity(user);
+    }
 }

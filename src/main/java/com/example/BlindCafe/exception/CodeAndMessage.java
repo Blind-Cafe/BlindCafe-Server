@@ -29,6 +29,8 @@ public enum CodeAndMessage {
     NO_MATCHING("1030", "해당되는 매칭이 없습니다."),
     NO_USER_MATCHING("1031", "유효한 매칭이 아닙니다."),
 
+    INVALID_ADDRESS("1040", "유효한 주소가 아닙니다."),
+
     INVALID_REQUEST("4000", "잘못된 요청입니다."),
     FAILED_AUTHORIZATION("4001", "검증에 실패했습니다."),
     EXPIRED_TOKEN("4002", "토큰의 기한이 만료되었습니다."),

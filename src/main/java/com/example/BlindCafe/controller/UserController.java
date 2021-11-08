@@ -60,4 +60,13 @@ public class UserController {
         log.info("PATCH /api/user/nickname");
         return userService.editNickname(getUserId(authentication), request);
     }
+
+    @PatchMapping("/address")
+    public EditAddressDto.Response editAddress(
+            Authentication authentication,
+            @Valid @RequestBody EditAddressDto.Request request
+    ) {
+        log.info("PATCH /api/user/address");
+        return userService.editAddress(getUserId(authentication), request);
+    }
 }
