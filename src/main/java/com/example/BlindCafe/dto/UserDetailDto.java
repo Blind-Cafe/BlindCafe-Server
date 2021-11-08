@@ -6,9 +6,11 @@ import lombok.*;
 
 import javax.persistence.Enumerated;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static com.example.BlindCafe.type.status.CommonStatus.NORMAL;
 import static com.example.BlindCafe.type.status.CommonStatus.SELECTED;
 import static javax.persistence.EnumType.STRING;
 
@@ -29,8 +31,9 @@ public class UserDetailDto {
 
     public static UserDetailDto fromEntity(User user) {
         ProfileImage profileImage = user.getProfileImages()
-                .stream().filter(pi -> pi.getStatus().equals(SELECTED))
-                .findAny()
+                .stream().sorted(Comparator.comparing(ProfileImage::getPriority))
+                .filter(pi -> pi.getStatus().equals(NORMAL))
+                .findFirst()
                 .orElse(null);
         String src = profileImage != null ?
                 profileImage.getSrc() : null;

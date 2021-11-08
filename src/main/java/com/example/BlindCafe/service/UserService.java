@@ -7,6 +7,8 @@ import com.example.BlindCafe.exception.BlindCafeException;
 import com.example.BlindCafe.exception.CodeAndMessage;
 import com.example.BlindCafe.repository.*;
 import com.example.BlindCafe.type.Social;
+import com.example.BlindCafe.type.status.CommonStatus;
+import com.example.BlindCafe.type.status.UserStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +23,7 @@ import static com.example.BlindCafe.auth.jwt.JwtUtils.createToken;
 import static com.example.BlindCafe.type.Gender.N;
 import static com.example.BlindCafe.type.Social.APPLE;
 import static com.example.BlindCafe.type.Social.KAKAO;
+import static com.example.BlindCafe.type.status.CommonStatus.*;
 import static com.example.BlindCafe.type.status.MatchingStatus.*;
 import static com.example.BlindCafe.type.status.UserStatus.SUSPENDED;
 import static com.example.BlindCafe.type.status.UserStatus.NORMAL;
@@ -35,6 +38,7 @@ public class UserService {
     private final InterestRepository interestRepository;
     private final UserInterestRepository userInterestRepository;
     private final InterestOrderRepository interestOrderRepository;
+    private final ProfileImageRepository profileImageRepository;
 
     private final static int USER_INTEREST_LENGTH = 3;
     private static int[][] interestOrderArr = new int[USER_INTEREST_LENGTH][2];
@@ -68,7 +72,7 @@ public class UserService {
                      .socialId(socialResponse.getSocialId())
                      .socialType(socialResponse.getSocialType())
                      .deviceId(deviceId)
-                     .status(NORMAL)
+                     .status(UserStatus.NORMAL)
                      .build();
              userRepository.save(user);
              return getLoginResponse(user, SIGN_UP);
@@ -186,7 +190,7 @@ public class UserService {
     public UserHomeDto.Response userHome(Long userId) {
 
         User user = userRepository.findById(userId)
-                .filter(u -> u.getStatus().equals(NORMAL))
+                .filter(u -> u.getStatus().equals(UserStatus.NORMAL))
                 .orElseThrow(() -> new BlindCafeException(NO_USER));
 
         // 매칭 상태 확인
@@ -313,5 +317,33 @@ public class UserService {
                 .orElseThrow(() -> new BlindCafeException(NO_USER));
         user.setAddress(new Address(request.getState(), request.getRegion()));
         return EditAddressDto.Response.fromEntity(user);
+    }
+
+    @Transactional
+    public EditProfileImageDto.Response editProfileImage(
+            Long userId,
+            EditProfileImageDto.Request request
+    ) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BlindCafeException(NO_USER));
+
+        ProfileImage profileImage = profileImageRepository
+                .findByUserIdAndPriorityAndStatus(
+                        userId, request.getPriority(), CommonStatus.NORMAL)
+                .orElse(null);
+
+        if (profileImage != null) {
+            user.getProfileImages().remove(profileImage);
+            profileImage.setStatus(DELETED);
+        }
+        ProfileImage newProfileImage = ProfileImage.builder()
+                .user(user)
+                .src(request.getSrc())
+                .priority(request.getPriority())
+                .status(CommonStatus.NORMAL)
+                .build();
+        profileImageRepository.save(newProfileImage);
+        user.getProfileImages().add(newProfileImage);
+        return EditProfileImageDto.Response.fromEntity(user);
     }
 }

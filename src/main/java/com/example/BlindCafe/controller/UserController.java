@@ -69,4 +69,13 @@ public class UserController {
         log.info("PATCH /api/user/address");
         return userService.editAddress(getUserId(authentication), request);
     }
+
+    @PatchMapping("/image")
+    public EditProfileImageDto.Response editProfileImage(
+            Authentication authentication,
+            @Valid @RequestBody EditProfileImageDto.Request request
+    ) {
+        log.info("PATCH /api/user/image");
+        return userService.editProfileImage(getUserId(authentication), request);
+    }
 }
