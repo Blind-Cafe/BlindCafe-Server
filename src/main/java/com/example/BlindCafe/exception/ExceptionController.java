@@ -1,6 +1,7 @@
 package com.example.BlindCafe.exception;
 
 import com.example.BlindCafe.dto.ErrorResponse;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import io.jsonwebtoken.ExpiredJwtException;
 import lombok.extern.slf4j.Slf4j;
