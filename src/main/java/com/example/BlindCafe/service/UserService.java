@@ -1,6 +1,7 @@
 package com.example.BlindCafe.service;
 
 import com.example.BlindCafe.dto.*;
+import com.example.BlindCafe.dto.CreateUserInfoDto;
 import com.example.BlindCafe.entity.*;
 import com.example.BlindCafe.exception.BlindCafeException;
 import com.example.BlindCafe.exception.CodeAndMessage;
@@ -296,5 +297,13 @@ public class UserService {
 
         return EditInterestDto.Response.builder()
                 .codeAndMessage(SUCCESS).build();
+    }
+
+    @Transactional
+    public EditNicknameDto.Response editNickname(Long userId, EditNicknameDto.Request request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BlindCafeException(NO_USER));
+        user.setNickname(request.getNickname());
+        return EditNicknameDto.Response.fromEntity(user);
     }
 }
