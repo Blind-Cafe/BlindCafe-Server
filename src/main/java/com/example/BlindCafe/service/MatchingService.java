@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -235,6 +236,13 @@ public class MatchingService {
         userMatchingRepository.save(userMatching);
         matchingRepository.save(matching);
 
-        return DrinkDto.Response.builder().codeAndMessage(SUCCESS).build();
+        LocalDateTime ldt = matching.getStartTime();
+        Timestamp timestamp = Timestamp.valueOf(ldt);
+        String startTime = String.valueOf(timestamp.getTime() / 1000);
+
+        return DrinkDto.Response.builder()
+                .codeAndMessage(SUCCESS)
+                .startTime(startTime)
+                .build();
     }
 }

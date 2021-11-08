@@ -22,7 +22,7 @@ import static javax.persistence.FetchType.LAZY;
 public class Matching extends BaseTimeEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue
     @Column(name = "matching_id")
     private Long id;
 

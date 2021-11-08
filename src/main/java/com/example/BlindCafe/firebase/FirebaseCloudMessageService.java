@@ -1,6 +1,8 @@
 package com.example.BlindCafe.firebase;
 
 import com.example.BlindCafe.dto.FcmMessageDto;
+import com.example.BlindCafe.exception.BlindCafeException;
+import com.example.BlindCafe.exception.CodeAndMessage;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.auth.oauth2.GoogleCredentials;
@@ -12,6 +14,9 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+
+import static com.example.BlindCafe.exception.CodeAndMessage.FCM_JSON_PARSE_ERROR;
+import static com.example.BlindCafe.exception.CodeAndMessage.FCM_SERVER_ERROR;
 
 @Slf4j
 @Service
@@ -37,33 +42,33 @@ public class FirebaseCloudMessageService {
                     .build();
 
             Response response  = client.newCall(request).execute();
-
-            log.info(response.body().string());
         } catch (Exception e) {
-            log.error(e.getClass() + " : " + e.getMessage());
+            throw new BlindCafeException(FCM_SERVER_ERROR);
         }
-
     }
 
-    private String makeMessage(String targetToken, String title, String body, String path) throws JsonProcessingException {
-        FcmMessageDto fcmMessage = FcmMessageDto.builder()
-                .message(FcmMessageDto.Message.builder()
-                        .token(targetToken)
-                        .notification(FcmMessageDto.Notification.builder()
-                                .title(title)
-                                .body(body)
-                                .image(null)
-                                .build()
-                        )
-                        .data(FcmMessageDto.FcmData.builder()
-                                .path(path)
-                                .build()
-                        )
-                        .build()
-                ).validate_only(false).build();
+    private String makeMessage(String targetToken, String title, String body, String path) {
+        try {
+            FcmMessageDto fcmMessage = FcmMessageDto.builder()
+                    .message(FcmMessageDto.Message.builder()
+                            .token(targetToken)
+                            .notification(FcmMessageDto.Notification.builder()
+                                    .title(title)
+                                    .body(body)
+                                    .image(null)
+                                    .build()
+                            )
+                            .data(FcmMessageDto.FcmData.builder()
+                                    .path(path)
+                                    .build()
+                            )
+                            .build()
+                    ).validate_only(false).build();
 
-        log.info(objectMapper.writeValueAsString(fcmMessage));
-        return objectMapper.writeValueAsString(fcmMessage);
+            return objectMapper.writeValueAsString(fcmMessage);
+        } catch (JsonProcessingException e) {
+            throw new BlindCafeException(FCM_JSON_PARSE_ERROR);
+        }
     }
 
     private String getAccessToken() throws Exception {

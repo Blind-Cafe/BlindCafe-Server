@@ -1,6 +1,7 @@
 package com.example.BlindCafe.controller;
 
 import com.example.BlindCafe.dto.*;
+import com.example.BlindCafe.dto.CreateUserInfoDto;
 import com.example.BlindCafe.entity.User;
 import com.example.BlindCafe.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -35,13 +36,13 @@ public class UserController {
         return userService.addUserInfo(user, request);
     }
 
-    @GetMapping("home")
+    @GetMapping("/home")
     public UserHomeDto.Response userHome(Authentication authentication) {
         log.info("GET /api/user/home");
         return userService.userHome(getUserId(authentication));
     }
 
-    @PutMapping("interest")
+    @PutMapping("/interest")
     public EditInterestDto.Response editInterest(
             Authentication authentication,
             @Valid @RequestBody EditInterestDto.Request request
@@ -49,5 +50,23 @@ public class UserController {
         log.info("PUT /api/user/interest");
         User user = (User) authentication.getPrincipal();
         return userService.editInterest(user, request);
+    }
+
+    @PatchMapping("/nickname")
+    public EditNicknameDto.Response editNickname (
+            Authentication authentication,
+            @Valid @RequestBody EditNicknameDto.Request request
+    ) {
+        log.info("PATCH /api/user/nickname");
+        return userService.editNickname(getUserId(authentication), request);
+    }
+
+    @PatchMapping("/address")
+    public EditAddressDto.Response editAddress(
+            Authentication authentication,
+            @Valid @RequestBody EditAddressDto.Request request
+    ) {
+        log.info("PATCH /api/user/address");
+        return userService.editAddress(getUserId(authentication), request);
     }
 }

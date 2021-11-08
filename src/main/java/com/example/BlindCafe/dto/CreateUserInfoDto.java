@@ -1,5 +1,6 @@
 package com.example.BlindCafe.dto;
 
+import com.example.BlindCafe.dto.ApiResponse;
 import com.example.BlindCafe.exception.CodeAndMessage;
 import com.example.BlindCafe.type.Gender;
 import lombok.*;
