@@ -37,9 +37,10 @@ public class Matching extends BaseTimeEntity {
     private List<MatchingTopic> topics = new ArrayList<>();
 
     private LocalDateTime startTime;
+    private LocalDateTime expiryTime;
 
-    @Column(columnDefinition = "boolean default true", nullable = false)
-    private Boolean isValid;
+    @Column(columnDefinition = "boolean default false", nullable = false)
+    private Boolean isContinuous;
 
     @Enumerated(STRING)
     @Column(columnDefinition = "varchar(20) default 'MATCHING'", nullable = false)
