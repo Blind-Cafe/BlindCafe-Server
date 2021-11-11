@@ -7,10 +7,12 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum CodeAndMessage {
 
-    SUCCESS("999", "성공"),
+    SIGN_IN("990", "성공적으로 로그인했습니다."),
+    SIGN_UP("991", "성공적으로 회원가입이 되었습니다."),
+    SIGN_IN_NOT_REQUIRED_INFO("992", "회원가입은 되어있지만 필수 정보가 입력되지 않았습니다"),
 
-    SIGN_IN("1000", "성공적으로 로그인했습니다."),
-    SIGN_UP("1001", "성공적으로 회원가입이 되었습니다."),
+    SUCCESS("1000", "성공"),
+
     INVALID_KAKAO_ACCESS("1002", "카카오 로그인 서버에 접근 중 예외가 발생했습니다."),
     INVALID_KAKAO_TOKEN("1003", "카카오 Access Token이 유효하지 않습니다."),
     FAILED_TO_FIND_AVAILABLE_RSA("1004", "사용 가능한 키가 없습니다."),
