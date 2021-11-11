@@ -7,10 +7,7 @@ import com.example.BlindCafe.service.MatchingService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 
@@ -30,13 +27,13 @@ public class MatchingController {
         return matchingService.createMatching(getUserId(authentication));
     }
 
-    @PostMapping("drink")
+    @PostMapping("{matchingId}/drink")
     public DrinkDto.Response setDrink(
             Authentication authentication,
+            @PathVariable Long matchingId,
             @Valid @RequestBody DrinkDto.Request request
     ) {
-        log.info("POST /api/matching/drink");
-        User user = (User) authentication.getPrincipal();
-        return matchingService.setDrink(user, request);
+        log.info("POST /api/matching/{}/drink", matchingId);
+        return matchingService.setDrink(getUserId(authentication), matchingId, request);
     }
 }
