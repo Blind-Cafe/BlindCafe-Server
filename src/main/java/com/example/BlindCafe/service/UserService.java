@@ -25,9 +25,8 @@ import static com.example.BlindCafe.type.Social.APPLE;
 import static com.example.BlindCafe.type.Social.KAKAO;
 import static com.example.BlindCafe.type.status.CommonStatus.*;
 import static com.example.BlindCafe.type.status.MatchingStatus.*;
-import static com.example.BlindCafe.type.status.UserStatus.SUSPENDED;
-import static com.example.BlindCafe.type.status.UserStatus.NORMAL;
 import static com.example.BlindCafe.auth.SocialUtils.*;
+import static com.example.BlindCafe.type.status.UserStatus.*;
 
 @Service
 @Transactional(readOnly = true)
@@ -35,6 +34,7 @@ import static com.example.BlindCafe.auth.SocialUtils.*;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final RetiredUserRepository retiredUserRepository;
     private final InterestRepository interestRepository;
     private final UserInterestRepository userInterestRepository;
     private final InterestOrderRepository interestOrderRepository;
@@ -345,5 +345,26 @@ public class UserService {
         profileImageRepository.save(newProfileImage);
         user.getProfileImages().add(newProfileImage);
         return EditProfileImageDto.Response.fromEntity(user);
+    }
+
+    @Transactional
+    public DeleteUserDto.Response deleteUser(Long userId, Long reasonType) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BlindCafeException(NO_USER));
+
+        RetiredUser retiredUser = RetiredUser.builder()
+                .nickname(user.getNickname())
+                .socialId(user.getSocialId())
+                .socialType(user.getSocialType())
+                .reasonType(reasonType)
+                .build();
+
+        retiredUserRepository.save(retiredUser);
+        userRepository.delete(user);
+
+        return DeleteUserDto.Response.builder()
+                .codeAndMessage(SUCCESS)
+                .nickname(retiredUser.getNickname())
+                .build();
     }
 }
