@@ -25,9 +25,9 @@ import static com.example.BlindCafe.type.Social.APPLE;
 import static com.example.BlindCafe.type.Social.KAKAO;
 import static com.example.BlindCafe.type.status.CommonStatus.*;
 import static com.example.BlindCafe.type.status.MatchingStatus.*;
-import static com.example.BlindCafe.type.status.UserStatus.SUSPENDED;
-import static com.example.BlindCafe.type.status.UserStatus.NORMAL;
 import static com.example.BlindCafe.auth.SocialUtils.*;
+import static com.example.BlindCafe.type.status.UserStatus.*;
+import static com.example.BlindCafe.type.status.UserStatus.NORMAL;
 
 @Service
 @Transactional(readOnly = true)
@@ -35,6 +35,7 @@ import static com.example.BlindCafe.auth.SocialUtils.*;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final RetiredUserRepository retiredUserRepository;
     private final InterestRepository interestRepository;
     private final UserInterestRepository userInterestRepository;
     private final InterestOrderRepository interestOrderRepository;
@@ -59,12 +60,18 @@ public class UserService {
              if (user.getStatus().equals(SUSPENDED))
                  throw new BlindCafeException(SUSPENDED_USER);
              else {
-                 // 로그인
+                 // 디바이스 토큰 업데이트
                  if (!user.getDeviceId().equals(deviceId)) {
                      user.setDeviceId(deviceId);
                      userRepository.save(user);
                  }
-                 return getLoginResponse(user, SIGN_IN);
+                 if (user.getStatus().equals(NOT_REQUIRED_INFO)) {
+                     // 필수 정보가 입력되지 않은 경우
+                     return getLoginResponse(user, SIGN_IN_NOT_REQUIRED_INFO);
+                 } else {
+                     // 필수 정보가 입력된 경우 정상 로그인
+                     return getLoginResponse(user, SIGN_IN);
+                 }
              }
          } else {
              // 회원가입
@@ -72,7 +79,7 @@ public class UserService {
                      .socialId(socialResponse.getSocialId())
                      .socialType(socialResponse.getSocialType())
                      .deviceId(deviceId)
-                     .status(UserStatus.NORMAL)
+                     .status(UserStatus.NOT_REQUIRED_INFO)
                      .build();
              userRepository.save(user);
              return getLoginResponse(user, SIGN_UP);
@@ -106,10 +113,12 @@ public class UserService {
      */
     private LoginDto.Response getLoginResponse(User user, CodeAndMessage codeAndMessage) {
         String token = createToken(user);
+        String nickname = user.getNickname() != null ? user.getNickname() : null;
         return LoginDto.Response.builder()
                 .codeAndMessage(codeAndMessage)
                 .jwt(token)
                 .id(user.getId())
+                .nickname(nickname)
                 .build();
     }
 
@@ -122,6 +131,7 @@ public class UserService {
         user.setMyGender(request.getMyGender());
         user.setNickname(request.getNickname());
         user.setPartnerGender(request.getPartnerGender());
+        user.setStatus(NORMAL);
         userRepository.save(user);
 
         // 관심사 저장
@@ -190,7 +200,7 @@ public class UserService {
     public UserHomeDto.Response userHome(Long userId) {
 
         User user = userRepository.findById(userId)
-                .filter(u -> u.getStatus().equals(UserStatus.NORMAL))
+                .filter(u -> u.getStatus().equals(NORMAL))
                 .orElseThrow(() -> new BlindCafeException(NO_USER));
 
         // 매칭 상태 확인
@@ -345,5 +355,26 @@ public class UserService {
         profileImageRepository.save(newProfileImage);
         user.getProfileImages().add(newProfileImage);
         return EditProfileImageDto.Response.fromEntity(user);
+    }
+
+    @Transactional
+    public DeleteUserDto.Response deleteUser(Long userId, Long reasonType) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BlindCafeException(NO_USER));
+
+        RetiredUser retiredUser = RetiredUser.builder()
+                .nickname(user.getNickname())
+                .socialId(user.getSocialId())
+                .socialType(user.getSocialType())
+                .reasonType(reasonType)
+                .build();
+
+        retiredUserRepository.save(retiredUser);
+        userRepository.delete(user);
+
+        return DeleteUserDto.Response.builder()
+                .codeAndMessage(SUCCESS)
+                .nickname(retiredUser.getNickname())
+                .build();
     }
 }
