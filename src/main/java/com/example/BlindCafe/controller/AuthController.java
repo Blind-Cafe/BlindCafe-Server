@@ -1,7 +1,7 @@
 package com.example.BlindCafe.controller;
 
 import com.example.BlindCafe.dto.LoginDto;
-import com.example.BlindCafe.service.UserService;
+import com.example.BlindCafe.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -18,17 +18,17 @@ import static com.example.BlindCafe.type.Social.KAKAO;
 @RequiredArgsConstructor
 public class AuthController {
 
-    private final UserService userService;
+    private final AuthService authService;
 
     @PostMapping("/api/kakao")
     public LoginDto.Response signupKakao(@Valid @RequestBody LoginDto.Request request) {
         log.info("POST /api/kakao");
-        return userService.signin(request, KAKAO);
+        return authService.signin(request, KAKAO);
     }
 
     @PostMapping("/api/apple")
     public LoginDto.Response signupApple(@Valid @RequestBody LoginDto.Request request) {
         log.info("POST /api/apple");
-        return userService.signin(request, APPLE);
+        return authService.signin(request, APPLE);
     }
 }

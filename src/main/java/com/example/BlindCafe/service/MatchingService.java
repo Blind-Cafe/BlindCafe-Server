@@ -212,11 +212,14 @@ public class MatchingService {
     }
 
     @Transactional
-    public DrinkDto.Response setDrink(User user, DrinkDto.Request request) {
+    public DrinkDto.Response setDrink(Long userId, Long matchingId, DrinkDto.Request request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BlindCafeException(NO_USER));
+
         Drink drink = drinkRepository.findById(request.getDrink())
                 .orElseThrow(() -> new BlindCafeException(NO_DRINK));
 
-        Matching matching = matchingRepository.findById(request.getMatchingId())
+        Matching matching = matchingRepository.findById(matchingId)
                 .orElseThrow(() -> new BlindCafeException(NO_MATCHING));
 
         UserMatching userMatching = matching.getUserMatchings()

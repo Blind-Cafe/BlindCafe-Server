@@ -15,8 +15,6 @@ public class DrinkDto {
     @Builder
     public static class Request {
         @NotNull
-        private Long matchingId;
-        @NotNull
         private Long drink;
     }
 
