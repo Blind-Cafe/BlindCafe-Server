@@ -2,6 +2,7 @@ package com.example.BlindCafe.service;
 
 import com.example.BlindCafe.dto.CreateMatchingDto;
 import com.example.BlindCafe.dto.DrinkDto;
+import com.example.BlindCafe.dto.MatchingDto;
 import com.example.BlindCafe.entity.*;
 import com.example.BlindCafe.exception.BlindCafeException;
 import com.example.BlindCafe.firebase.FirebaseCloudMessageService;
@@ -37,7 +38,50 @@ public class MatchingService {
     private final DrinkRepository drinkRepository;
 
     private final static Long MAX_WAIT_TIME = 24L;
+    private final static int BASIC_CHAT_DAYS = 3;
+    private final static int EXTEND_CHAT_DAYS = 7;
 
+    /**
+     * 내 테이블 조회 - 프로필 교환을 완료한 상대방 목록 조회
+     */
+    public List<MatchingDto> getMatchings(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BlindCafeException(NO_USER));
+
+        LocalDateTime now = LocalDateTime.now();
+        return user.getUserMatchings().stream()
+                .filter(userMatching -> userMatching.getMatching().getIsContinuous())
+                .map(userMatching -> userMatching.getMatching())
+                .map(matching -> makeMatchingDto(matching, user, now))
+                .filter(matchingDto -> matchingDto != null)
+                .collect(Collectors.toList());
+    }
+
+    private MatchingDto makeMatchingDto(Matching matching, User user, LocalDateTime now) {
+        Long restDay = ChronoUnit.DAYS.between(now, matching.getExpiryTime()) >= 0L ?
+                ChronoUnit.DAYS.between(now, matching.getExpiryTime()) : -1L;
+
+        User partner = matching.getUserMatchings().stream()
+                .filter(userMatching -> !userMatching.getUser().equals(user))
+                .findAny()
+                .map(partnerMatching -> partnerMatching.getUser()).orElse(null);
+
+        if (partner != null) {
+            return MatchingDto.builder()
+                    .matchingId(matching.getId())
+                    .partner(new MatchingDto.Partner(partner))
+                    .latestMessage("none")
+                    .isReceived(true)
+                    .expiryDay(restDay)
+                    .build();
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * 매칭 요청
+     */
     @Transactional
     public CreateMatchingDto.Response createMatching(Long userId) {
         User user = userRepository.findById(userId)
@@ -71,7 +115,7 @@ public class MatchingService {
             Matching matching = Matching.builder()
                     .interest(commonInterest)
                     .topics(topics)
-                    .isValid(true)
+                    .isContinuous(false)
                     .status(MATCHING_NOT_START)
                     .build();
             matching = matchingRepository.save(matching);
@@ -81,10 +125,7 @@ public class MatchingService {
             userMatchingRepository.save(userMatching);
             userMatchingRepository.save(partnerMatching);
 
-            /**
-             * Todo
-             * FCM
-             */
+            // FCM
             fcm.sendMessageTo(
                     user.getDeviceId(),
                     FcmMessage.MATCHING.getTitle(),
@@ -112,6 +153,9 @@ public class MatchingService {
         }
     }
 
+    /**
+     * 매칭이 가능한 상대방이 있는지 확인
+     */
     private UserMatching searchAbleMatching(User user) {
         // 유저 관심사 확인
         List<Interest> userInterests = getUserInterestSortedByPriority(user);
@@ -145,6 +189,9 @@ public class MatchingService {
                 .findFirst().orElse(null);
     }
 
+    /**
+     * 유저의 관심사를 우선순위 순으로 정렬
+     */
     private List<Interest> getUserInterestSortedByPriority(User user) {
         return user.getInterestOrders().stream()
                 .sorted(comparing(InterestOrder::getPriority))
@@ -152,6 +199,9 @@ public class MatchingService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * 유효한 시간 내의 요청인지 확인
+     */
     private boolean isValidRequestTime(UserMatching otherMatching, LocalDateTime now) {
         Long diffTime = ChronoUnit.HOURS.between(otherMatching.getCreatedAt(), now);
         if (diffTime <= MAX_WAIT_TIME)
@@ -160,6 +210,9 @@ public class MatchingService {
             return false;
     }
 
+    /**
+     * 유저간 선호하는 성별인지 확인
+     */
     private boolean isValidGender(UserMatching userMatching, User user) {
         User otherUser = userMatching.getUser();
 
@@ -177,6 +230,9 @@ public class MatchingService {
             return false;
     }
 
+    /**
+     * 관심사가 공통되는지 확인
+     */
     private boolean isContainInterest(UserMatching userMatching, List<Interest> userInterests) {
         List<Interest> otherInterests = userMatching.getUser().getInterestOrders()
                 .stream()
@@ -191,6 +247,7 @@ public class MatchingService {
     }
 
     /**
+     * 유저간 공통 관심사 추출
      * Todo
      * 나중에 isContainInterest 에서 한 번에 공통 관심사 뽑자
      */
@@ -211,6 +268,10 @@ public class MatchingService {
         return pastPartners.contains(userMatching.getUser());
     }
 
+
+    /**
+     * 매칭에 대한 음료수 선택하기
+     */
     @Transactional
     public DrinkDto.Response setDrink(Long userId, Long matchingId, DrinkDto.Request request) {
         User user = userRepository.findById(userId)
@@ -232,8 +293,10 @@ public class MatchingService {
         userMatching.setStatus(MATCHING);
 
         if (!matching.getStatus().equals(MATCHING)) {
+            LocalDateTime now = LocalDateTime.now();
             matching.setStatus(MATCHING);
-            matching.setStartTime(LocalDateTime.now());
+            matching.setStartTime(now);
+            matching.setExpiryTime(now.plusDays(BASIC_CHAT_DAYS));
         }
 
         userMatchingRepository.save(userMatching);
