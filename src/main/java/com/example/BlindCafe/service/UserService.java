@@ -23,6 +23,7 @@ import static com.example.BlindCafe.type.Gender.N;
 import static com.example.BlindCafe.type.status.CommonStatus.*;
 import static com.example.BlindCafe.type.status.MatchingStatus.*;
 import static com.example.BlindCafe.type.status.UserStatus.NORMAL;
+import static com.example.BlindCafe.type.status.UserStatus.NOT_REQUIRED_INFO;
 
 @Service
 @Transactional(readOnly = true)
@@ -120,7 +121,7 @@ public class UserService {
     public UserHomeDto.Response userHome(Long userId) {
 
         User user = userRepository.findById(userId)
-                .filter(u -> u.getStatus().equals(NORMAL))
+                .filter(u -> u.getStatus().equals(NORMAL) || u.getStatus().equals(NOT_REQUIRED_INFO))
                 .orElseThrow(() -> new BlindCafeException(NO_USER));
 
         // 매칭 상태 확인
@@ -290,6 +291,12 @@ public class UserService {
                 .build();
 
         retiredUserRepository.save(retiredUser);
+
+        /**
+         * Todo
+         * userMatching 걸려있는 상대방 user matching들에 탈퇴로 채팅 종료 상태 변경
+         */
+
         userRepository.delete(user);
 
         return DeleteUserDto.Response.builder()

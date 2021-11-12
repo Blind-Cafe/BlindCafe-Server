@@ -36,6 +36,8 @@ public enum CodeAndMessage {
     FCM_JSON_PARSE_ERROR("1050", "FCM JSON 형식이 올바르지 않습니다."),
     FCM_SERVER_ERROR("1051", "FCM 전송 중 오류가 발생했습니다."),
 
+    NOT_REQUIRED_INFO_FOR_MATCHING("1060", "매칭을 요청하기에 충분한 정보가 입력되어 있지 않습니다."),
+
     INVALID_REQUEST("4000", "잘못된 요청입니다."),
     FAILED_AUTHORIZATION("4001", "검증에 실패했습니다."),
     EXPIRED_TOKEN("4002", "토큰의 기한이 만료되었습니다."),

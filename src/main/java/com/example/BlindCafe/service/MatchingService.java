@@ -1,6 +1,7 @@
 package com.example.BlindCafe.service;
 
 import com.example.BlindCafe.dto.CreateMatchingDto;
+import com.example.BlindCafe.dto.DeleteMatchingDto;
 import com.example.BlindCafe.dto.DrinkDto;
 import com.example.BlindCafe.dto.MatchingDto;
 import com.example.BlindCafe.entity.*;
@@ -9,6 +10,7 @@ import com.example.BlindCafe.firebase.FirebaseCloudMessageService;
 import com.example.BlindCafe.repository.*;
 import com.example.BlindCafe.type.FcmMessage;
 import com.example.BlindCafe.type.Gender;
+import com.example.BlindCafe.type.status.UserStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -86,6 +88,9 @@ public class MatchingService {
     public CreateMatchingDto.Response createMatching(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BlindCafeException(NO_USER));
+
+        if (user.getStatus().equals(UserStatus.NOT_REQUIRED_INFO))
+            throw new BlindCafeException(NOT_REQUIRED_INFO_FOR_MATCHING);
 
         UserMatching partnerMatching = searchAbleMatching(user);
 
