@@ -6,6 +6,7 @@ import com.example.BlindCafe.entity.*;
 import com.example.BlindCafe.exception.BlindCafeException;
 import com.example.BlindCafe.exception.CodeAndMessage;
 import com.example.BlindCafe.repository.*;
+import com.example.BlindCafe.type.ReasonType;
 import com.example.BlindCafe.type.Social;
 import com.example.BlindCafe.type.status.CommonStatus;
 import com.example.BlindCafe.type.status.UserStatus;
@@ -20,6 +21,7 @@ import java.util.stream.Collectors;
 
 import static com.example.BlindCafe.exception.CodeAndMessage.*;
 import static com.example.BlindCafe.type.Gender.N;
+import static com.example.BlindCafe.type.ReasonType.FOR_RETIRED;
 import static com.example.BlindCafe.type.status.CommonStatus.*;
 import static com.example.BlindCafe.type.status.MatchingStatus.*;
 import static com.example.BlindCafe.type.status.UserStatus.NORMAL;
@@ -36,6 +38,7 @@ public class UserService {
     private final UserInterestRepository userInterestRepository;
     private final InterestOrderRepository interestOrderRepository;
     private final ProfileImageRepository profileImageRepository;
+    private final ReasonRepository reasonRepository;
 
     private final static int USER_INTEREST_LENGTH = 3;
     private static int[][] interestOrderArr = new int[USER_INTEREST_LENGTH][2];
@@ -279,15 +282,18 @@ public class UserService {
     }
 
     @Transactional
-    public DeleteUserDto.Response deleteUser(Long userId, Long reasonType) {
+    public DeleteUserDto.Response deleteUser(Long userId, Long reasonNum) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BlindCafeException(NO_USER));
+
+        Reason reason = reasonRepository.findByReasonTypeAndNum(FOR_RETIRED, reasonNum)
+                .orElseThrow(() -> new BlindCafeException(INVALID_REASON));
 
         RetiredUser retiredUser = RetiredUser.builder()
                 .nickname(user.getNickname())
                 .socialId(user.getSocialId())
                 .socialType(user.getSocialType())
-                .reasonType(reasonType)
+                .reason(reason)
                 .build();
 
         retiredUserRepository.save(retiredUser);
