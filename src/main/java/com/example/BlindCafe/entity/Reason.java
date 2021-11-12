@@ -5,6 +5,8 @@ import lombok.*;
 
 import javax.persistence.*;
 
+import static javax.persistence.EnumType.STRING;
+
 @Entity
 @Getter
 @Setter
@@ -21,5 +23,6 @@ public class Reason {
     private Long num;
     private String text;
 
+    @Enumerated(STRING)
     private ReasonType reasonType;
 }
