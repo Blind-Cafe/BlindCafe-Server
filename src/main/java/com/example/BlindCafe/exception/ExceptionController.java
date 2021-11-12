@@ -7,6 +7,7 @@ import io.jsonwebtoken.ExpiredJwtException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -36,7 +37,8 @@ public class ExceptionController {
     @ExceptionHandler(value = {
             HttpRequestMethodNotSupportedException.class,
             MethodArgumentNotValidException.class,
-            InvalidFormatException.class
+            InvalidFormatException.class,
+            MissingServletRequestParameterException.class
     })
     public ErrorResponse handleBadRequest(
             Exception e, HttpServletRequest request

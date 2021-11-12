@@ -106,9 +106,9 @@ public class UserController {
     @DeleteMapping
     public DeleteUserDto.Response deleteUser(
             Authentication authentication,
-            @RequestParam(value="reason", defaultValue="0") Long reasonType
+            @RequestParam(value="reason", defaultValue="0") Long reasonNum
     ) {
         log.info("DELETE /api/user");
-        return userService.deleteUser(getUserId(authentication), reasonType);
+        return userService.deleteUser(getUserId(authentication), reasonNum);
     }
 }

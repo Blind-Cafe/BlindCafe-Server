@@ -1,6 +1,7 @@
 package com.example.BlindCafe.service;
 
 import com.example.BlindCafe.dto.CreateMatchingDto;
+import com.example.BlindCafe.dto.DeleteMatchingDto;
 import com.example.BlindCafe.dto.DrinkDto;
 import com.example.BlindCafe.dto.MatchingDto;
 import com.example.BlindCafe.entity.*;
@@ -9,6 +10,8 @@ import com.example.BlindCafe.firebase.FirebaseCloudMessageService;
 import com.example.BlindCafe.repository.*;
 import com.example.BlindCafe.type.FcmMessage;
 import com.example.BlindCafe.type.Gender;
+import com.example.BlindCafe.type.ReasonType;
+import com.example.BlindCafe.type.status.UserStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +25,7 @@ import java.util.stream.Collectors;
 
 import static com.example.BlindCafe.exception.CodeAndMessage.*;
 import static com.example.BlindCafe.type.Gender.N;
+import static com.example.BlindCafe.type.ReasonType.FOR_LEAVE_ROOM;
 import static com.example.BlindCafe.type.status.MatchingStatus.*;
 import static java.util.Comparator.comparing;
 
@@ -36,6 +40,7 @@ public class MatchingService {
     private final UserMatchingRepository userMatchingRepository;
     private final MatchingRepository matchingRepository;
     private final DrinkRepository drinkRepository;
+    private final ReasonRepository reasonRepository;
 
     private final static Long MAX_WAIT_TIME = 24L;
     private final static int BASIC_CHAT_DAYS = 3;
@@ -86,6 +91,9 @@ public class MatchingService {
     public CreateMatchingDto.Response createMatching(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BlindCafeException(NO_USER));
+
+        if (user.getStatus().equals(UserStatus.NOT_REQUIRED_INFO))
+            throw new BlindCafeException(NOT_REQUIRED_INFO_FOR_MATCHING);
 
         UserMatching partnerMatching = searchAbleMatching(user);
 
@@ -309,6 +317,41 @@ public class MatchingService {
         return DrinkDto.Response.builder()
                 .codeAndMessage(SUCCESS)
                 .startTime(startTime)
+                .build();
+    }
+
+    /**
+     * 채팅방 나가기
+     */
+    @Transactional
+    public DeleteMatchingDto deleteMatching(Long userId, Long matchingId, Long reasonNum) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BlindCafeException(NO_USER));
+
+        Matching matching = matchingRepository.findById(matchingId)
+                .orElseThrow(() -> new BlindCafeException(NO_MATCHING));
+
+        Reason reason = reasonRepository.findByReasonTypeAndNum(FOR_LEAVE_ROOM, reasonNum)
+                .orElseThrow(() -> new BlindCafeException(NO_REASON));
+
+        // 상대방에게 사유 저장, 상태 변경
+        UserMatching partnerMatching = matching.getUserMatchings().stream()
+                .filter(um -> !um.getUser().equals(user)).findAny()
+                .orElseThrow(() -> new BlindCafeException(INVALID_MATCHING));
+        partnerMatching.setReason(reason);
+        partnerMatching.setStatus(FAILED_LEAVE_ROOM);
+
+        // 현재 matching 비활성화
+        matching.setStatus(FAILED_LEAVE_ROOM);
+
+        // 내 user matching 끊어주기
+        UserMatching userMatching = matching.getUserMatchings().stream()
+                .filter(um -> um.getUser().equals(user))
+                .findAny().orElseThrow(() -> new BlindCafeException(INVALID_MATCHING));
+        userMatching.setStatus(OUT);
+
+        return DeleteMatchingDto.builder()
+                .codeAndMessage(SUCCESS)
                 .build();
     }
 }

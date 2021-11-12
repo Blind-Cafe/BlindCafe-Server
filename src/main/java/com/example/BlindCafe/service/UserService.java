@@ -6,8 +6,10 @@ import com.example.BlindCafe.entity.*;
 import com.example.BlindCafe.exception.BlindCafeException;
 import com.example.BlindCafe.exception.CodeAndMessage;
 import com.example.BlindCafe.repository.*;
+import com.example.BlindCafe.type.ReasonType;
 import com.example.BlindCafe.type.Social;
 import com.example.BlindCafe.type.status.CommonStatus;
+import com.example.BlindCafe.type.status.MatchingStatus;
 import com.example.BlindCafe.type.status.UserStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -20,9 +22,11 @@ import java.util.stream.Collectors;
 
 import static com.example.BlindCafe.exception.CodeAndMessage.*;
 import static com.example.BlindCafe.type.Gender.N;
+import static com.example.BlindCafe.type.ReasonType.FOR_RETIRED;
 import static com.example.BlindCafe.type.status.CommonStatus.*;
 import static com.example.BlindCafe.type.status.MatchingStatus.*;
 import static com.example.BlindCafe.type.status.UserStatus.NORMAL;
+import static com.example.BlindCafe.type.status.UserStatus.NOT_REQUIRED_INFO;
 
 @Service
 @Transactional(readOnly = true)
@@ -35,6 +39,7 @@ public class UserService {
     private final UserInterestRepository userInterestRepository;
     private final InterestOrderRepository interestOrderRepository;
     private final ProfileImageRepository profileImageRepository;
+    private final ReasonRepository reasonRepository;
 
     private final static int USER_INTEREST_LENGTH = 3;
     private static int[][] interestOrderArr = new int[USER_INTEREST_LENGTH][2];
@@ -120,52 +125,73 @@ public class UserService {
     public UserHomeDto.Response userHome(Long userId) {
 
         User user = userRepository.findById(userId)
-                .filter(u -> u.getStatus().equals(NORMAL))
+                .filter(u -> u.getStatus().equals(NORMAL) || u.getStatus().equals(NOT_REQUIRED_INFO))
                 .orElseThrow(() -> new BlindCafeException(NO_USER));
 
         // 매칭 상태 확인
-        List<UserMatching> matchings = user.getUserMatchings().stream()
-                .filter(userMatching ->
-                        userMatching.getStatus().equals(WAIT) ||
-                        userMatching.getStatus().equals(FOUND) ||
-                        userMatching.getStatus().equals(MATCHING))
-                .collect(Collectors.toList());
+        UserMatching userMatching = user.getUserMatchings().stream()
+                .filter(um -> validMatchingStatus(um))
+                .findAny().orElse(null);
 
-        if (matchings.size() < 1) {
+        if (userMatching == null) {
             // 요청 없음
             return UserHomeDto.Response.noneMatchingBuilder()
                     .codeAndMessage(SUCCESS)
                     .matchingStatus(NONE)
                     .build();
         } else {
-            UserMatching validMatching = matchings.get(0);
-            if (validMatching.getStatus().equals(WAIT)) {
+            MatchingStatus status = userMatching.getStatus();
+            if (status.equals(WAIT)) {
                 return UserHomeDto.Response.noneMatchingBuilder()
                         .codeAndMessage(SUCCESS)
                         .matchingStatus(WAIT)
                         .build();
             } else {
-                Matching matching = validMatching.getMatching();
-                List<UserMatching> userMatchings = matching.getUserMatchings()
-                        .stream()
-                        .filter(mat -> !mat.equals(validMatching))
-                        .collect(Collectors.toList());
-                UserMatching partnerMatching = userMatchings.get(0);
+                Matching matching = userMatching.getMatching();
+                UserMatching partnerMatching = matching.getUserMatchings().stream()
+                        .filter(um -> !um.equals(userMatching))
+                        .findAny().orElseThrow(() -> new BlindCafeException(INVALID_MATCHING));
 
-                LocalDateTime ldt = matching.getStartTime();
-                Timestamp timestamp = Timestamp.valueOf(ldt);
-                String startTime = String.valueOf(timestamp.getTime() / 1000);
+                if (matching.getStatus().equals(FOUND) ||
+                    matching.getStatus().equals(MATCHING)) {
+                    // 정상적인 매칭 상태
+                    LocalDateTime ldt = matching.getStartTime();
+                    Timestamp timestamp = Timestamp.valueOf(ldt);
+                    String startTime = String.valueOf(timestamp.getTime() / 1000);
 
-                return UserHomeDto.Response.matchingBuilder()
-                        .codeAndMessage(SUCCESS)
-                        .matchingStatus(validMatching.getStatus())
-                        .matchingId(matching.getId())
-                        .partnerId(partnerMatching.getUser().getId())
-                        .partnerNickname(partnerMatching.getUser().getNickname())
-                        .startTime(startTime)
-                        .build();
+                    return UserHomeDto.Response.matchingBuilder()
+                            .codeAndMessage(SUCCESS)
+                            .matchingStatus(userMatching.getStatus())
+                            .matchingId(matching.getId())
+                            .partnerId(partnerMatching.getUser().getId())
+                            .partnerNickname(partnerMatching.getUser().getNickname())
+                            .startTime(startTime)
+                            .build();
+                } else {
+                    // 폭파
+                    UserHomeDto.Response response = UserHomeDto.Response.outMatchingBuilder()
+                            .codeAndMessage(SUCCESS)
+                            .matchingStatus(userMatching.getStatus())
+                            .partnerNickname(partnerMatching.getUser().getNickname())
+                            .reason(partnerMatching.getReason().getText())
+                            .build();
+                    userMatching.setStatus(OUT);
+                    return response;
+                }
             }
         }
+    }
+
+    private boolean validMatchingStatus(UserMatching userMatching) {
+        MatchingStatus status = userMatching.getStatus();
+        if (status.equals(WAIT) ||
+            status.equals(FOUND) ||
+            status.equals(MATCHING) ||
+            status.equals(FAILED_LEAVE_ROOM) ||
+            status.equals(FAILED_REPORT) ||
+            status.equals(FAILED_WONT_EXCHANGE)
+        ) return true;
+        return false;
     }
 
     public UserDetailDto getUserDetail(Long userId) {
@@ -278,18 +304,27 @@ public class UserService {
     }
 
     @Transactional
-    public DeleteUserDto.Response deleteUser(Long userId, Long reasonType) {
+    public DeleteUserDto.Response deleteUser(Long userId, Long reasonNum) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BlindCafeException(NO_USER));
+
+        Reason reason = reasonRepository.findByReasonTypeAndNum(FOR_RETIRED, reasonNum)
+                .orElseThrow(() -> new BlindCafeException(NO_REASON));
 
         RetiredUser retiredUser = RetiredUser.builder()
                 .nickname(user.getNickname())
                 .socialId(user.getSocialId())
                 .socialType(user.getSocialType())
-                .reasonType(reasonType)
+                .reason(reason)
                 .build();
 
         retiredUserRepository.save(retiredUser);
+
+        /**
+         * Todo
+         * userMatching 걸려있는 상대방 user matching들에 탈퇴로 채팅 종료 상태 변경
+         */
+
         userRepository.delete(user);
 
         return DeleteUserDto.Response.builder()

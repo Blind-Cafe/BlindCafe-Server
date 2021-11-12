@@ -6,6 +6,7 @@ import lombok.*;
 import javax.persistence.*;
 
 import static javax.persistence.EnumType.STRING;
+import static javax.persistence.FetchType.LAZY;
 
 @Entity
 @Getter
@@ -30,5 +31,7 @@ public class RetiredUser extends BaseTimeEntity {
     @Column(length = 10, nullable = false)
     private Social socialType;
 
-    private Long reasonType;
+    @OneToOne(fetch = LAZY)
+    @JoinColumn(name = "reason_id")
+    private Reason reason;
 }

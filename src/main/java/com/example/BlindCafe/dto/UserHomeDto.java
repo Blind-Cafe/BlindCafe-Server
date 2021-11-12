@@ -21,8 +21,9 @@ public class UserHomeDto {
         private Long partnerId;
         private String partnerNickname;
         private String startTime;
+        private String reason;
 
-        @Builder(builderMethodName = "matchingBuilder")
+        @Builder(builderClassName = "matchingBuilder", builderMethodName = "matchingBuilder")
         public Response(
                 CodeAndMessage codeAndMessage,
                 MatchingStatus matchingStatus,
@@ -39,7 +40,20 @@ public class UserHomeDto {
             this.startTime = startTime;
         }
 
-        @Builder(builderMethodName = "noneMatchingBuilder")
+        @Builder(builderClassName = "outMatchingBuilder", builderMethodName = "outMatchingBuilder")
+        public Response(
+                CodeAndMessage codeAndMessage,
+                MatchingStatus matchingStatus,
+                String partnerNickname,
+                String reason
+        ) {
+            super(codeAndMessage.getCode(), codeAndMessage.getMessage());
+            this.matchingStatus = matchingStatus;
+            this.partnerNickname = partnerNickname;
+            this.reason = reason;
+        }
+
+        @Builder(builderClassName = "noneMatchingBuilder", builderMethodName = "noneMatchingBuilder")
         public Response(
                 CodeAndMessage codeAndMessage,
                 MatchingStatus matchingStatus
