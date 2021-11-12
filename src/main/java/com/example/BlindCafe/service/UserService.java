@@ -152,8 +152,8 @@ public class UserService {
                         .filter(um -> !um.equals(userMatching))
                         .findAny().orElseThrow(() -> new BlindCafeException(INVALID_MATCHING));
 
-                if (matching.getStatus().equals(FOUND) ||
-                    matching.getStatus().equals(MATCHING)) {
+                if (userMatching.getStatus().equals(FOUND) ||
+                    userMatching.getStatus().equals(MATCHING)) {
                     // 정상적인 매칭 상태
                     LocalDateTime ldt = matching.getStartTime();
                     Timestamp timestamp = Timestamp.valueOf(ldt);
