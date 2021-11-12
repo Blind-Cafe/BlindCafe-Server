@@ -38,7 +38,7 @@ public enum CodeAndMessage {
 
     NOT_REQUIRED_INFO_FOR_MATCHING("1060", "매칭을 요청하기에 충분한 정보가 입력되어 있지 않습니다."),
 
-    INVALID_REASON("1070", "유효하지 않은 이유입니다."),
+    NO_REASON("1070", "유효하지 않은 이유입니다."),
 
     INVALID_REQUEST("4000", "잘못된 요청입니다."),
     FAILED_AUTHORIZATION("4001", "검증에 실패했습니다."),

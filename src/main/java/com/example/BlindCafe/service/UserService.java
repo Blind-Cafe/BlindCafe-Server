@@ -287,7 +287,7 @@ public class UserService {
                 .orElseThrow(() -> new BlindCafeException(NO_USER));
 
         Reason reason = reasonRepository.findByReasonTypeAndNum(FOR_RETIRED, reasonNum)
-                .orElseThrow(() -> new BlindCafeException(INVALID_REASON));
+                .orElseThrow(() -> new BlindCafeException(NO_REASON));
 
         RetiredUser retiredUser = RetiredUser.builder()
                 .nickname(user.getNickname())
