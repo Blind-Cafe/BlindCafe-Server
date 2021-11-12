@@ -3,14 +3,13 @@ package com.example.BlindCafe.service;
 import com.example.BlindCafe.dto.CreateMatchingDto;
 import com.example.BlindCafe.dto.DeleteMatchingDto;
 import com.example.BlindCafe.dto.DrinkDto;
-import com.example.BlindCafe.dto.MatchingDto;
+import com.example.BlindCafe.dto.MatchingListDto;
 import com.example.BlindCafe.entity.*;
 import com.example.BlindCafe.exception.BlindCafeException;
 import com.example.BlindCafe.firebase.FirebaseCloudMessageService;
 import com.example.BlindCafe.repository.*;
 import com.example.BlindCafe.type.FcmMessage;
 import com.example.BlindCafe.type.Gender;
-import com.example.BlindCafe.type.ReasonType;
 import com.example.BlindCafe.type.status.UserStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -49,20 +48,22 @@ public class MatchingService {
     /**
      * 내 테이블 조회 - 프로필 교환을 완료한 상대방 목록 조회
      */
-    public List<MatchingDto> getMatchings(Long userId) {
+    public MatchingListDto getMatchings(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BlindCafeException(NO_USER));
 
         LocalDateTime now = LocalDateTime.now();
-        return user.getUserMatchings().stream()
+        List<MatchingListDto.MatchingDto> matchings = user.getUserMatchings().stream()
                 .filter(userMatching -> userMatching.getMatching().getIsContinuous())
                 .map(userMatching -> userMatching.getMatching())
                 .map(matching -> makeMatchingDto(matching, user, now))
                 .filter(matchingDto -> matchingDto != null)
                 .collect(Collectors.toList());
+
+        return new MatchingListDto(matchings);
     }
 
-    private MatchingDto makeMatchingDto(Matching matching, User user, LocalDateTime now) {
+    private MatchingListDto.MatchingDto makeMatchingDto(Matching matching, User user, LocalDateTime now) {
         Long restDay = ChronoUnit.DAYS.between(now, matching.getExpiryTime()) >= 0L ?
                 ChronoUnit.DAYS.between(now, matching.getExpiryTime()) : -1L;
 
@@ -72,9 +73,9 @@ public class MatchingService {
                 .map(partnerMatching -> partnerMatching.getUser()).orElse(null);
 
         if (partner != null) {
-            return MatchingDto.builder()
+            return MatchingListDto.MatchingDto.builder()
                     .matchingId(matching.getId())
-                    .partner(new MatchingDto.Partner(partner))
+                    .partner(new MatchingListDto.Partner(partner))
                     .latestMessage("none")
                     .isReceived(true)
                     .expiryDay(restDay)
