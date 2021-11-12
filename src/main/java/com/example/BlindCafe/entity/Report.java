@@ -29,7 +29,9 @@ public class Report extends BaseTimeEntity {
     @JoinColumn(name = "user_id")
     private User user;
 
-    private String reason;
+    @OneToOne(fetch = LAZY)
+    @JoinColumn(name = "reason_id")
+    private Reason reason;
 
     @Enumerated(STRING)
     @Column(length = 10, nullable = false)
