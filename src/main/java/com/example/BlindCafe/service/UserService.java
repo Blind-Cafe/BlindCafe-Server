@@ -9,6 +9,7 @@ import com.example.BlindCafe.repository.*;
 import com.example.BlindCafe.type.ReasonType;
 import com.example.BlindCafe.type.Social;
 import com.example.BlindCafe.type.status.CommonStatus;
+import com.example.BlindCafe.type.status.MatchingStatus;
 import com.example.BlindCafe.type.status.UserStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -128,48 +129,69 @@ public class UserService {
                 .orElseThrow(() -> new BlindCafeException(NO_USER));
 
         // 매칭 상태 확인
-        List<UserMatching> matchings = user.getUserMatchings().stream()
-                .filter(userMatching ->
-                        userMatching.getStatus().equals(WAIT) ||
-                        userMatching.getStatus().equals(FOUND) ||
-                        userMatching.getStatus().equals(MATCHING))
-                .collect(Collectors.toList());
+        UserMatching userMatching = user.getUserMatchings().stream()
+                .filter(um -> validMatchingStatus(um))
+                .findAny().orElse(null);
 
-        if (matchings.size() < 1) {
+        if (userMatching == null) {
             // 요청 없음
             return UserHomeDto.Response.noneMatchingBuilder()
                     .codeAndMessage(SUCCESS)
                     .matchingStatus(NONE)
                     .build();
         } else {
-            UserMatching validMatching = matchings.get(0);
-            if (validMatching.getStatus().equals(WAIT)) {
+            MatchingStatus status = userMatching.getStatus();
+            if (status.equals(WAIT)) {
                 return UserHomeDto.Response.noneMatchingBuilder()
                         .codeAndMessage(SUCCESS)
                         .matchingStatus(WAIT)
                         .build();
             } else {
-                Matching matching = validMatching.getMatching();
-                List<UserMatching> userMatchings = matching.getUserMatchings()
-                        .stream()
-                        .filter(mat -> !mat.equals(validMatching))
-                        .collect(Collectors.toList());
-                UserMatching partnerMatching = userMatchings.get(0);
+                Matching matching = userMatching.getMatching();
+                UserMatching partnerMatching = matching.getUserMatchings().stream()
+                        .filter(um -> !um.equals(userMatching))
+                        .findAny().orElseThrow(() -> new BlindCafeException(INVALID_MATCHING));
 
-                LocalDateTime ldt = matching.getStartTime();
-                Timestamp timestamp = Timestamp.valueOf(ldt);
-                String startTime = String.valueOf(timestamp.getTime() / 1000);
+                if (matching.getStatus().equals(FOUND) ||
+                    matching.getStatus().equals(MATCHING)) {
+                    // 정상적인 매칭 상태
+                    LocalDateTime ldt = matching.getStartTime();
+                    Timestamp timestamp = Timestamp.valueOf(ldt);
+                    String startTime = String.valueOf(timestamp.getTime() / 1000);
 
-                return UserHomeDto.Response.matchingBuilder()
-                        .codeAndMessage(SUCCESS)
-                        .matchingStatus(validMatching.getStatus())
-                        .matchingId(matching.getId())
-                        .partnerId(partnerMatching.getUser().getId())
-                        .partnerNickname(partnerMatching.getUser().getNickname())
-                        .startTime(startTime)
-                        .build();
+                    return UserHomeDto.Response.matchingBuilder()
+                            .codeAndMessage(SUCCESS)
+                            .matchingStatus(userMatching.getStatus())
+                            .matchingId(matching.getId())
+                            .partnerId(partnerMatching.getUser().getId())
+                            .partnerNickname(partnerMatching.getUser().getNickname())
+                            .startTime(startTime)
+                            .build();
+                } else {
+                    // 폭파
+                    UserHomeDto.Response response = UserHomeDto.Response.outMatchingBuilder()
+                            .codeAndMessage(SUCCESS)
+                            .matchingStatus(userMatching.getStatus())
+                            .partnerNickname(partnerMatching.getUser().getNickname())
+                            .reason(partnerMatching.getReason().getText())
+                            .build();
+                    userMatching.setStatus(OUT);
+                    return response;
+                }
             }
         }
+    }
+
+    private boolean validMatchingStatus(UserMatching userMatching) {
+        MatchingStatus status = userMatching.getStatus();
+        if (status.equals(WAIT) ||
+            status.equals(FOUND) ||
+            status.equals(MATCHING) ||
+            status.equals(FAILED_LEAVE_ROOM) ||
+            status.equals(FAILED_REPORT) ||
+            status.equals(FAILED_WONT_EXCHANGE)
+        ) return true;
+        return false;
     }
 
     public UserDetailDto getUserDetail(Long userId) {

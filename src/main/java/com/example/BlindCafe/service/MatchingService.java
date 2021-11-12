@@ -348,7 +348,7 @@ public class MatchingService {
         UserMatching userMatching = matching.getUserMatchings().stream()
                 .filter(um -> um.getUser().equals(user))
                 .findAny().orElseThrow(() -> new BlindCafeException(INVALID_MATCHING));
-        userMatching.setStatus(LEAVE_ROOM);
+        userMatching.setStatus(OUT);
 
         return DeleteMatchingDto.builder()
                 .codeAndMessage(SUCCESS)

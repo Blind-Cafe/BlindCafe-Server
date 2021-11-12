@@ -19,11 +19,9 @@ public enum MatchingStatus {
     MATCHING_CONTINUE("7일간 대화"),
     FAILED_EXPIRED("7일 만료"),
 
-    LEAVE_ROOM("방 나가기"),
+    OUT("방 나가기"),
     FAILED_LEAVE_ROOM("방 나가기로 인한 폭파"),
-    REPORT("신고"),
     FAILED_REPORT("신고로 인한 폭파"),
-    WONT_EXCHANGE("프로필 교환 거절"),
     FAILED_WONT_EXCHANGE("프로필 교환 거절로 인한 폭파");
 
     private final String description;
