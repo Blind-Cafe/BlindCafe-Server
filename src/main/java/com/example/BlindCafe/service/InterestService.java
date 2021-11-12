@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -21,12 +22,12 @@ public class InterestService {
 
     public InterestDto getSubInterest(List<Long> interestIds) {
 
-        InterestDto interestDto = new InterestDto();
+        List<InterestDto.Interest> interestDto = new ArrayList<>();
         for (Long interestId: interestIds) {
             Interest interest = interestRepository.findByIdAndParentId(interestId, interestId)
                     .orElseThrow(() -> new BlindCafeException(CodeAndMessage.INVALID_MAIN_INTEREST));
 
-            interestDto.getInterests().add(new InterestDto.Interest(
+            interestDto.add(new InterestDto.Interest(
                     interest.getId(),
                     interest.getChild().stream()
                             .filter(i -> !i.equals(i.getParent()))
@@ -34,6 +35,6 @@ public class InterestService {
                             .collect(Collectors.toList())
             ));
         }
-        return interestDto;
+        return new InterestDto(interestDto);
     }
 }
