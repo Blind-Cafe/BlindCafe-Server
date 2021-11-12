@@ -1,9 +1,6 @@
 package com.example.BlindCafe.service;
 
-import com.example.BlindCafe.dto.CreateMatchingDto;
-import com.example.BlindCafe.dto.DeleteMatchingDto;
-import com.example.BlindCafe.dto.DrinkDto;
-import com.example.BlindCafe.dto.MatchingListDto;
+import com.example.BlindCafe.dto.*;
 import com.example.BlindCafe.entity.*;
 import com.example.BlindCafe.exception.BlindCafeException;
 import com.example.BlindCafe.firebase.FirebaseCloudMessageService;
@@ -83,6 +80,24 @@ public class MatchingService {
         } else {
             return null;
         }
+    }
+
+    /**
+     * 채팅방 정보 조회
+     */
+    public MatchingDetailDto getMatching(Long userId, Long matchingId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BlindCafeException(NO_USER));
+
+        Matching matching = matchingRepository.findById(matchingId)
+                .orElseThrow(() -> new BlindCafeException(NO_MATCHING));
+
+        User partner = matching.getUserMatchings().stream()
+                .filter(um -> !um.getUser().equals(user))
+                .map(um -> um.getUser())
+                .findAny().orElseThrow(() -> new BlindCafeException(INVALID_MATCHING));
+
+        return new MatchingDetailDto(matching, partner);
     }
 
     /**
