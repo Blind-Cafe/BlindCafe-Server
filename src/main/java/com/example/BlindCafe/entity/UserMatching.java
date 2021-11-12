@@ -33,6 +33,10 @@ public class UserMatching extends BaseTimeEntity {
     @JoinColumn(name = "drink_id")
     private Drink drink;
 
+    @OneToOne(fetch = LAZY)
+    @JoinColumn(name = "reason_id")
+    private Reason reason;
+
     @Enumerated(STRING)
     @Column(length = 20, nullable = false)
     private MatchingStatus status;

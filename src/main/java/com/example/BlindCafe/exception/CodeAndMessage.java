@@ -29,7 +29,8 @@ public enum CodeAndMessage {
     PAST_PARTNER_SEARCH_ERROR("1022", "이전 대화 상대 조회 중 오류가 발생했습니다."),
 
     NO_MATCHING("1030", "해당되는 매칭이 없습니다."),
-    NO_USER_MATCHING("1031", "유효한 매칭이 아닙니다."),
+    NO_USER_MATCHING("1031", "권한이 없는 매칭이 아닙니다."),
+    INVALID_MATCHING("1032", "매칭 상태가 유효하지 않습니다."),
 
     INVALID_ADDRESS("1040", "유효한 주소가 아닙니다."),
 
