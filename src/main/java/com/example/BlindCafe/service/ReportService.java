@@ -5,6 +5,7 @@ import com.example.BlindCafe.dto.ReportListDto;
 import com.example.BlindCafe.entity.*;
 import com.example.BlindCafe.exception.BlindCafeException;
 import com.example.BlindCafe.repository.*;
+import com.example.BlindCafe.type.ReasonType;
 import com.example.BlindCafe.type.status.ReportStatus;
 import com.example.BlindCafe.type.status.UserStatus;
 import lombok.RequiredArgsConstructor;
@@ -47,7 +48,7 @@ public class ReportService {
                 .map(um -> um.getUser())
                 .findAny().orElseThrow(() -> new BlindCafeException(NO_USER_MATCHING));
 
-        Reason reason = reasonRepository.findById(request.getReason())
+        Reason reason = reasonRepository.findByReasonTypeAndNum(ReasonType.FOR_REPORT, request.getReason())
                 .orElseThrow(() -> new BlindCafeException(NO_REASON));
 
         Report report = Report.builder()
