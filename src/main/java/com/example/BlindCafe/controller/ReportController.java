@@ -1,10 +1,12 @@
 package com.example.BlindCafe.controller;
 
 import com.example.BlindCafe.dto.CreateReportDto;
+import com.example.BlindCafe.dto.ReportListDto;
 import com.example.BlindCafe.entity.User;
 import com.example.BlindCafe.service.ReportService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -36,11 +38,11 @@ public class ReportController {
      * 신고 내역 확인하기
      */
     @GetMapping
-    public ReportListDto getReports(
+    public ResponseEntity<ReportListDto> getReports(
             Authentication authentication
     ) {
         log.info("GET /api/report");
-        return reportService.getReports(getUserId(authentication));
+        return ResponseEntity.ok(reportService.getReports(getUserId(authentication)));
     }
 
 }

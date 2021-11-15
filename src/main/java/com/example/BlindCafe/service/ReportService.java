@@ -1,19 +1,21 @@
 package com.example.BlindCafe.service;
 
 import com.example.BlindCafe.dto.CreateReportDto;
+import com.example.BlindCafe.dto.ReportListDto;
 import com.example.BlindCafe.entity.*;
 import com.example.BlindCafe.exception.BlindCafeException;
 import com.example.BlindCafe.repository.*;
 import com.example.BlindCafe.type.status.ReportStatus;
 import com.example.BlindCafe.type.status.UserStatus;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static com.example.BlindCafe.exception.CodeAndMessage.*;
-import static com.example.BlindCafe.type.status.CommonStatus.NORMAL;
 
 @Service
 @Transactional(readOnly = true)
@@ -65,5 +67,13 @@ public class ReportService {
 
         return CreateReportDto.Response.builder()
                 .codeAndMessage(SUCCESS).build();
+    }
+
+    public ReportListDto getReports(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BlindCafeException(NO_USER));
+        return new ReportListDto(reportRepository.findByReporter(user).stream()
+                .map(ReportListDto.ReportDto::new)
+                .collect(Collectors.toList()));
     }
 }
