@@ -26,8 +26,12 @@ public class Report extends BaseTimeEntity {
     private Matching matching;
 
     @ManyToOne(fetch = LAZY)
-    @JoinColumn(name = "user_id")
-    private User user;
+    @JoinColumn(name = "reporter")
+    private User reporter;
+
+    @ManyToOne(fetch = LAZY)
+    @JoinColumn(name = "reported")
+    private User reported;
 
     @OneToOne(fetch = LAZY)
     @JoinColumn(name = "reason_id")

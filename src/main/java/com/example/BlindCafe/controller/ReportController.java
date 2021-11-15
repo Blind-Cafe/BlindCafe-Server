@@ -1,15 +1,14 @@
 package com.example.BlindCafe.controller;
 
 import com.example.BlindCafe.dto.CreateReportDto;
+import com.example.BlindCafe.dto.ReportListDto;
 import com.example.BlindCafe.entity.User;
 import com.example.BlindCafe.service.ReportService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 
@@ -33,6 +32,17 @@ public class ReportController {
     ) {
         log.info("POST /api/report");
         return reportService.createReport(getUserId(authentication), request);
+    }
+
+    /**
+     * 신고 내역 확인하기
+     */
+    @GetMapping
+    public ResponseEntity<ReportListDto> getReports(
+            Authentication authentication
+    ) {
+        log.info("GET /api/report");
+        return ResponseEntity.ok(reportService.getReports(getUserId(authentication)));
     }
 
 }

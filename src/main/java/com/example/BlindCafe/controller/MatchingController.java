@@ -26,9 +26,21 @@ public class MatchingController {
      * 내 테이블 조회 - 프로필 교환을 완료한 상대방 목록 조회
      */
     @GetMapping
-    public List<MatchingDto> getMatchings(Authentication authentication) {
+    public MatchingListDto getMatchings(Authentication authentication) {
         log.info("GET /api/matching");
         return matchingService.getMatchings(getUserId(authentication));
+    }
+
+    /**
+     * 채팅방 정보 조회
+     */
+    @GetMapping("{matchingId}")
+    public MatchingDetailDto getMatching(
+            Authentication authentication,
+            @PathVariable Long matchingId
+    )  {
+        log.info("GET /api/matching/{}", matchingId);
+        return matchingService.getMatching(getUserId(authentication), matchingId);
     }
 
     /**
@@ -52,7 +64,6 @@ public class MatchingController {
         log.info("DELETE /api/matching/{}", matchingId);
         return matchingService.deleteMatching(getUserId(authentication), matchingId, reasonNum);
     }
-
 
     /**
      * 음료수 설정하기

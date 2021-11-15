@@ -6,21 +6,26 @@ import com.example.BlindCafe.entity.User;
 import lombok.*;
 
 import java.util.Comparator;
+import java.util.List;
 
 import static com.example.BlindCafe.type.status.CommonStatus.NORMAL;
 
 @Getter
-@Setter
 @AllArgsConstructor
-@NoArgsConstructor
-@Builder
-public class MatchingDto {
+public class MatchingListDto {
 
-    private Long matchingId;
-    private Partner partner;
-    private String latestMessage;
-    private boolean isReceived;
-    private Long expiryDay;
+    private List<MatchingDto> matchings;
+
+    @Getter
+    @AllArgsConstructor
+    @Builder
+    public static class MatchingDto {
+        private Long matchingId;
+        private Partner partner;
+        private String latestMessage;
+        private boolean isReceived;
+        private Long expiryDay;
+    }
 
     @Getter
     @Setter
