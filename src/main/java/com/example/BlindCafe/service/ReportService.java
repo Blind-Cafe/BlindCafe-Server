@@ -23,7 +23,6 @@ public class ReportService {
     private final UserRepository userRepository;
     private final ReasonRepository reasonRepository;
     private final ReportRepository reportRepository;
-    private final ReportedRepository reportedRepository;
 
     /**
      * 신고하기
@@ -50,21 +49,15 @@ public class ReportService {
                 .orElseThrow(() -> new BlindCafeException(NO_REASON));
 
         Report report = Report.builder()
-                .user(user)
                 .matching(matching)
+                .reporter(user)
+                .reported(partner)
                 .reason(reason)
                 .status(ReportStatus.WAIT)
                 .build();
         reportRepository.save(report);
 
-        Reported reported = Reported.builder()
-                .report(report)
-                .user(partner)
-                .status(NORMAL)
-                .build();
-        reportedRepository.save(reported);
-
-        List<Reported> reporteds = reportedRepository.findByUser(partner);
+        List<Report> reporteds = reportRepository.findByReported(partner);
         if (reporteds.size() >= 5) {
             partner.setStatus(UserStatus.SUSPENDED);
             userRepository.save(partner);

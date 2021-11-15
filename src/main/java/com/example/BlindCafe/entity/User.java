@@ -62,11 +62,11 @@ public class User extends BaseTimeEntity {
     @OneToMany(mappedBy = "user", cascade = ALL)
     private List<UserDrink> userDrinks = new ArrayList<>();
 
-    @OneToMany(mappedBy = "user", cascade = ALL)
+    @OneToMany(mappedBy = "reporter", cascade = ALL)
     private List<Report> myReport = new ArrayList<>();
 
-    @OneToMany(mappedBy = "user", cascade = ALL)
-    private List<Reported> reported = new ArrayList<>();
+    @OneToMany(mappedBy = "reported", cascade = ALL)
+    private List<Report> reported = new ArrayList<>();
 
     @Embedded
     private Address address;
