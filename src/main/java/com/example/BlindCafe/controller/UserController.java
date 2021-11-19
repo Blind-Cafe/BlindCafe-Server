@@ -105,6 +105,19 @@ public class UserController {
     }
 
     /**
+     * 매칭 상대방 성별 수정
+     */
+    @PatchMapping("/partner")
+    public ResponseEntity<Void> editPartnerGender(
+            Authentication authentication,
+            @Valid @RequestBody EditPartnerGenderDto request
+    ) {
+        log.info("PATCH /api/user/partner");
+        userService.editPartnerGender(getUserId(authentication), request);
+        return ResponseEntity.ok().build();
+    }
+
+    /**
      * 유저 탈퇴
      */
     @DeleteMapping

@@ -345,4 +345,11 @@ public class UserService {
                 .nickname(retiredUser.getNickname())
                 .build();
     }
+
+    @Transactional
+    public void editPartnerGender(Long userId, EditPartnerGenderDto request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BlindCafeException(NO_USER));
+        user.setPartnerGender(request.getGender());
+    }
 }

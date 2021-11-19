@@ -7,23 +7,28 @@ import com.example.BlindCafe.firebase.FirebaseCloudMessageService;
 import com.example.BlindCafe.repository.*;
 import com.example.BlindCafe.type.FcmMessage;
 import com.example.BlindCafe.type.Gender;
+import com.example.BlindCafe.type.status.MatchingStatus;
 import com.example.BlindCafe.type.status.UserStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.persistence.Enumerated;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import static com.example.BlindCafe.exception.CodeAndMessage.*;
 import static com.example.BlindCafe.type.Gender.N;
 import static com.example.BlindCafe.type.ReasonType.FOR_LEAVE_ROOM;
+import static com.example.BlindCafe.type.status.CommonStatus.NORMAL;
 import static com.example.BlindCafe.type.status.MatchingStatus.*;
 import static java.util.Comparator.comparing;
+import static javax.persistence.EnumType.STRING;
 
 @Service
 @Transactional(readOnly = true)
@@ -368,6 +373,64 @@ public class MatchingService {
 
         return DeleteMatchingDto.builder()
                 .codeAndMessage(SUCCESS)
+                .build();
+    }
+
+    /**
+     * 매칭 취소하기
+     */
+    @Transactional
+    public void cancelMatching(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BlindCafeException(NO_USER));
+
+        UserMatching userMatching = user.getUserMatchings().stream()
+                .filter(um -> um.getStatus().equals(WAIT))
+                .findFirst()
+                .orElseThrow(() -> new BlindCafeException(NO_REQUEST_MATCHING));
+
+        userMatching.setStatus(CANCEL_REQUEST);
+    }
+
+    /**
+     * 프로필 교환 시 내 프로필 조회
+     */
+    public MatchingProfileDto getMatchingProfile(Long userId, Long matchingId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BlindCafeException(NO_USER));
+
+        Matching matching = matchingRepository.findById(matchingId)
+                .orElseThrow(() -> new BlindCafeException(NO_MATCHING));
+
+        if (!matching.getStatus().equals(MATCHING_EXPIRED))
+            throw new BlindCafeException(NOT_YET_EXCHANGE_PROFILE);
+
+        User partner = matching.getUserMatchings().stream()
+                .filter(um -> !um.getUser().equals(user))
+                .map(um -> um.getUser() )
+                .findAny()
+                .orElseThrow(() -> new BlindCafeException(INVALID_MATCHING));
+
+        ProfileImage profileImage = user.getProfileImages()
+                .stream().sorted(Comparator.comparing(ProfileImage::getPriority))
+                .filter(pi -> pi.getStatus().equals(NORMAL))
+                .findFirst()
+                .orElse(null);
+        String src = profileImage != null ?
+                profileImage.getSrc() : null;
+        String region = user.getAddress() != null ?
+                user.getAddress().toString() : null;
+
+        boolean isFill = (src == null || region == null) ? false : true;
+
+        return MatchingProfileDto.builder()
+                .partnerNickname(partner.getNickname())
+                .isFill(isFill)
+                .profileImage(src)
+                .nickname(user.getNickname())
+                .region(region)
+                .gender(user.getMyGender())
+                .age(user.getAge())
                 .build();
     }
 }

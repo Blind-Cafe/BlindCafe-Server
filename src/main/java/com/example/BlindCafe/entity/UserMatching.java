@@ -37,6 +37,10 @@ public class UserMatching extends BaseTimeEntity {
     @JoinColumn(name = "reason_id")
     private Reason reason;
 
+    @OneToOne(fetch = LAZY)
+    @JoinColumn(name = "profile_image_id")
+    private ProfileImage profileImage;
+
     @Enumerated(STRING)
     @Column(length = 20, nullable = false)
     private MatchingStatus status;
