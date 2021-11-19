@@ -67,6 +67,6 @@ public class ExceptionController {
                 .code(INTERNAL_SERVER_ERROR.getCode())
                 .message(INTERNAL_SERVER_ERROR.getMessage())
                 .build();
-        return ResponseEntity.internalServerError().body(errorResponse);
+        return ResponseEntity.badRequest().body(errorResponse);
     }
 }
