@@ -6,8 +6,10 @@ import com.example.BlindCafe.entity.User;
 import com.example.BlindCafe.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
 
@@ -92,12 +94,14 @@ public class UserController {
      * 유저 프로필 이미지 수정
      */
     @PatchMapping("/image")
-    public EditProfileImageDto.Response editProfileImage(
+    public ResponseEntity<Void> editProfileImage(
             Authentication authentication,
-            @Valid @RequestBody EditProfileImageDto.Request request
+            @RequestParam int priority,
+            @RequestParam MultipartFile image
     ) {
         log.info("PATCH /api/user/image");
-        return userService.editProfileImage(getUserId(authentication), request);
+        userService.editProfileImage(getUserId(authentication), priority, image);
+        return ResponseEntity.ok().build();
     }
 
     /**

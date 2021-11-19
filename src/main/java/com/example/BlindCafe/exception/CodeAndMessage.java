@@ -41,6 +41,11 @@ public enum CodeAndMessage {
 
     NO_REASON("1070", "유효하지 않은 이유입니다."),
 
+    FILE_CONVERT_ERROR("1080", "파일 변환에 실패했습니다."),
+    FILE_EXTENSION_ERROR("1081", "파일 확장자 인식에 실패했습니다."),
+
+    INVALID_PROFILE_IMAGE_PRIORITY("1090", "유효하지 않은 우선순위입니다."),
+
     INVALID_REQUEST("4000", "잘못된 요청입니다."),
     FAILED_AUTHORIZATION("4001", "검증에 실패했습니다."),
     EXPIRED_TOKEN("4002", "토큰의 기한이 만료되었습니다."),
