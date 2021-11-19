@@ -48,6 +48,8 @@ public enum CodeAndMessage {
 
     NO_REQUEST_MATCHING("1100", "현재 요청하고 있는 매칭이 없습니다."),
 
+    NOT_YET_EXCHANGE_PROFILE("1110", "프로필 교환을 할 수 있는 매칭이 아닙니다."),
+
     INVALID_REQUEST("4000", "잘못된 요청입니다."),
     FAILED_AUTHORIZATION("4001", "검증에 실패했습니다."),
     EXPIRED_TOKEN("4002", "토큰의 기한이 만료되었습니다."),

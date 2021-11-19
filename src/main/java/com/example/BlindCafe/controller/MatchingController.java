@@ -80,6 +80,18 @@ public class MatchingController {
     }
 
     /**
+     * 프로필 교환 시 내 프로필 조회
+     */
+    @GetMapping("{matchingId}/profile")
+    public ResponseEntity<MatchingProfileDto> getMatchingProfile(
+            Authentication authentication,
+            @PathVariable Long matchingId
+    ) {
+        log.info("GET /api/matching/{}/profile", matchingId);
+        return ResponseEntity.ok(matchingService.getMatchingProfile(getUserId(authentication), matchingId));
+    }
+
+    /**
      * 매칭 취소하기
      * Todo
      * matching이랑 room 분리하기 uri에 행위(cancel) 들어가는 건 별로
