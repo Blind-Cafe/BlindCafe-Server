@@ -7,6 +7,7 @@ import com.example.BlindCafe.firebase.FirebaseCloudMessageService;
 import com.example.BlindCafe.repository.*;
 import com.example.BlindCafe.type.FcmMessage;
 import com.example.BlindCafe.type.Gender;
+import com.example.BlindCafe.type.status.MatchingStatus;
 import com.example.BlindCafe.type.status.UserStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -369,5 +370,21 @@ public class MatchingService {
         return DeleteMatchingDto.builder()
                 .codeAndMessage(SUCCESS)
                 .build();
+    }
+
+    /**
+     * 매칭 취소하기
+     */
+    @Transactional
+    public void cancelMatching(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BlindCafeException(NO_USER));
+
+        UserMatching userMatching = user.getUserMatchings().stream()
+                .filter(um -> um.getStatus().equals(WAIT))
+                .findFirst()
+                .orElseThrow(() -> new BlindCafeException(NO_REQUEST_MATCHING));
+
+        userMatching.setStatus(CANCEL_REQUEST);
     }
 }

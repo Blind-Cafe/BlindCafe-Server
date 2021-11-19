@@ -5,6 +5,7 @@ import com.example.BlindCafe.entity.User;
 import com.example.BlindCafe.service.MatchingService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -76,5 +77,17 @@ public class MatchingController {
     ) {
         log.info("POST /api/matching/{}/drink", matchingId);
         return matchingService.setDrink(getUserId(authentication), matchingId, request);
+    }
+
+    /**
+     * 매칭 취소하기
+     * Todo
+     * matching이랑 room 분리하기 uri에 행위(cancel) 들어가는 건 별로
+     */
+    @PostMapping("cancel")
+    public ResponseEntity<Void> cancelMatching(Authentication authentication) {
+        log.info("POST /api/matching/cancel");
+        matchingService.cancelMatching(getUserId(authentication));
+        return ResponseEntity.ok().build();
     }
 }
