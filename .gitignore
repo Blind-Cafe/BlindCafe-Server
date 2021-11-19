@@ -40,4 +40,8 @@ out/
 /src/main/resources/application-prod1.yml
 /src/main/resources/application-prod2.yml
 /src/main/resources/application-edit.yml
+/src/main/resources/application-aws.yml
+
 /src/main/resources/firebase
+
+/src/main/java/com/example/BlindCafe/auth/jwt/JwtKey.java

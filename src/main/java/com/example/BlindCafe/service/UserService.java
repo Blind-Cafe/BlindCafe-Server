@@ -11,9 +11,11 @@ import com.example.BlindCafe.type.Social;
 import com.example.BlindCafe.type.status.CommonStatus;
 import com.example.BlindCafe.type.status.MatchingStatus;
 import com.example.BlindCafe.type.status.UserStatus;
+import com.example.BlindCafe.util.AmazonS3Connector;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
@@ -40,6 +42,7 @@ public class UserService {
     private final InterestOrderRepository interestOrderRepository;
     private final ProfileImageRepository profileImageRepository;
     private final ReasonRepository reasonRepository;
+    private final AmazonS3Connector amazonS3Connector;
 
     private final static int USER_INTEREST_LENGTH = 3;
     private static int[][] interestOrderArr = new int[USER_INTEREST_LENGTH][2];
@@ -276,31 +279,41 @@ public class UserService {
     }
 
     @Transactional
-    public EditProfileImageDto.Response editProfileImage(
+    public void editProfileImage(
             Long userId,
-            EditProfileImageDto.Request request
+            int priority,
+            MultipartFile image
     ) {
+        validatePriority(priority);
+
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BlindCafeException(NO_USER));
 
         ProfileImage profileImage = profileImageRepository
                 .findByUserIdAndPriorityAndStatus(
-                        userId, request.getPriority(), CommonStatus.NORMAL)
+                        userId, priority, CommonStatus.NORMAL)
                 .orElse(null);
 
         if (profileImage != null) {
             user.getProfileImages().remove(profileImage);
             profileImage.setStatus(DELETED);
         }
+
+        String src = amazonS3Connector.uploadProfileImage(image, user.getId());
+
         ProfileImage newProfileImage = ProfileImage.builder()
                 .user(user)
-                .src(request.getSrc())
-                .priority(request.getPriority())
+                .src(src)
+                .priority(priority)
                 .status(CommonStatus.NORMAL)
                 .build();
         profileImageRepository.save(newProfileImage);
         user.getProfileImages().add(newProfileImage);
-        return EditProfileImageDto.Response.fromEntity(user);
+    }
+
+    private void validatePriority(int priority) {
+        if (priority < 1 && priority > 3)
+            throw new BlindCafeException(INVALID_PROFILE_IMAGE_PRIORITY);
     }
 
     @Transactional
