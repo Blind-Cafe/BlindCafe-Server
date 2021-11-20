@@ -20,6 +20,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static com.example.BlindCafe.exception.CodeAndMessage.*;
@@ -416,10 +417,8 @@ public class MatchingService {
                 .filter(pi -> pi.getStatus().equals(NORMAL))
                 .findFirst()
                 .orElse(null);
-        String src = profileImage != null ?
-                profileImage.getSrc() : null;
-        String region = user.getAddress() != null ?
-                user.getAddress().toString() : null;
+        String src = Objects.isNull(profileImage) ? null : profileImage.getSrc();
+        String region = Objects.isNull(user.getAddress()) ? null : user.getAddress().toString();
 
         boolean isFill = (src == null || region == null) ? false : true;
 
