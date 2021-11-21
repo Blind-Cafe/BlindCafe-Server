@@ -7,6 +7,8 @@ import lombok.*;
 
 import javax.persistence.Enumerated;
 
+import java.util.List;
+
 import static javax.persistence.EnumType.STRING;
 
 @Getter
@@ -22,5 +24,6 @@ public class MatchingProfileDto {
     private String region;
     @Enumerated(STRING)
     private Gender gender;
+    private List<String> interests;
     private int age;
 }

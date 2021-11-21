@@ -461,7 +461,7 @@ public class MatchingService {
         Matching matching = matchingRepository.findById(matchingId)
                 .orElseThrow(() -> new BlindCafeException(NO_MATCHING));
 
-        if (!matching.getStatus().equals(MATCHING_EXPIRED))
+        if (!matching.getStatus().equals(WAIT_FOR_EXCHANGE))
             throw new BlindCafeException(NOT_YET_EXCHANGE_PROFILE);
 
         User partner = matching.getUserMatchings().stream()
@@ -480,6 +480,12 @@ public class MatchingService {
 
         boolean isFill = (src == null || region == null) ? false : true;
 
+        List<String> interests = user.getInterestOrders().stream()
+                .sorted(Comparator.comparing(InterestOrder::getPriority))
+                .map(io -> io.getInterest())
+                .map(Interest::getName)
+                .collect(Collectors.toList());
+
         return MatchingProfileDto.builder()
                 .partnerNickname(partner.getNickname())
                 .isFill(isFill)
@@ -487,6 +493,7 @@ public class MatchingService {
                 .nickname(user.getNickname())
                 .region(region)
                 .gender(user.getMyGender())
+                .interests(interests)
                 .age(user.getAge())
                 .build();
     }
