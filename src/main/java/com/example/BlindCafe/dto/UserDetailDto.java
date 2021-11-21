@@ -52,9 +52,10 @@ public class UserDetailDto {
                         .map(Interest::getId).collect(Collectors.toList())
                 )
                 .drinks(
-                        user.getUserDrinks()
-                        .stream().map(UserDrink::getId)
-                        .collect(Collectors.toList())
+                        user.getUserDrinks().stream()
+                                .map(UserDrink::getDrink)
+                                .map(Drink::getId)
+                                .collect(Collectors.toList())
                 )
                 .build();
     }

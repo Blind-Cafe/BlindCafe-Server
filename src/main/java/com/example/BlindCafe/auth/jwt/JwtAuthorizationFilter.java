@@ -6,6 +6,7 @@ import com.example.BlindCafe.entity.User;
 import com.example.BlindCafe.exception.BlindCafeException;
 import com.example.BlindCafe.exception.CodeAndMessage;
 import com.example.BlindCafe.repository.UserRepository;
+import com.example.BlindCafe.type.status.UserStatus;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.MalformedJwtException;
@@ -61,6 +62,8 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
             if (socialId != null) {
                 User user = userRepository.findBySocialId(socialId)
                         .orElseThrow(() -> new BlindCafeException(FORBIDDEN_AUTHORIZATION));
+                if (user.getStatus().equals(UserStatus.SUSPENDED))
+                    throw new BlindCafeException(SUSPENDED_USER);
 
                 if (user != null) {
                     return new UsernamePasswordAuthenticationToken(

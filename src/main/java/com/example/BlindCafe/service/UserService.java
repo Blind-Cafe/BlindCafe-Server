@@ -355,4 +355,11 @@ public class UserService {
                 .orElseThrow(() -> new BlindCafeException(NO_USER));
         user.setPartnerGender(request.getGender());
     }
+
+    @Transactional
+    public void updateDeviceToken(Long userId, EditDeviceToken request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BlindCafeException(NO_USER));
+        user.setDeviceId(request.getToken());
+    }
 }
