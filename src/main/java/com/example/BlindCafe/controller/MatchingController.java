@@ -92,6 +92,18 @@ public class MatchingController {
     }
 
     /**
+     * 토픽 가져오기
+     */
+    @GetMapping("{matchingId}/topic")
+    public ResponseEntity<TopicDto> getTopic(
+            Authentication authentication,
+            @PathVariable Long matchingId
+    ) {
+        log.info("GET /api/matching/{}/topic", matchingId);
+        return ResponseEntity.ok(matchingService.getTopic(getUserId(authentication), matchingId));
+    }
+
+    /**
      * 매칭 취소하기
      * Todo
      * matching이랑 room 분리하기 uri에 행위(cancel) 들어가는 건 별로

@@ -210,8 +210,11 @@ public class UserService {
      * + 유저 엔티티에서 연관관계 메소드로 현재 관심사만 가져오기
      */
     @Transactional
-    public EditInterestDto.Response editInterest(User user, EditInterestDto.Request request) {
-        userInterestRepository.deleteAllByUserId(user.getId());
+    public EditInterestDto.Response editInterest(Long userId, EditInterestDto.Request request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BlindCafeException(NO_USER));
+
+        userInterestRepository.deleteAllByUser(user);
 
         // 관심사 저장
         editIndex = 0;

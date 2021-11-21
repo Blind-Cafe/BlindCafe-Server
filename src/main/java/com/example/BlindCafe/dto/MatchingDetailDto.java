@@ -20,6 +20,7 @@ public class MatchingDetailDto {
     private String nickname;
     private String profileImage;
     private String drink;
+    private String interest;
     private String startTime;
 
     public MatchingDetailDto(Matching matching, User user) {
@@ -46,5 +47,6 @@ public class MatchingDetailDto {
         this.nickname = user.getNickname();
         this.drink = drink == null ? "미입력" : drink.getName();
         this.startTime = startTime;
+        this.interest = matching.getInterest().getName();
     }
 }
