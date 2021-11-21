@@ -78,6 +78,15 @@ public class MatchingService {
         Long restDay = ChronoUnit.DAYS.between(now, matching.getExpiryTime()) >= 0L ?
                 ChronoUnit.DAYS.between(now, matching.getExpiryTime()) : -1L;
 
+        String expiryTime = "";
+        if (restDay > 0L) {
+            expiryTime = restDay + "일 남음";
+        } else if (restDay == 0L) {
+            expiryTime = ChronoUnit.HOURS.between(now, matching.getExpiryTime()) + "시간 남음";
+        } else {
+            expiryTime = "만료";
+        }
+
         User partner = matching.getUserMatchings().stream()
                 .filter(userMatching -> !userMatching.getUser().equals(user))
                 .findAny()
@@ -88,8 +97,8 @@ public class MatchingService {
                     .matchingId(matching.getId())
                     .partner(new MatchingListDto.Partner(partner))
                     .latestMessage("none")
-                    .isReceived(true)
-                    .expiryDay(restDay)
+                    .received(true)
+                    .expiryTime(expiryTime)
                     .build();
         } else {
             return null;

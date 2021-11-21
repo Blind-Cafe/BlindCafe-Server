@@ -23,8 +23,8 @@ public class MatchingListDto {
         private Long matchingId;
         private Partner partner;
         private String latestMessage;
-        private boolean isReceived;
-        private Long expiryDay;
+        private boolean received;
+        private String expiryTime;
     }
 
     @Getter
