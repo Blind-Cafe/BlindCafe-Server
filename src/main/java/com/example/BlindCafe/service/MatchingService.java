@@ -2,12 +2,14 @@ package com.example.BlindCafe.service;
 
 import com.example.BlindCafe.dto.*;
 import com.example.BlindCafe.entity.*;
+import com.example.BlindCafe.entity.topic.Topic;
 import com.example.BlindCafe.exception.BlindCafeException;
 import com.example.BlindCafe.firebase.FirebaseCloudMessageService;
 import com.example.BlindCafe.repository.*;
 import com.example.BlindCafe.type.FcmMessage;
 import com.example.BlindCafe.type.Gender;
 import com.example.BlindCafe.type.status.MatchingStatus;
+import com.example.BlindCafe.type.status.TopicStatus;
 import com.example.BlindCafe.type.status.UserStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -17,10 +19,7 @@ import javax.persistence.Enumerated;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.example.BlindCafe.exception.CodeAndMessage.*;
@@ -43,10 +42,13 @@ public class MatchingService {
     private final MatchingRepository matchingRepository;
     private final DrinkRepository drinkRepository;
     private final ReasonRepository reasonRepository;
+    private final TopicRepository topicRepository;
 
     private final static Long MAX_WAIT_TIME = 24L;
     private final static int BASIC_CHAT_DAYS = 3;
     private final static int EXTEND_CHAT_DAYS = 7;
+    private final static Long PUBLIC_INTEREST_ID = 0L;
+    private final static Long MAX_INTEREST_ID = 9L;
 
     /**
      * 내 테이블 조회 - 프로필 교환을 완료한 상대방 목록 조회
@@ -136,18 +138,18 @@ public class MatchingService {
                     getUserInterestSortedByPriority(user)
             );
 
-            /**
-             * Todo
-             * 토픽 생성, 확실하게 결정 나면 수정
-             */
-            List<MatchingTopic> topics = new ArrayList<>();
-
             Matching matching = Matching.builder()
                     .interest(commonInterest)
-                    .topics(topics)
                     .isContinuous(false)
                     .status(MATCHING_NOT_START)
                     .build();
+
+            // 토픽 생성, 확실하게 결정 나면 수정
+            // subject 36개, image 5개, audio 4개
+            List<MatchingTopic> matchingTopics = makeMatchingTopics(matching);
+
+            matching.setTopics(matchingTopics);
+
             matching = matchingRepository.save(matching);
 
             userMatching.setMatching(matching);
@@ -181,6 +183,43 @@ public class MatchingService {
                     .matchingStatus(userMatching.getStatus())
                     .build();
         }
+    }
+
+    private List<MatchingTopic> makeMatchingTopics(Matching matching) {
+        Long interestId = matching.getInterest().getId();
+        List<Topic> topics = new ArrayList<>();
+        List<MatchingTopic> matchingTopics = new ArrayList<>();
+
+        // 공통 질문
+        topics.addAll(getTargetTopicWithShuffle(PUBLIC_INTEREST_ID, 10));
+        // 공통 관심사 질문
+        topics.addAll(getTargetTopicWithShuffle(interestId, 10));
+        // 그 외 관심사 질문
+        for (Long i = 1L; i<=MAX_INTEREST_ID; i++) {
+            if (i != interestId)
+                topics.addAll(getTargetTopicWithShuffle(i, 2));
+        }
+        // 이미지 5개
+        topics.addAll(topicRepository.findImages());
+        // 오디오 4개
+        topics.addAll(topicRepository.findAudios());
+        Collections.shuffle(topics);
+
+        for (int index=0; index<topics.size(); index++) {
+            matchingTopics.add(MatchingTopic.builder()
+                    .matching(matching)
+                    .topic(topics.get(index))
+                    .sequence(index)
+                    .status(TopicStatus.WAIT)
+                    .build());
+        }
+        return matchingTopics;
+    }
+
+    private List<Topic> getTargetTopicWithShuffle(Long interestId, int count) {
+        List<Topic> topics = topicRepository.findByInterestId(interestId);
+        Collections.shuffle(topics);
+        return topics.subList(0, count);
     }
 
     /**
