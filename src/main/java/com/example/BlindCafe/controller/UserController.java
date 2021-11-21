@@ -62,8 +62,7 @@ public class UserController {
             @Valid @RequestBody EditInterestDto.Request request
     ) {
         log.info("PUT /api/user/interest");
-        User user = (User) authentication.getPrincipal();
-        return userService.editInterest(user, request);
+        return userService.editInterest(getUserId(authentication), request);
     }
 
     /**
