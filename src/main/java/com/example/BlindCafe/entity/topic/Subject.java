@@ -14,9 +14,7 @@ import static javax.persistence.FetchType.LAZY;
 @Setter
 public class Subject extends Topic {
 
-    @OneToOne(fetch = LAZY)
-    @JoinColumn(name = "interest_id")
-    private Interest interest;
-
+    @Column(name = "interest_id")
+    private Long interestId;
     private String subject;
 }

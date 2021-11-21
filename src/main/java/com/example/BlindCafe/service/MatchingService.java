@@ -191,18 +191,23 @@ public class MatchingService {
         List<MatchingTopic> matchingTopics = new ArrayList<>();
 
         // 공통 질문
-        topics.addAll(getTargetTopicWithShuffle(PUBLIC_INTEREST_ID, 10));
+        topics.addAll(getTopicsWithShuffle(
+                topicRepository.findByInterestId(PUBLIC_INTEREST_ID), 10));
         // 공통 관심사 질문
-        topics.addAll(getTargetTopicWithShuffle(interestId, 10));
+        topics.addAll(getTopicsWithShuffle(
+                topicRepository.findByInterestId(interestId), 10));
         // 그 외 관심사 질문
         for (Long i = 1L; i<=MAX_INTEREST_ID; i++) {
             if (i != interestId)
-                topics.addAll(getTargetTopicWithShuffle(i, 2));
+                topics.addAll(getTopicsWithShuffle(
+                        topicRepository.findByInterestId(i), 2));
         }
         // 이미지 5개
-        topics.addAll(topicRepository.findImages());
+        topics.addAll(getTopicsWithShuffle(
+                topicRepository.findImages(), 5));
         // 오디오 4개
-        topics.addAll(topicRepository.findAudios());
+        topics.addAll(getTopicsWithShuffle(
+                topicRepository.findAudios(), 4));
         Collections.shuffle(topics);
 
         for (int index=0; index<topics.size(); index++) {
@@ -216,8 +221,7 @@ public class MatchingService {
         return matchingTopics;
     }
 
-    private List<Topic> getTargetTopicWithShuffle(Long interestId, int count) {
-        List<Topic> topics = topicRepository.findByInterestId(interestId);
+    private List<Topic> getTopicsWithShuffle(List<Topic> topics, int count) {
         Collections.shuffle(topics);
         return topics.subList(0, count);
     }
