@@ -18,6 +18,5 @@ public class Subject extends Topic {
     @JoinColumn(name = "interest_id")
     private Interest interest;
 
-    @Column(length = 50, nullable = false)
     private String subject;
 }
