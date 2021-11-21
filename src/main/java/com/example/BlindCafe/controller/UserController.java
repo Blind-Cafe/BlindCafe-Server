@@ -90,6 +90,19 @@ public class UserController {
     }
 
     /**
+     * 디바이스 토큰 갱신
+     */
+    @PatchMapping("device")
+    public ResponseEntity<Void> updatedDeviceToken(
+            Authentication authentication,
+            @Valid @RequestBody EditDeviceToken request
+    ) {
+        log.info("PATCH /api/user/device");
+        userService.updateDeviceToken(getUserId(authentication), request)
+        return ResponseEntity.ok().build();
+    }
+
+    /**
      * 유저 프로필 이미지 수정
      */
     @PatchMapping("/image")
