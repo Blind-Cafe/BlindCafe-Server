@@ -50,6 +50,9 @@ public enum CodeAndMessage {
 
     NOT_YET_EXCHANGE_PROFILE("1110", "프로필 교환을 할 수 있는 매칭이 아닙니다."),
 
+    EXCEED_MATCHING_TOPIC("1120", "더 이상 존재하는 토픽이 없습니다."),
+    INVALID_TOPIC("1121", "현재 유효하지 않은 토픽입니다. "),
+
     INVALID_REQUEST("4000", "잘못된 요청입니다."),
     FAILED_AUTHORIZATION("4001", "검증에 실패했습니다."),
     EXPIRED_TOKEN("4002", "토큰의 기한이 만료되었습니다."),

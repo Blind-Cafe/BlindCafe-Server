@@ -2,6 +2,9 @@ package com.example.BlindCafe.service;
 
 import com.example.BlindCafe.dto.*;
 import com.example.BlindCafe.entity.*;
+import com.example.BlindCafe.entity.topic.Audio;
+import com.example.BlindCafe.entity.topic.Image;
+import com.example.BlindCafe.entity.topic.Subject;
 import com.example.BlindCafe.entity.topic.Topic;
 import com.example.BlindCafe.exception.BlindCafeException;
 import com.example.BlindCafe.firebase.FirebaseCloudMessageService;
@@ -49,6 +52,9 @@ public class MatchingService {
     private final static int EXTEND_CHAT_DAYS = 7;
     private final static Long PUBLIC_INTEREST_ID = 0L;
     private final static Long MAX_INTEREST_ID = 9L;
+    private final static Long SUBJECT_LIMIT = 1000L;
+    private final static Long AUDIO_LIMIT = 2000L;
+    private final static Long IMAGE_LIMIT = 3000L;
 
     /**
      * 내 테이블 조회 - 프로필 교환을 완료한 상대방 목록 조회
@@ -474,5 +480,59 @@ public class MatchingService {
                 .gender(user.getMyGender())
                 .age(user.getAge())
                 .build();
+    }
+
+    @Transactional
+    public TopicDto getTopic(Long userId, Long matchingId) {
+        Matching matching = matchingRepository.findById(matchingId)
+                .orElseThrow(() -> new BlindCafeException(NO_MATCHING));
+
+        matching.getUserMatchings().stream().
+                filter(um -> um.getUser().getId().equals(userId))
+                .findAny()
+                .orElseThrow(() -> new BlindCafeException(NO_USER_MATCHING));
+
+
+        /**
+         * Todo
+         * 지금 프록시에서 instanceof로 클래스 타입 확인이 안 돼서
+         * 일단은 topicRepository 조회해서 클래스 타입 확인
+         * 나중에 matchingTopic -> getTopic을 instanceof로 클래스 타입 확인하기
+         */
+        MatchingTopic matchingTopic = matching.getTopics().stream()
+                .filter(mt -> mt.getStatus().equals(TopicStatus.WAIT))
+                .sorted(Comparator.comparing(MatchingTopic::getSequence))
+                .findFirst()
+                .orElseThrow(() -> new BlindCafeException(EXCEED_MATCHING_TOPIC));
+        Long topicId = matchingTopic.getTopic().getId();
+        matchingTopic.setStatus(TopicStatus.SELECT);
+
+        if (topicId <= SUBJECT_LIMIT) {
+            Subject subject = topicRepository.findSubjectById(topicId)
+                    .orElseThrow(() -> new BlindCafeException(INVALID_TOPIC));
+            return TopicDto.builder()
+                    .type("text")
+                    .text(TopicDto.SubjectDto.builder()
+                            .content(subject.getSubject()).build())
+                    .build();
+        } else if (topicId <= AUDIO_LIMIT) {
+            Audio audio = topicRepository.findAudioById(topicId)
+                    .orElseThrow(() -> new BlindCafeException(INVALID_TOPIC));
+            return TopicDto.builder()
+                    .type("audio")
+                    .audio(TopicDto.ObjectDto.builder()
+                            .answer(audio.getTitle())
+                            .src(audio.getSrc()).build())
+                    .build();
+        } else {
+            Image image = topicRepository.findImageById(topicId)
+                    .orElseThrow(() -> new BlindCafeException(INVALID_TOPIC));
+            return TopicDto.builder()
+                    .type("image")
+                    .audio(TopicDto.ObjectDto.builder()
+                            .answer(image.getTitle())
+                            .src(image.getSrc()).build())
+                    .build();
+        }
     }
 }
