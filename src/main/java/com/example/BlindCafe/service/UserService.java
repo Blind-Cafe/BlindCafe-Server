@@ -19,6 +19,7 @@ import javax.validation.constraints.Size;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.example.BlindCafe.exception.CodeAndMessage.*;
 import static com.example.BlindCafe.type.Gender.N;
@@ -396,5 +397,18 @@ public class UserService {
         user.setAddress(new Address(request.getState(), request.getRegion()));
 
         return EditUserProfileDto.Response.fromEntity(user);
+    }
+
+    public ProfileImageListDto getProfileImages(Long userId) {
+        User user = userRepository.findById(userId)
+                .filter(u -> u.getStatus().equals(NORMAL) || u.getStatus().equals(NOT_REQUIRED_INFO))
+                .orElseThrow(() -> new BlindCafeException(NO_USER));
+        return ProfileImageListDto.builder()
+                .images(user.getProfileImages().stream()
+                        .filter(profileImage -> profileImage.getStatus().equals(CommonStatus.NORMAL))
+                        .sorted(Comparator.comparing(ProfileImage::getPriority))
+                        .map(ProfileImage::getSrc)
+                        .collect(Collectors.toList()))
+                .build();
     }
 }
