@@ -344,6 +344,7 @@ public class UserService {
          * userMatching 걸려있는 상대방 user matching들에 탈퇴로 채팅 종료 상태 변경
          */
         // userRepository.delete(user);
+        user.setSocialId(UUID.randomUUID().toString());
         user.setStatus(RETIRED);
 
         return DeleteUserDto.Response.builder()

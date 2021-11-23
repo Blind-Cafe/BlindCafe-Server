@@ -24,7 +24,7 @@ public class RetiredUser extends BaseTimeEntity {
     @Column(length = 10)
     private String nickname;
 
-    @Column(name="social_id" , length = 100, unique=true)
+    @Column(name="social_id")
     private String socialId;
 
     @Enumerated(STRING)
