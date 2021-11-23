@@ -48,7 +48,7 @@ public class UserController {
      * 프로필 수정하기
      */
     @PutMapping
-    public ResponseEntity<EditUserProfileDto.Response> editProfle(
+    public ResponseEntity<EditUserProfileDto.Response> editProfile(
             Authentication authentication,
             @Valid EditUserProfileDto.Request request
     ) {
@@ -57,6 +57,18 @@ public class UserController {
                 userService.editProfile(
                         getUserId(authentication), request)
         );
+    }
+
+    /**
+     * 프로필 이미지 리스트 조회
+     */
+    @GetMapping("{userId}/image")
+    public ResponseEntity<ProfileImageListDto> getProfileImages(
+            Authentication authentication,
+            @PathVariable Long userId
+    ) {
+        log.info("GET /api/user/{}/image", userId);
+        return ResponseEntity.ok(userService.getProfileImages(userId));
     }
 
     /**
