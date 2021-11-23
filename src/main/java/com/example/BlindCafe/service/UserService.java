@@ -4,23 +4,21 @@ import com.example.BlindCafe.dto.*;
 import com.example.BlindCafe.dto.CreateUserInfoDto;
 import com.example.BlindCafe.entity.*;
 import com.example.BlindCafe.exception.BlindCafeException;
-import com.example.BlindCafe.exception.CodeAndMessage;
 import com.example.BlindCafe.repository.*;
-import com.example.BlindCafe.type.ReasonType;
-import com.example.BlindCafe.type.Social;
+import com.example.BlindCafe.type.Gender;
 import com.example.BlindCafe.type.status.CommonStatus;
 import com.example.BlindCafe.type.status.MatchingStatus;
-import com.example.BlindCafe.type.status.UserStatus;
 import com.example.BlindCafe.util.AmazonS3Connector;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static com.example.BlindCafe.exception.CodeAndMessage.*;
 import static com.example.BlindCafe.type.Gender.N;
@@ -290,28 +288,35 @@ public class UserService {
         validatePriority(priority);
 
         User user = userRepository.findById(userId)
+                .filter(u -> u.getStatus().equals(NORMAL) || u.getStatus().equals(NOT_REQUIRED_INFO))
                 .orElseThrow(() -> new BlindCafeException(NO_USER));
 
-        ProfileImage profileImage = profileImageRepository
-                .findByUserIdAndPriorityAndStatus(
-                        userId, priority, CommonStatus.NORMAL)
-                .orElse(null);
+        uploadProfileImage(user, priority, image);
+    }
 
-        if (profileImage != null) {
-            user.getProfileImages().remove(profileImage);
-            profileImage.setStatus(DELETED);
+    private void uploadProfileImage(User user, int priority, MultipartFile image) {
+        if (!Objects.isNull(image)) {
+            ProfileImage profileImage = profileImageRepository
+                    .findByUserIdAndPriorityAndStatus(
+                            user.getId(), priority, CommonStatus.NORMAL)
+                    .orElse(null);
+
+            if (profileImage != null) {
+                user.getProfileImages().remove(profileImage);
+                profileImage.setStatus(DELETED);
+            }
+
+            String src = amazonS3Connector.uploadProfileImage(image, user.getId());
+
+            ProfileImage newProfileImage = ProfileImage.builder()
+                    .user(user)
+                    .src(src)
+                    .priority(priority)
+                    .status(CommonStatus.NORMAL)
+                    .build();
+            profileImageRepository.save(newProfileImage);
+            user.getProfileImages().add(newProfileImage);
         }
-
-        String src = amazonS3Connector.uploadProfileImage(image, user.getId());
-
-        ProfileImage newProfileImage = ProfileImage.builder()
-                .user(user)
-                .src(src)
-                .priority(priority)
-                .status(CommonStatus.NORMAL)
-                .build();
-        profileImageRepository.save(newProfileImage);
-        user.getProfileImages().add(newProfileImage);
     }
 
     private void validatePriority(int priority) {
@@ -361,5 +366,35 @@ public class UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BlindCafeException(NO_USER));
         user.setDeviceId(request.getToken());
+    }
+
+    public EditUserProfileDto.Response getMyProfileForEdit(Long userId) {
+        User user = userRepository.findById(userId)
+                .filter(u -> u.getStatus().equals(NORMAL) || u.getStatus().equals(NOT_REQUIRED_INFO))
+                .orElseThrow(() -> new BlindCafeException(NO_USER));
+        return EditUserProfileDto.Response.fromEntity(user);
+    }
+
+    @Transactional
+    public EditUserProfileDto.Response editProfile(Long userId, EditUserProfileDto.Request request) {
+        User user = userRepository.findById(userId)
+                .filter(u -> u.getStatus().equals(NORMAL) || u.getStatus().equals(NOT_REQUIRED_INFO))
+                .orElseThrow(() -> new BlindCafeException(NO_USER));
+
+        // 프로필 이미지 수정
+        uploadProfileImage(user, 1, request.getImage1());
+        uploadProfileImage(user, 2, request.getImage2());
+        uploadProfileImage(user, 3, request.getImage3());
+
+        // 닉네임 수정
+        user.setNickname(request.getNickname());
+
+        // 매칭 상대방 수정
+        user.setPartnerGender(request.getPartnerGender());
+
+        // 지역 수정
+        user.setAddress(new Address(request.getState(), request.getRegion()));
+
+        return EditUserProfileDto.Response.fromEntity(user);
     }
 }

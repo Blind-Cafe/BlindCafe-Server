@@ -45,6 +45,21 @@ public class UserController {
     }
 
     /**
+     * 프로필 수정하기
+     */
+    @PutMapping
+    public ResponseEntity<EditUserProfileDto.Response> editProfle(
+            Authentication authentication,
+            @Valid EditUserProfileDto.Request request
+    ) {
+        log.info("PUT /api/user");
+        return ResponseEntity.ok(
+                userService.editProfile(
+                        getUserId(authentication), request)
+        );
+    }
+
+    /**
      * 홈화면 (유저 매칭 상태 확인)
      */
     @GetMapping("/home")
@@ -98,7 +113,7 @@ public class UserController {
             @Valid @RequestBody EditDeviceToken request
     ) {
         log.info("PATCH /api/user/device");
-        userService.updateDeviceToken(getUserId(authentication), request)
+        userService.updateDeviceToken(getUserId(authentication), request);
         return ResponseEntity.ok().build();
     }
 
@@ -127,6 +142,17 @@ public class UserController {
         log.info("PATCH /api/user/partner");
         userService.editPartnerGender(getUserId(authentication), request);
         return ResponseEntity.ok().build();
+    }
+
+    /**
+     * 프로필 수정 조회 화면
+     */
+    @GetMapping("profile")
+    public ResponseEntity<EditUserProfileDto.Response> getMyProfileForEdit(
+            Authentication authentication
+    ) {
+        log.info("GET /api/user/profile");
+        return ResponseEntity.ok(userService.getMyProfileForEdit(getUserId(authentication)));
     }
 
     /**
