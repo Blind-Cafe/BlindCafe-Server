@@ -5,14 +5,33 @@ import com.example.BlindCafe.entity.User;
 import com.example.BlindCafe.type.Gender;
 import com.example.BlindCafe.type.status.CommonStatus;
 import lombok.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.persistence.Enumerated;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import java.util.*;
 import java.util.stream.Collectors;
 
 import static javax.persistence.EnumType.STRING;
 
-public class EditUserDto {
+public class EditUserProfileDto {
+
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    public static class Request {
+        MultipartFile image1;
+        MultipartFile image2;
+        MultipartFile image3;
+        @NotNull
+        @Size(min = 1, max = 10, message = "name min 1 max 10")
+        String nickname;
+        @NotNull
+        Gender partnerGender;
+        String state;
+        String region;
+    }
 
     @Getter
     @Setter
