@@ -15,6 +15,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -141,10 +142,16 @@ public class UserService {
         } else {
             MatchingStatus status = userMatching.getStatus();
             if (status.equals(WAIT)) {
-                return UserHomeDto.Response.noneMatchingBuilder()
-                        .codeAndMessage(SUCCESS)
-                        .matchingStatus(WAIT)
-                        .build();
+                if (ChronoUnit.HOURS.between(userMatching.getCreatedAt(), LocalDateTime.now()) >= 24L) {
+                    // 24시간 초과로 인한 요청 취소
+                    userMatching.setStatus(CANCEL_REQUEST_EXPIRED);
+                    throw new BlindCafeException(REQUEST_EXPIRED);
+                } else {
+                    return UserHomeDto.Response.noneMatchingBuilder()
+                            .codeAndMessage(SUCCESS)
+                            .matchingStatus(WAIT)
+                            .build();
+                }
             } else {
                 Matching matching = userMatching.getMatching();
                 UserMatching partnerMatching = matching.getUserMatchings().stream()
