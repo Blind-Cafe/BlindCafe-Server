@@ -98,7 +98,7 @@ public class UserController {
             @Valid @RequestBody EditDeviceToken request
     ) {
         log.info("PATCH /api/user/device");
-        userService.updateDeviceToken(getUserId(authentication), request)
+        userService.updateDeviceToken(getUserId(authentication), request);
         return ResponseEntity.ok().build();
     }
 
@@ -127,6 +127,17 @@ public class UserController {
         log.info("PATCH /api/user/partner");
         userService.editPartnerGender(getUserId(authentication), request);
         return ResponseEntity.ok().build();
+    }
+
+    /**
+     * 프로필 수정 조회 화면
+     */
+    @GetMapping("profile")
+    public ResponseEntity<EditUserDto.Response> getMyProfileForEdit(
+            Authentication authentication
+    ) {
+        log.info("GET /api/user/profile");
+        return ResponseEntity.ok(userService.getMyProfileForEdit(getUserId(authentication)));
     }
 
     /**

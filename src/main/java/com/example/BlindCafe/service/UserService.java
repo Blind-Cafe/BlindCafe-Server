@@ -4,13 +4,9 @@ import com.example.BlindCafe.dto.*;
 import com.example.BlindCafe.dto.CreateUserInfoDto;
 import com.example.BlindCafe.entity.*;
 import com.example.BlindCafe.exception.BlindCafeException;
-import com.example.BlindCafe.exception.CodeAndMessage;
 import com.example.BlindCafe.repository.*;
-import com.example.BlindCafe.type.ReasonType;
-import com.example.BlindCafe.type.Social;
 import com.example.BlindCafe.type.status.CommonStatus;
 import com.example.BlindCafe.type.status.MatchingStatus;
-import com.example.BlindCafe.type.status.UserStatus;
 import com.example.BlindCafe.util.AmazonS3Connector;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -20,7 +16,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static com.example.BlindCafe.exception.CodeAndMessage.*;
 import static com.example.BlindCafe.type.Gender.N;
@@ -361,5 +356,12 @@ public class UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BlindCafeException(NO_USER));
         user.setDeviceId(request.getToken());
+    }
+
+    public EditUserDto.Response getMyProfileForEdit(Long userId) {
+        User user = userRepository.findById(userId)
+                .filter(u -> u.getStatus().equals(NORMAL) || u.getStatus().equals(NOT_REQUIRED_INFO))
+                .orElseThrow(() -> new BlindCafeException(NO_USER));
+        return EditUserDto.Response.fromEntity(user);
     }
 }
