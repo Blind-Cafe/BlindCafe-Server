@@ -5,7 +5,6 @@ import com.example.BlindCafe.dto.CreateUserInfoDto;
 import com.example.BlindCafe.entity.*;
 import com.example.BlindCafe.exception.BlindCafeException;
 import com.example.BlindCafe.repository.*;
-import com.example.BlindCafe.type.Gender;
 import com.example.BlindCafe.type.status.CommonStatus;
 import com.example.BlindCafe.type.status.MatchingStatus;
 import com.example.BlindCafe.util.AmazonS3Connector;
@@ -14,8 +13,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -26,8 +23,8 @@ import static com.example.BlindCafe.type.Gender.N;
 import static com.example.BlindCafe.type.ReasonType.FOR_RETIRED;
 import static com.example.BlindCafe.type.status.CommonStatus.*;
 import static com.example.BlindCafe.type.status.MatchingStatus.*;
+import static com.example.BlindCafe.type.status.UserStatus.*;
 import static com.example.BlindCafe.type.status.UserStatus.NORMAL;
-import static com.example.BlindCafe.type.status.UserStatus.NOT_REQUIRED_INFO;
 
 @Service
 @Transactional(readOnly = true)
@@ -346,8 +343,8 @@ public class UserService {
          * Todo
          * userMatching 걸려있는 상대방 user matching들에 탈퇴로 채팅 종료 상태 변경
          */
-
-        userRepository.delete(user);
+        // userRepository.delete(user);
+        user.setStatus(RETIRED);
 
         return DeleteUserDto.Response.builder()
                 .codeAndMessage(SUCCESS)
