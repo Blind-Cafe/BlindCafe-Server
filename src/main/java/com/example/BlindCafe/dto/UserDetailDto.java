@@ -26,6 +26,8 @@ public class UserDetailDto {
     private Gender myGender;
     private int age;
     private String region;
+    @Enumerated(STRING)
+    private Gender partnerGender;
     private List<Long> interests;
     private List<Long> drinks;
 
@@ -46,6 +48,7 @@ public class UserDetailDto {
                 .myGender(user.getMyGender())
                 .age(user.getAge())
                 .region(region)
+                .partnerGender(user.getPartnerGender())
                 .interests(
                         user.getInterestOrders()
                         .stream().map(InterestOrder::getInterest)
