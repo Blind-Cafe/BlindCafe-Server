@@ -38,12 +38,15 @@ public class AmazonS3Connector {
     @Value("${cloud.aws.s3.bucket}")
     public String bucket;
 
+    @Value("${cloud.aws.cloudfront.url}")
+    public String cloudfrontUrl;
+
     public String uploadProfileImage(MultipartFile multipartFile, Long userId) {
         File file = convertToFile(multipartFile);
         String fileName = PROFILE_IMAGE_DIR + userId + "/" + UUID.randomUUID() + extension(multipartFile);
         amazonS3Client.putObject(new PutObjectRequest(bucket, fileName, file));
         file.delete();
-        return amazonS3Client.getUrl(bucket, fileName).toString();
+        return cloudfrontUrl + fileName;
     }
 
     private File convertToFile(MultipartFile multipartFile) {
