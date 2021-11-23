@@ -38,7 +38,7 @@ public class User extends BaseTimeEntity {
     @Column(length = 10)
     private Gender partnerGender;
 
-    @Column(name="social_id" , length = 100, unique=true)
+    @Column(name="social_id", unique=true)
     private String socialId;
 
     @Enumerated(STRING)
