@@ -156,6 +156,7 @@ public class MatchingService {
             Matching matching = Matching.builder()
                     .interest(commonInterest)
                     .isContinuous(false)
+                    .startTime(LocalDateTime.now())
                     .status(MATCHING_NOT_START)
                     .build();
 
