@@ -255,6 +255,7 @@ public class MatchingService {
 
         // 이전 대화 상대 찾기
         List<User> pastPartners = user.getUserMatchings().stream()
+                .filter(userMatching -> !Objects.isNull(userMatching.getMatching()))
                 .filter(userMatching ->
                         !userMatching.getStatus().equals(WAIT) &&
                         !userMatching.getStatus().equals(FOUND))
