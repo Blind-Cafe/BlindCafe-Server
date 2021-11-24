@@ -12,8 +12,11 @@ public enum MatchingStatus {
     FOUND("대화 상대 찾음, 음료수 미선택"),
     MATCHING_NOT_START("음료수 미선택인 매칭"),
     MATCHING("3일간 대화"),
-    MATCHING_EXPIRED("3일간 대화 종료"),
 
+    WAIT_FOR_EXCHANGE("프로필 교환 대기"),
+    READY_FOR_EXCHANGE("프로필 공개"),
+
+    CANCEL_REQUEST_EXPIRED("시간 초과로 인해 요청 취소"),
     CANCEL_REQUEST("요청 취소"),
     CANCEL_EXPIRED("24시간 내 음료수 미선택"),
 
