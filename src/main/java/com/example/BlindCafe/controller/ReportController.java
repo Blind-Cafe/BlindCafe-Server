@@ -26,12 +26,12 @@ public class ReportController {
      * 신고하기
      */
     @PostMapping
-    public CreateReportDto.Response addUserInfo(
+    public ResponseEntity<CreateReportDto.Response> addUserInfo(
             Authentication authentication,
             @Valid @RequestBody CreateReportDto.Request request
     ) {
         log.info("POST /api/report");
-        return reportService.createReport(getUserId(authentication), request);
+        return ResponseEntity.ok(reportService.createReport(getUserId(authentication), request));
     }
 
     /**

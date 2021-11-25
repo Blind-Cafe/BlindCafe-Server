@@ -179,7 +179,7 @@ public class UserService {
                             .codeAndMessage(SUCCESS)
                             .matchingStatus(userMatching.getStatus())
                             .partnerNickname(partnerMatching.getUser().getNickname())
-                            .reason(partnerMatching.getReason().getText())
+                            .reason(userMatching.getReason().getText())
                             .build();
                     userMatching.setStatus(OUT);
                     return response;
