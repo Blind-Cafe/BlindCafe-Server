@@ -6,6 +6,7 @@ import com.example.BlindCafe.entity.*;
 import com.example.BlindCafe.exception.BlindCafeException;
 import com.example.BlindCafe.repository.*;
 import com.example.BlindCafe.type.ReasonType;
+import com.example.BlindCafe.type.status.MatchingStatus;
 import com.example.BlindCafe.type.status.ReportStatus;
 import com.example.BlindCafe.type.status.UserStatus;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +18,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static com.example.BlindCafe.exception.CodeAndMessage.*;
+import static com.example.BlindCafe.type.status.UserStatus.NORMAL;
+import static com.example.BlindCafe.type.status.UserStatus.NOT_REQUIRED_INFO;
 
 @Service
 @Transactional(readOnly = true)
@@ -24,6 +27,7 @@ import static com.example.BlindCafe.exception.CodeAndMessage.*;
 public class ReportService {
 
     private final UserRepository userRepository;
+    private final MatchingRepository matchingRepository;
     private final ReasonRepository reasonRepository;
     private final ReportRepository reportRepository;
 
@@ -35,18 +39,16 @@ public class ReportService {
             Long userId, CreateReportDto.Request request
     ) {
         User user = userRepository.findById(userId)
+                .filter(u -> u.getStatus().equals(NORMAL) || u.getStatus().equals(NOT_REQUIRED_INFO))
                 .orElseThrow(() -> new BlindCafeException(NO_USER));
 
-        Matching matching = user.getUserMatchings().stream()
-                .filter(um -> um.getMatching().getId().equals(request.getMatchingId()))
-                .map(um -> um.getMatching())
-                .findAny()
-                .orElseThrow(() -> new BlindCafeException(NO_USER_MATCHING));
+        Matching matching = matchingRepository.findById(request.getMatchingId())
+                .orElseThrow(() -> new BlindCafeException(NO_AUTHORIZATION_MATCHING));
 
         User partner = matching.getUserMatchings().stream()
                 .filter(um -> !um.getUser().equals(user))
                 .map(um -> um.getUser())
-                .findAny().orElseThrow(() -> new BlindCafeException(NO_USER_MATCHING));
+                .findAny().orElseThrow(() -> new BlindCafeException(INVALID_MATCHING));
 
         Reason reason = reasonRepository.findByReasonTypeAndNum(ReasonType.FOR_REPORT, request.getReason())
                 .orElseThrow(() -> new BlindCafeException(NO_REASON));
@@ -59,6 +61,18 @@ public class ReportService {
                 .status(ReportStatus.WAIT)
                 .build();
         reportRepository.save(report);
+
+        matching.getUserMatchings().stream()
+                .filter(userMatching -> userMatching.getUser().equals(user))
+                .findAny().orElseThrow(() -> new BlindCafeException(INVALID_MATCHING))
+                .setStatus(MatchingStatus.OUT);
+        UserMatching partnerMatching = matching.getUserMatchings().stream()
+                .filter(userMatching -> userMatching.getUser().equals(partner))
+                .findAny().orElseThrow(() -> new BlindCafeException(INVALID_MATCHING));
+        partnerMatching.setStatus(MatchingStatus.FAILED_REPORT);
+        partnerMatching.setReason(reason);
+
+        matching.setStatus(MatchingStatus.FAILED_REPORT);
 
         List<Report> reporteds = reportRepository.findByReported(partner);
         if (reporteds.size() >= 5) {

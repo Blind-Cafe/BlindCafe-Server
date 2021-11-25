@@ -379,7 +379,7 @@ public class MatchingService {
                 .stream()
                 .filter(m -> m.getUser().getId().equals(user.getId()))
                 .findAny()
-                .orElseThrow(() -> new BlindCafeException(NO_USER_MATCHING));
+                .orElseThrow(() -> new BlindCafeException(NO_AUTHORIZATION_MATCHING));
 
         userMatching.setDrink(drink);
         userMatching.setStatus(MATCHING);
@@ -510,7 +510,7 @@ public class MatchingService {
         matching.getUserMatchings().stream().
                 filter(um -> um.getUser().getId().equals(userId))
                 .findAny()
-                .orElseThrow(() -> new BlindCafeException(NO_USER_MATCHING));
+                .orElseThrow(() -> new BlindCafeException(NO_AUTHORIZATION_MATCHING));
 
 
         /**
