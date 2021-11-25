@@ -516,6 +516,7 @@ public class MatchingService {
                 .collect(Collectors.toList());
 
         return MatchingProfileDto.builder()
+                .userId(user.getId())
                 .partnerNickname(partner.getNickname())
                 .isFill(isFill)
                 .profileImage(src)

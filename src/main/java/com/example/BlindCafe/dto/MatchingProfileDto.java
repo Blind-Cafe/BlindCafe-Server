@@ -17,6 +17,7 @@ import static javax.persistence.EnumType.STRING;
 @NoArgsConstructor
 @Builder
 public class MatchingProfileDto {
+    private Long userId;
     private String partnerNickname;
     private boolean isFill;
     private String profileImage;
