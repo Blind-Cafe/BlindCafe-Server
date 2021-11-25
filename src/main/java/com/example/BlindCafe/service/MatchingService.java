@@ -118,6 +118,7 @@ public class MatchingService {
         User partner = matching.getUserMatchings().stream()
                 .filter(um -> !um.getUser().equals(user))
                 .map(um -> um.getUser())
+                .filter(u -> u.getStatus().equals(UserStatus.NORMAL))
                 .findAny().orElseThrow(() -> new BlindCafeException(INVALID_MATCHING));
 
         return new MatchingDetailDto(matching, partner);
