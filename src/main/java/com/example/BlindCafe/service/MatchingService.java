@@ -69,7 +69,7 @@ public class MatchingService {
                 .filter(userMatching -> userMatching.getMatching().getIsContinuous())
                 .map(userMatching -> userMatching.getMatching())
                 .map(matching -> makeMatchingDto(matching, user, now))
-                .filter(matchingDto -> matchingDto != null)
+                .filter(matchingDto -> !Objects.isNull(matchingDto))
                 .collect(Collectors.toList());
 
         return new MatchingListDto(matchings);
@@ -109,6 +109,7 @@ public class MatchingService {
     /**
      * 채팅방 정보 조회
      */
+    @Transactional
     public MatchingDetailDto getMatching(Long userId, Long matchingId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BlindCafeException(NO_USER));
@@ -122,7 +123,31 @@ public class MatchingService {
                 .filter(u -> u.getStatus().equals(UserStatus.NORMAL))
                 .findAny().orElseThrow(() -> new BlindCafeException(INVALID_MATCHING));
 
-        return new MatchingDetailDto(matching, partner);
+        ProfileImage profileImage = partner.getProfileImages()
+                .stream().sorted(Comparator.comparing(ProfileImage::getPriority))
+                .filter(pi -> pi.getStatus().equals(NORMAL))
+                .findFirst()
+                .orElse(null);
+        String src = profileImage != null ? profileImage.getSrc() : null;
+
+        Drink drink = matching.getUserMatchings().stream()
+                .filter(um -> um.getUser().equals(partner))
+                .map(UserMatching::getDrink)
+                .findAny()
+                .orElse(null);
+
+        LocalDateTime ldt = matching.getStartTime();
+        Timestamp timestamp = Timestamp.valueOf(ldt);
+        String startTime = String.valueOf(timestamp.getTime() / 1000);
+
+        return MatchingDetailDto.builder()
+                .matchingId(matching.getId())
+                .profileImage(src)
+                .nickname(partner.getNickname())
+                .drink(drink == null ? "미입력" : drink.getName())
+                .startTime(startTime)
+                .interest(matching.getInterest().getName())
+                .build();
     }
 
     /**
