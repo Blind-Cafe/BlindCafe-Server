@@ -65,6 +65,7 @@ public class MatchingService {
 
         LocalDateTime now = LocalDateTime.now();
         List<MatchingListDto.MatchingDto> matchings = user.getUserMatchings().stream()
+                .filter(userMatching -> !Objects.isNull(userMatching.getMatching()))
                 .filter(userMatching -> userMatching.getMatching().getIsContinuous())
                 .map(userMatching -> userMatching.getMatching())
                 .map(matching -> makeMatchingDto(matching, user, now))
