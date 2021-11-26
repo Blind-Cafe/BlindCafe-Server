@@ -41,7 +41,7 @@ public class AuthService {
             User user = userOptional.get();
             // 신고 유저
             if (user.getStatus().equals(SUSPENDED))
-                throw new BlindCafeException(SUSPENDED_USER);
+                throw new BlindCafeException(SUSPENDED_USER, user.getNickname());
             else {
                 // 디바이스 토큰 업데이트
                 if (!user.getDeviceId().equals(deviceId)) {
