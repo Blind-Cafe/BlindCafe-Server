@@ -625,6 +625,7 @@ public class MatchingService {
 
         return OpenMatchingProfileDto.builder()
                 .result(result)
+                .nickname(partnerMatching.getUser().getNickname())
                 .build();
     }
 }
