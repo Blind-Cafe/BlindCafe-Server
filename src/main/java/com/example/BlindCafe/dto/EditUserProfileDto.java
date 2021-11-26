@@ -21,9 +21,6 @@ public class EditUserProfileDto {
     @Setter
     @NoArgsConstructor
     public static class Request {
-        MultipartFile image1;
-        MultipartFile image2;
-        MultipartFile image3;
         @NotNull
         @Size(min = 1, max = 10, message = "name min 1 max 10")
         String nickname;
@@ -49,20 +46,8 @@ public class EditUserProfileDto {
         private String region;
 
         public static Response fromEntity(User user) {
-            String[] images = new String[3];
-            Arrays.fill(images, "");
-            ArrayList<ProfileImage> profileImages = new ArrayList<>();
-            profileImages.addAll(user.getProfileImages().stream()
-                    .filter(profileImage -> profileImage.getStatus().equals(CommonStatus.NORMAL))
-                    .sorted(Comparator.comparing(ProfileImage::getPriority))
-                    .collect(Collectors.toList()));
-            for (ProfileImage pi: profileImages) {
-                images[pi.getPriority()-1] = pi.getSrc();
-            }
             String region = Objects.isNull(user.getAddress()) ? null : user.getAddress().toString();
-
             return Response.builder()
-                    .images(images)
                     .nickname(user.getNickname())
                     .age(user.getAge())
                     .myGender(user.getMyGender())
