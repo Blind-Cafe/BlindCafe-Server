@@ -132,6 +132,7 @@ public class MatchingService {
 
         Drink drink = matching.getUserMatchings().stream()
                 .filter(um -> um.getUser().equals(partner))
+                .filter(um -> !Objects.isNull(um.getDrink()))
                 .map(UserMatching::getDrink)
                 .findAny()
                 .orElse(null);
