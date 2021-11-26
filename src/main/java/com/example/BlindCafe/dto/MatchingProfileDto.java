@@ -19,7 +19,6 @@ import static javax.persistence.EnumType.STRING;
 public class MatchingProfileDto {
     private Long userId;
     private String partnerNickname;
-    private boolean isFill;
     private String profileImage;
     private String nickname;
     private String region;

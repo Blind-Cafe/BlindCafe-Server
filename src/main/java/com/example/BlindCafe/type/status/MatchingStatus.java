@@ -13,8 +13,9 @@ public enum MatchingStatus {
     MATCHING_NOT_START("음료수 미선택인 매칭"),
     MATCHING("3일간 대화"),
 
-    WAIT_FOR_EXCHANGE("프로필 교환 대기"),
-    READY_FOR_EXCHANGE("프로필 공개"),
+    PROFILE_OPEN("프로필 공개 여부 선택"),
+    PROFILE_READY("프로필 공개"),
+    PROFILE_ACCEPT("프로필 교환 수락"),
 
     CANCEL_REQUEST_EXPIRED("시간 초과로 인해 요청 취소"),
     CANCEL_REQUEST("요청 취소"),
@@ -26,7 +27,8 @@ public enum MatchingStatus {
     OUT("방 나가기"),
     FAILED_LEAVE_ROOM("방 나가기로 인한 폭파"),
     FAILED_REPORT("신고로 인한 폭파"),
-    FAILED_WONT_EXCHANGE("프로필 교환 거절로 인한 폭파");
+    FAILED_WONT_EXCHANGE("프로필 교환 거절로 인한 폭파"),
+    FAILED_INVALID_USER("상대방의 상태가 유효하지 않습니다.");
 
     private final String description;
 }

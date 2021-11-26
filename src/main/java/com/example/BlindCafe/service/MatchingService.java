@@ -491,7 +491,7 @@ public class MatchingService {
         Matching matching = matchingRepository.findById(matchingId)
                 .orElseThrow(() -> new BlindCafeException(NO_MATCHING));
 
-        if (!matching.getStatus().equals(WAIT_FOR_EXCHANGE))
+        if (ChronoUnit.HOURS.between(LocalDateTime.now(), matching.getExpiryTime()) < 0L)
             throw new BlindCafeException(NOT_YET_EXCHANGE_PROFILE);
 
         User partner = matching.getUserMatchings().stream()
@@ -508,8 +508,6 @@ public class MatchingService {
         String src = Objects.isNull(profileImage) ? null : profileImage.getSrc();
         String region = Objects.isNull(user.getAddress()) ? null : user.getAddress().toString();
 
-        boolean isFill = (src == null || region == null) ? false : true;
-
         List<String> interests = user.getInterestOrders().stream()
                 .sorted(Comparator.comparing(InterestOrder::getPriority))
                 .map(io -> io.getInterest())
@@ -519,7 +517,6 @@ public class MatchingService {
         return MatchingProfileDto.builder()
                 .userId(user.getId())
                 .partnerNickname(partner.getNickname())
-                .isFill(isFill)
                 .profileImage(src)
                 .nickname(user.getNickname())
                 .region(region)
