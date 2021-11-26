@@ -12,6 +12,7 @@ public enum MatchingStatus {
     FOUND("대화 상대 찾음, 음료수 미선택"),
     MATCHING_NOT_START("음료수 미선택인 매칭"),
     MATCHING("3일간 대화"),
+    PROFILE_EXCHANGE("프로필 교환"),
 
     PROFILE_OPEN("프로필 공개 여부 선택"),
     PROFILE_READY("프로필 공개"),

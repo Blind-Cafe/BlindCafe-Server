@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.Enumerated;
+import javax.validation.Valid;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -30,6 +31,7 @@ import static com.example.BlindCafe.type.Gender.N;
 import static com.example.BlindCafe.type.ReasonType.FOR_LEAVE_ROOM;
 import static com.example.BlindCafe.type.status.CommonStatus.NORMAL;
 import static com.example.BlindCafe.type.status.MatchingStatus.*;
+import static com.example.BlindCafe.type.status.UserStatus.NOT_REQUIRED_INFO;
 import static java.util.Comparator.comparing;
 import static javax.persistence.EnumType.STRING;
 
@@ -116,6 +118,7 @@ public class MatchingService {
 
         Matching matching = matchingRepository.findById(matchingId)
                 .orElseThrow(() -> new BlindCafeException(NO_MATCHING));
+        updateMatchingStatus(matching);
 
         User partner = matching.getUserMatchings().stream()
                 .filter(um -> !um.getUser().equals(user))
@@ -149,6 +152,18 @@ public class MatchingService {
                 .startTime(startTime)
                 .interest(matching.getInterest().getName())
                 .build();
+    }
+
+    private void updateMatchingStatus(Matching matching) {
+        if (!matching.getStatus().equals(MATCHING))
+            return;
+        if (matching.getExpiryTime().isAfter(LocalDateTime.now()))
+            return;
+        List<UserMatching> userMatchings = matching.getUserMatchings();
+        for (UserMatching userMatching: userMatchings) {
+            userMatching.setStatus(PROFILE_OPEN);
+        }
+        matching.setStatus(PROFILE_EXCHANGE);
     }
 
     /**
@@ -491,7 +506,7 @@ public class MatchingService {
         Matching matching = matchingRepository.findById(matchingId)
                 .orElseThrow(() -> new BlindCafeException(NO_MATCHING));
 
-        if (ChronoUnit.HOURS.between(LocalDateTime.now(), matching.getExpiryTime()) < 0L)
+        if (!matching.getStatus().equals(PROFILE_EXCHANGE))
             throw new BlindCafeException(NOT_YET_EXCHANGE_PROFILE);
 
         User partner = matching.getUserMatchings().stream()
@@ -578,5 +593,38 @@ public class MatchingService {
                             .src(image.getSrc()).build())
                     .build();
         }
+    }
+
+    @Transactional
+    public OpenMatchingProfileDto openMatchingProfile(Long userId, Long matchingId, EditUserProfileDto.Request request) {
+        User user = userRepository.findById(userId)
+                .filter(u -> u.getStatus().equals(NORMAL))
+                .orElseThrow(() -> new BlindCafeException(NO_USER));
+        Matching matching = matchingRepository.findById(matchingId)
+                .orElseThrow(() -> new BlindCafeException(NO_MATCHING));
+
+        // 닉네임 수정
+        user.setNickname(request.getNickname());
+        // 매칭 상대방 수정
+        user.setPartnerGender(request.getPartnerGender());
+        // 지역 수정
+        user.setAddress(new Address(request.getState(), request.getRegion()));
+
+        UserMatching userMatching = matching.getUserMatchings().stream()
+                .filter(um -> um.getUser().equals(user)).findAny()
+                .orElseThrow(() -> new BlindCafeException(NO_AUTHORIZATION_MATCHING));
+        UserMatching partnerMatching = matching.getUserMatchings().stream()
+                .filter(um -> !um.getUser().equals(user)).findAny()
+                .orElseThrow(() -> new BlindCafeException(INVALID_MATCHING));
+
+        userMatching.setStatus(PROFILE_READY);
+
+        boolean result = false;
+        if (partnerMatching.getStatus().equals(PROFILE_READY))
+            result = true;
+
+        return OpenMatchingProfileDto.builder()
+                .result(result)
+                .build();
     }
 }
