@@ -236,6 +236,7 @@ public class UserService {
                 .orElseThrow(() -> new BlindCafeException(NO_USER));
 
         userInterestRepository.deleteAllByUser(user);
+        interestOrderRepository.deleteAllByUser(user);
 
         // 관심사 저장
         editIndex = 0;
