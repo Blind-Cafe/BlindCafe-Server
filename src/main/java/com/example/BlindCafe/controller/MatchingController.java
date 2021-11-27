@@ -1,7 +1,6 @@
 package com.example.BlindCafe.controller;
 
 import com.example.BlindCafe.dto.*;
-import com.example.BlindCafe.entity.User;
 import com.example.BlindCafe.service.MatchingService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -10,8 +9,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-
-import java.util.List;
 
 import static com.example.BlindCafe.config.SecurityConfig.getUserId;
 
@@ -89,6 +86,33 @@ public class MatchingController {
     ) {
         log.info("GET /api/matching/{}/profile", matchingId);
         return ResponseEntity.ok(matchingService.getMatchingProfile(getUserId(authentication), matchingId));
+    }
+
+    /**
+     * 프로필 공개하기
+     */
+    @PostMapping("{matchingId}/profile")
+    public ResponseEntity<OpenMatchingProfileDto> openMatchingProfile(
+            Authentication authentication,
+            @PathVariable Long matchingId,
+            @Valid EditUserProfileDto.Request request
+    ) {
+        log.info("POST /api/matching/{}/profile", matchingId);
+        return ResponseEntity.ok(
+                matchingService.openMatchingProfile(getUserId(authentication), matchingId, request));
+    }
+
+    /**
+     * 상대방 프로필 확인하기
+     */
+    @GetMapping("{matchingId}/partner")
+    public ResponseEntity<MatchingProfileDto> getPartnerProfile(
+            Authentication authentication,
+            @PathVariable Long matchingId
+    ) {
+        log.info("GET /api/matching/{}/partner", matchingId);
+        return ResponseEntity.ok(
+                matchingService.getPartnerProfile(getUserId(authentication), matchingId));
     }
 
     /**

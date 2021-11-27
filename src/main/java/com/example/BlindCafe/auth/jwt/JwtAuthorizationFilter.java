@@ -63,7 +63,7 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
                 User user = userRepository.findBySocialId(socialId)
                         .orElseThrow(() -> new BlindCafeException(FORBIDDEN_AUTHORIZATION));
                 if (user.getStatus().equals(UserStatus.SUSPENDED))
-                    throw new BlindCafeException(SUSPENDED_USER);
+                    throw new BlindCafeException(SUSPENDED_USER, user.getNickname());
                 if (user.getStatus().equals(UserStatus.RETIRED))
                     throw new BlindCafeException(NO_USER);
 

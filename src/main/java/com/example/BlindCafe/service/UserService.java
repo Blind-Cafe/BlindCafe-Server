@@ -139,52 +139,55 @@ public class UserService {
                     .codeAndMessage(SUCCESS)
                     .matchingStatus(NONE)
                     .build();
-        } else {
-            MatchingStatus status = userMatching.getStatus();
-            if (status.equals(WAIT)) {
-                if (ChronoUnit.HOURS.between(userMatching.getCreatedAt(), LocalDateTime.now()) >= 24L) {
-                    // 24시간 초과로 인한 요청 취소
-                    userMatching.setStatus(CANCEL_REQUEST_EXPIRED);
-                    throw new BlindCafeException(REQUEST_EXPIRED);
-                } else {
-                    return UserHomeDto.Response.noneMatchingBuilder()
-                            .codeAndMessage(SUCCESS)
-                            .matchingStatus(WAIT)
-                            .build();
-                }
+        }
+
+        MatchingStatus status = userMatching.getStatus();
+        Matching matching = userMatching.getMatching();
+        updateMatchingStatus(matching);
+
+        if (status.equals(WAIT)) {
+            if (ChronoUnit.HOURS.between(userMatching.getCreatedAt(), LocalDateTime.now()) >= 24L) {
+                // 24시간 초과로 인한 요청 취소
+                userMatching.setStatus(CANCEL_REQUEST_EXPIRED);
+                throw new BlindCafeException(REQUEST_EXPIRED);
             } else {
-                Matching matching = userMatching.getMatching();
-                UserMatching partnerMatching = matching.getUserMatchings().stream()
-                        .filter(um -> !um.equals(userMatching))
-                        .findAny().orElseThrow(() -> new BlindCafeException(INVALID_MATCHING));
-
-                if (userMatching.getStatus().equals(FOUND) ||
-                    userMatching.getStatus().equals(MATCHING)) {
-                    // 정상적인 매칭 상태
-                    LocalDateTime ldt = matching.getStartTime();
-                    Timestamp timestamp = Timestamp.valueOf(ldt);
-                    String startTime = String.valueOf(timestamp.getTime() / 1000);
-
-                    return UserHomeDto.Response.matchingBuilder()
-                            .codeAndMessage(SUCCESS)
-                            .matchingStatus(userMatching.getStatus())
-                            .matchingId(matching.getId())
-                            .partnerId(partnerMatching.getUser().getId())
-                            .partnerNickname(partnerMatching.getUser().getNickname())
-                            .startTime(startTime)
-                            .build();
-                } else {
-                    // 폭파
-                    UserHomeDto.Response response = UserHomeDto.Response.outMatchingBuilder()
-                            .codeAndMessage(SUCCESS)
-                            .matchingStatus(userMatching.getStatus())
-                            .partnerNickname(partnerMatching.getUser().getNickname())
-                            .reason(userMatching.getReason().getText())
-                            .build();
-                    userMatching.setStatus(OUT);
-                    return response;
-                }
+                return UserHomeDto.Response.noneMatchingBuilder()
+                        .codeAndMessage(SUCCESS)
+                        .matchingStatus(WAIT)
+                        .build();
             }
+        } else {
+            UserMatching partnerMatching = matching.getUserMatchings().stream()
+                    .filter(um -> !um.equals(userMatching))
+                    .findAny().orElseThrow(() -> new BlindCafeException(INVALID_MATCHING));
+
+            if (status.equals(FAILED_LEAVE_ROOM) ||
+                    status.equals(FAILED_REPORT) ||
+                    status.equals(FAILED_WONT_EXCHANGE)) {
+                // 폭파
+                UserHomeDto.Response response = UserHomeDto.Response.outMatchingBuilder()
+                        .codeAndMessage(SUCCESS)
+                        .matchingStatus(userMatching.getStatus())
+                        .partnerNickname(partnerMatching.getUser().getNickname())
+                        .reason(userMatching.getReason().getText())
+                        .build();
+                userMatching.setStatus(OUT);
+                return response;
+            }
+
+            // 정상적인 매칭 상태
+            LocalDateTime ldt = matching.getStartTime();
+            Timestamp timestamp = Timestamp.valueOf(ldt);
+            String startTime = String.valueOf(timestamp.getTime() / 1000);
+
+            return UserHomeDto.Response.matchingBuilder()
+                    .codeAndMessage(SUCCESS)
+                    .matchingStatus(userMatching.getStatus())
+                    .matchingId(matching.getId())
+                    .partnerId(partnerMatching.getUser().getId())
+                    .partnerNickname(partnerMatching.getUser().getNickname())
+                    .startTime(startTime)
+                    .build();
         }
     }
 
@@ -195,9 +198,24 @@ public class UserService {
             status.equals(MATCHING) ||
             status.equals(FAILED_LEAVE_ROOM) ||
             status.equals(FAILED_REPORT) ||
-            status.equals(FAILED_WONT_EXCHANGE)
+            status.equals(FAILED_WONT_EXCHANGE) ||
+            status.equals(PROFILE_OPEN) ||
+            status.equals(PROFILE_READY) ||
+            status.equals(PROFILE_ACCEPT)
         ) return true;
         return false;
+    }
+
+    private void updateMatchingStatus(Matching matching) {
+        if (!matching.getStatus().equals(MATCHING))
+            return;
+        if (matching.getExpiryTime().isAfter(LocalDateTime.now()))
+            return;
+        List<UserMatching> userMatchings = matching.getUserMatchings();
+        for (UserMatching userMatching: userMatchings) {
+            userMatching.setStatus(PROFILE_OPEN);
+        }
+        matching.setStatus(PROFILE_EXCHANGE);
     }
 
     public UserDetailDto getUserDetail(Long userId) {
@@ -218,6 +236,7 @@ public class UserService {
                 .orElseThrow(() -> new BlindCafeException(NO_USER));
 
         userInterestRepository.deleteAllByUser(user);
+        interestOrderRepository.deleteAllByUser(user);
 
         // 관심사 저장
         editIndex = 0;
@@ -346,10 +365,6 @@ public class UserService {
 
         retiredUserRepository.save(retiredUser);
 
-        /**
-         * Todo
-         * userMatching 걸려있는 상대방 user matching들에 탈퇴로 채팅 종료 상태 변경
-         */
         // userRepository.delete(user);
         user.setSocialId(UUID.randomUUID().toString());
         user.setStatus(RETIRED);
@@ -386,21 +401,12 @@ public class UserService {
         User user = userRepository.findById(userId)
                 .filter(u -> u.getStatus().equals(NORMAL) || u.getStatus().equals(NOT_REQUIRED_INFO))
                 .orElseThrow(() -> new BlindCafeException(NO_USER));
-
-        // 프로필 이미지 수정
-        uploadProfileImage(user, 1, request.getImage1());
-        uploadProfileImage(user, 2, request.getImage2());
-        uploadProfileImage(user, 3, request.getImage3());
-
         // 닉네임 수정
         user.setNickname(request.getNickname());
-
         // 매칭 상대방 수정
         user.setPartnerGender(request.getPartnerGender());
-
         // 지역 수정
         user.setAddress(new Address(request.getState(), request.getRegion()));
-
         return EditUserProfileDto.Response.fromEntity(user);
     }
 

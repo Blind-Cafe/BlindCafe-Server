@@ -17,8 +17,9 @@ import static javax.persistence.EnumType.STRING;
 @NoArgsConstructor
 @Builder
 public class MatchingProfileDto {
+    private boolean fill;
+    private Long userId;
     private String partnerNickname;
-    private boolean isFill;
     private String profileImage;
     private String nickname;
     private String region;
