@@ -515,30 +515,7 @@ public class MatchingService {
                 .findAny()
                 .orElseThrow(() -> new BlindCafeException(INVALID_MATCHING));
 
-        ProfileImage profileImage = user.getProfileImages()
-                .stream().sorted(Comparator.comparing(ProfileImage::getPriority))
-                .filter(pi -> pi.getStatus().equals(NORMAL))
-                .findFirst()
-                .orElse(null);
-        String src = Objects.isNull(profileImage) ? null : profileImage.getSrc();
-        String region = Objects.isNull(user.getAddress()) ? null : user.getAddress().toString();
-
-        List<String> interests = user.getInterestOrders().stream()
-                .sorted(Comparator.comparing(InterestOrder::getPriority))
-                .map(io -> io.getInterest())
-                .map(Interest::getName)
-                .collect(Collectors.toList());
-
-        return MatchingProfileDto.builder()
-                .userId(user.getId())
-                .partnerNickname(partner.getNickname())
-                .profileImage(src)
-                .nickname(user.getNickname())
-                .region(region)
-                .gender(user.getMyGender())
-                .interests(interests)
-                .age(user.getAge())
-                .build();
+        return makeProfile(user, partner);
     }
 
     @Transactional
@@ -626,6 +603,63 @@ public class MatchingService {
         return OpenMatchingProfileDto.builder()
                 .result(result)
                 .nickname(partnerMatching.getUser().getNickname())
+                .build();
+    }
+
+    /**
+     * 상대방 프로필 조회하기
+     */
+    public MatchingProfileDto getPartnerProfile(Long userId, Long matchingId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BlindCafeException(NO_USER));
+
+        Matching matching = matchingRepository.findById(matchingId)
+                .orElseThrow(() -> new BlindCafeException(NO_MATCHING));
+
+        if (!matching.getStatus().equals(PROFILE_EXCHANGE))
+            throw new BlindCafeException(NOT_YET_EXCHANGE_PROFILE);
+
+        User partner = matching.getUserMatchings().stream()
+                .filter(um -> !um.getUser().equals(user))
+                .map(um -> um.getUser() )
+                .findAny()
+                .orElseThrow(() -> new BlindCafeException(INVALID_MATCHING));
+
+        UserMatching partnerMatching = matching.getUserMatchings().stream()
+                .filter(um -> um.getUser().equals(partner))
+                .findAny()
+                .orElseThrow(() -> new BlindCafeException(INVALID_MATCHING));
+
+        return makeProfile(partner, user);
+    }
+
+    private MatchingProfileDto makeProfile(User user, User partner) {
+        ProfileImage profileImage = user.getProfileImages()
+                .stream().sorted(Comparator.comparing(ProfileImage::getPriority))
+                .filter(pi -> pi.getStatus().equals(NORMAL))
+                .findFirst()
+                .orElse(null);
+        String src = Objects.isNull(profileImage) ? null : profileImage.getSrc();
+        String region = Objects.isNull(user.getAddress()) ? null : user.getAddress().toString();
+
+        List<String> interests = user.getInterestOrders().stream()
+                .sorted(Comparator.comparing(InterestOrder::getPriority))
+                .map(io -> io.getInterest())
+                .map(Interest::getName)
+                .collect(Collectors.toList());
+
+        boolean fill = (src == null || region == null) ? false : true;
+
+        return MatchingProfileDto.builder()
+                .fill(fill)
+                .userId(user.getId())
+                .partnerNickname(partner.getNickname())
+                .profileImage(src)
+                .nickname(user.getNickname())
+                .region(region)
+                .gender(user.getMyGender())
+                .interests(interests)
+                .age(user.getAge())
                 .build();
     }
 }

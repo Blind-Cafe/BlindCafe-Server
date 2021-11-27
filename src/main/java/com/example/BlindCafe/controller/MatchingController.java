@@ -103,6 +103,19 @@ public class MatchingController {
     }
 
     /**
+     * 상대방 프로필 확인하기
+     */
+    @GetMapping("{matchingId}/partner")
+    public ResponseEntity<MatchingProfileDto> getPartnerProfile(
+            Authentication authentication,
+            @PathVariable Long matchingId
+    ) {
+        log.info("GET /api/matching/{}/partner", matchingId);
+        return ResponseEntity.ok(
+                matchingService.getPartnerProfile(getUserId(authentication), matchingId));
+    }
+
+    /**
      * 토픽 가져오기
      */
     @GetMapping("{matchingId}/topic")
