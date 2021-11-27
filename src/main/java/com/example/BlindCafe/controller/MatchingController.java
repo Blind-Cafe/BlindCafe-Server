@@ -92,10 +92,10 @@ public class MatchingController {
      * 프로필 공개하기
      */
     @PostMapping("{matchingId}/profile")
-    public ResponseEntity<OpenMatchingProfileDto> openMatchingProfile(
+    public ResponseEntity<OpenMatchingProfileDto.Response> openMatchingProfile(
             Authentication authentication,
             @PathVariable Long matchingId,
-            @Valid EditUserProfileDto.Request request
+            @Valid OpenMatchingProfileDto.Request request
     ) {
         log.info("POST /api/matching/{}/profile", matchingId);
         return ResponseEntity.ok(

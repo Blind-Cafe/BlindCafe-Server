@@ -573,7 +573,7 @@ public class MatchingService {
     }
 
     @Transactional
-    public OpenMatchingProfileDto openMatchingProfile(Long userId, Long matchingId, EditUserProfileDto.Request request) {
+    public OpenMatchingProfileDto.Response openMatchingProfile(Long userId, Long matchingId, OpenMatchingProfileDto.Request request) {
         User user = userRepository.findById(userId)
                 .filter(u -> u.getStatus().equals(NORMAL))
                 .orElseThrow(() -> new BlindCafeException(NO_USER));
@@ -582,8 +582,6 @@ public class MatchingService {
 
         // 닉네임 수정
         user.setNickname(request.getNickname());
-        // 매칭 상대방 수정
-        user.setPartnerGender(request.getPartnerGender());
         // 지역 수정
         user.setAddress(new Address(request.getState(), request.getRegion()));
 
@@ -600,7 +598,7 @@ public class MatchingService {
         if (partnerMatching.getStatus().equals(PROFILE_READY))
             result = true;
 
-        return OpenMatchingProfileDto.builder()
+        return OpenMatchingProfileDto.Response.builder()
                 .result(result)
                 .nickname(partnerMatching.getUser().getNickname())
                 .build();
