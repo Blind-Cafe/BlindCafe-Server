@@ -95,7 +95,7 @@ public class MatchingController {
     public ResponseEntity<OpenMatchingProfileDto.Response> openMatchingProfile(
             Authentication authentication,
             @PathVariable Long matchingId,
-            @Valid OpenMatchingProfileDto.Request request
+            @Valid @RequestBody OpenMatchingProfileDto.Request request
     ) {
         log.info("POST /api/matching/{}/profile", matchingId);
         return ResponseEntity.ok(
