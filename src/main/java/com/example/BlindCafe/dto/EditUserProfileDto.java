@@ -36,7 +36,6 @@ public class EditUserProfileDto {
     @NoArgsConstructor
     @Builder
     public static class Response {
-        private String[] images = new String[3];
         private String nickname;
         private int age;
         @Enumerated(STRING)
