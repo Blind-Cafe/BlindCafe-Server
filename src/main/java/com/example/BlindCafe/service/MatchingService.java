@@ -575,8 +575,9 @@ public class MatchingService {
     @Transactional
     public OpenMatchingProfileDto.Response openMatchingProfile(Long userId, Long matchingId, OpenMatchingProfileDto.Request request) {
         User user = userRepository.findById(userId)
-                .filter(u -> u.getStatus().equals(NORMAL))
+                .filter(u -> u.getStatus().equals(UserStatus.NORMAL))
                 .orElseThrow(() -> new BlindCafeException(NO_USER));
+
         Matching matching = matchingRepository.findById(matchingId)
                 .orElseThrow(() -> new BlindCafeException(NO_MATCHING));
 
