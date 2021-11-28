@@ -93,6 +93,17 @@ public class UserController {
     }
 
     /**
+     * 프로필 사진 수정 화면
+     */
+    @GetMapping("/image")
+    public ResponseEntity<ProfileImageListDto> getProfileImagesForEdit(
+            Authentication authentication
+    ) {
+        log.info("GET /api/user/image");
+        return ResponseEntity.ok(userService.getProfileImagesForEdit(getUserId(authentication)));
+    }
+
+    /**
      * 유저 닉네임 수정
      */
     @PatchMapping("/nickname")

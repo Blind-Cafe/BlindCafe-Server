@@ -207,6 +207,8 @@ public class UserService {
     }
 
     private void updateMatchingStatus(Matching matching) {
+        if (Objects.isNull(matching))
+            return;
         if (!matching.getStatus().equals(MATCHING))
             return;
         if (matching.getExpiryTime().isAfter(LocalDateTime.now()))
@@ -422,6 +424,26 @@ public class UserService {
                         .sorted(Comparator.comparing(ProfileImage::getPriority))
                         .map(ProfileImage::getSrc)
                         .collect(Collectors.toList()))
+                .build();
+    }
+
+    public ProfileImageListDto getProfileImagesForEdit(Long userId) {
+        User user = userRepository.findById(userId)
+                .filter(u -> u.getStatus().equals(NORMAL) || u.getStatus().equals(NOT_REQUIRED_INFO))
+                .orElseThrow(() -> new BlindCafeException(NO_USER));
+        String[] images = new String[3];
+        Arrays.fill(images, "");
+        ArrayList<ProfileImage> profileImages = new ArrayList<>();
+        profileImages.addAll(user.getProfileImages().stream()
+                .filter(profileImage -> profileImage.getStatus().equals(CommonStatus.NORMAL))
+                .sorted(Comparator.comparing(ProfileImage::getPriority))
+                .collect(Collectors.toList()));
+        for (ProfileImage pi: profileImages) {
+            images[pi.getPriority()-1] = pi.getSrc();
+        }
+
+        return ProfileImageListDto.builder()
+                .images(Arrays.asList(images))
                 .build();
     }
 }
