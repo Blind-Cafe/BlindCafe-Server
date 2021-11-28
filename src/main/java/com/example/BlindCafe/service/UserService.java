@@ -331,7 +331,7 @@ public class UserService {
             profileImage.setStatus(DELETED);
         }
 
-        if (Objects.isNull(image)) {
+        if (Objects.isNull(image.getContentType())) {
             return;
         }
 
