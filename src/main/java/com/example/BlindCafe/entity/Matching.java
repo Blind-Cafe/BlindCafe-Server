@@ -36,6 +36,9 @@ public class Matching extends BaseTimeEntity {
     @OneToMany(mappedBy = "matching", cascade = ALL)
     private List<MatchingTopic> topics = new ArrayList<>();
 
+    @OneToMany(mappedBy = "matching", cascade = ALL)
+    private List<Message> messages = new ArrayList<>();
+
     private LocalDateTime startTime;
     private LocalDateTime expiryTime;
 

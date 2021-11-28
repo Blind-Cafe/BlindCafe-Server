@@ -6,6 +6,8 @@ import com.example.BlindCafe.exception.CodeAndMessage;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.auth.oauth2.GoogleCredentials;
+import com.google.firebase.FirebaseApp;
+import com.google.firebase.FirebaseOptions;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
@@ -13,6 +15,8 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
+import java.io.FileInputStream;
 import java.util.List;
 
 import static com.example.BlindCafe.exception.CodeAndMessage.FCM_JSON_PARSE_ERROR;
@@ -22,15 +26,15 @@ import static com.example.BlindCafe.exception.CodeAndMessage.FCM_SERVER_ERROR;
 @Service
 @RequiredArgsConstructor
 public class FirebaseCloudMessageService {
-    private final String KEY_PATH = "firebase/blind-cafe-firebase-key.json";
-    private final String API_URL = "https://fcm.googleapis.com/v1/projects/blind-cafe/messages:send";
-    private final String AUTH_URL = "https://www.googleapis.com/auth/cloud-platform";
+    private static final String KEY_PATH = "firebase/blind-cafe-firebase-key.json";
+    private static final String API_URL = "https://fcm.googleapis.com/v1/projects/blind-cafe/messages:send";
+    private static final String AUTH_URL = "https://www.googleapis.com/auth/cloud-platform";
 
     private final ObjectMapper objectMapper;
 
-    public void sendMessageTo(String targetToken, String title, String body, String path) {
+    public void sendMessageTo(String targetToken, String title, String body, String path, Long matchingId) {
         try {
-            String message = makeMessage(targetToken, title, body, path);
+            String message = makeMessage(targetToken, title, body, path, matchingId);
 
             OkHttpClient client = new OkHttpClient();
             RequestBody requestBody = RequestBody.create(message, MediaType.get("application/json; charset=utf-8"));
@@ -47,7 +51,7 @@ public class FirebaseCloudMessageService {
         }
     }
 
-    private String makeMessage(String targetToken, String title, String body, String path) {
+    private String makeMessage(String targetToken, String title, String body, String path, Long matchingId) {
         try {
             FcmMessageDto fcmMessage = FcmMessageDto.builder()
                     .message(FcmMessageDto.Message.builder()
@@ -60,6 +64,7 @@ public class FirebaseCloudMessageService {
                             )
                             .data(FcmMessageDto.FcmData.builder()
                                     .path(path)
+                                    .matchingId(Long.toString(matchingId))
                                     .build()
                             )
                             .build()

@@ -220,13 +220,15 @@ public class MatchingService {
                     user.getDeviceId(),
                     FcmMessage.MATCHING.getTitle(),
                     FcmMessage.MATCHING.getBody(),
-                    FcmMessage.MATCHING.getPath()
+                    FcmMessage.MATCHING.getPath(),
+                    0L
             );
             fcm.sendMessageTo(
                     partner.getDeviceId(),
                     FcmMessage.MATCHING.getTitle(),
                     FcmMessage.MATCHING.getBody(),
-                    FcmMessage.MATCHING.getPath()
+                    FcmMessage.MATCHING.getPath(),
+                    0L
             );
 
             return CreateMatchingDto.Response.matchingBuilder()
