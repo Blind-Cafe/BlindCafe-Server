@@ -670,24 +670,72 @@ public class MatchingService {
                 .build();
     }
 
-    public void acceptPartnerProfile(Long userId, Long matchingId) {
+    @Transactional
+    public OpenMatchingProfileDto.Response acceptPartnerProfile(Long userId, Long matchingId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BlindCafeException(NO_USER));
+
+        Matching matching = matchingRepository.findById(matchingId)
+                .orElseThrow(() -> new BlindCafeException(NO_MATCHING));
+
+        UserMatching userMatching = user.getUserMatchings().stream()
+                .filter(um -> um.getMatching().equals(matching))
+                .findAny().orElseThrow(() -> new BlindCafeException(NO_AUTHORIZATION_MATCHING));
+
+        UserMatching partnerMatching = matching.getUserMatchings().stream()
+                .filter(um -> !um.equals(userMatching))
+                .findAny().orElseThrow(() -> new BlindCafeException(INVALID_MATCHING));
+
+        User partner = partnerMatching.getUser();
+
+        MatchingStatus myMatchingStatus = userMatching.getStatus();
+
+        if (!myMatchingStatus.equals(PROFILE_READY)) {
+            // 거절 당한 경우
+            throw new BlindCafeException(REJECT_PROFILE_EXCHANGE);
+        }
 
         // 1. profile_accept 으로 user matching 변경
+        userMatching.setStatus(PROFILE_ACCEPT);
 
         // 2. 상대방 user matching 확인
-        
+        MatchingStatus partnerMatchingStatus = partnerMatching.getStatus();
+
         // 2-1. 상대방 아직 수락 안 했으면 대기
-        
-        // 2-2. 상대방 수락했으면 7일방으로
+        if (partnerMatchingStatus.equals(PROFILE_READY)) {
+            return OpenMatchingProfileDto.Response.builder()
+                    .result(false)
+                    .nickname(partner.getNickname())
+                    .build();
+        }
 
-        // 7일 만료 다시 세팅
-        
-        // 2-2-1. 양쪽 다 뱃지 추가
+        // 2-2. 상대방 수락했으면 7일방으로 + 7일 만료 다시 세팅
+        userMatching.setStatus(MATCHING_CONTINUE);
+        partnerMatching.setStatus(MATCHING_CONTINUE);
 
-        // 2-2-2. isContinuous true
+        LocalDateTime now = LocalDateTime.now();
+        matching.setIsContinuous(true);
+        matching.setStatus(MATCHING_CONTINUE);
+        matching.setStartTime(now);
+        matching.setExpiryTime(now.plusDays(EXTEND_CHAT_DAYS));
 
-        // Todo
-        // matching/{matchigId} api에서 isContinuous true일 때 업데이트 한번만 업데이트
+        // 2-2-1. 양쪽 다 음료(뱃지) 추가
+        UserDrink myDrink = UserDrink.builder()
+                .user(user)
+                .drink(partnerMatching.getDrink())
+                .build();
+        UserDrink partnerDrink = UserDrink.builder()
+                .user(partner)
+                .drink(userMatching.getDrink())
+                .build();
+
+        user.getUserDrinks().add(myDrink);
+        partner.getUserDrinks().add(partnerDrink);
+
+        return OpenMatchingProfileDto.Response.builder()
+                .result(true)
+                .nickname(partner.getNickname())
+                .build();
     }
 
     @Transactional

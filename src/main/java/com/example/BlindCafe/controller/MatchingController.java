@@ -119,13 +119,12 @@ public class MatchingController {
      * 프로필 교환 수락하기
      */
     @PostMapping("{matchingId}/partner")
-    public ResponseEntity<Void> acceptExchangeProfile(
+    public ResponseEntity<OpenMatchingProfileDto.Response> acceptExchangeProfile(
             Authentication authentication,
             @PathVariable Long matchingId
     ) {
         log.info("POST /api/matching/{}/partner", matchingId);
-        matchingService.acceptPartnerProfile(getUserId(authentication), matchingId);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(matchingService.acceptPartnerProfile(getUserId(authentication), matchingId));
     }
 
     /**
