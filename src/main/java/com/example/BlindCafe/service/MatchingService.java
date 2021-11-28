@@ -18,8 +18,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.persistence.Enumerated;
-import javax.validation.Valid;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -32,9 +30,7 @@ import static com.example.BlindCafe.type.ReasonType.FOR_LEAVE_ROOM;
 import static com.example.BlindCafe.type.ReasonType.FOR_WONT_EXCHANGE_PROFILE;
 import static com.example.BlindCafe.type.status.CommonStatus.NORMAL;
 import static com.example.BlindCafe.type.status.MatchingStatus.*;
-import static com.example.BlindCafe.type.status.UserStatus.NOT_REQUIRED_INFO;
 import static java.util.Comparator.comparing;
-import static javax.persistence.EnumType.STRING;
 
 @Service
 @Transactional(readOnly = true)
@@ -49,6 +45,7 @@ public class MatchingService {
     private final DrinkRepository drinkRepository;
     private final ReasonRepository reasonRepository;
     private final TopicRepository topicRepository;
+    private final RoomLogRepository roomLogRepository;
 
     private final static Long MAX_WAIT_TIME = 24L;
     private final static int BASIC_CHAT_DAYS = 3;
@@ -765,5 +762,21 @@ public class MatchingService {
                 .findAny().orElseThrow(() -> new BlindCafeException(INVALID_MATCHING));
         partnerMatching.setStatus(FAILED_WONT_EXCHANGE);
         partnerMatching.setReason(reason);
+    }
+
+    @Transactional
+    public void createRoomLog(Long userId, Long matchingId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BlindCafeException(NO_USER));
+
+        Matching matching = matchingRepository.findById(matchingId)
+                .orElseThrow(() -> new BlindCafeException(NO_MATCHING));
+
+        RoomLog roomLog = RoomLog.builder()
+                .user(user)
+                .matching(matching)
+                .latestTime(LocalDateTime.now())
+                .build();
+        roomLogRepository.save(roomLog);
     }
 }
