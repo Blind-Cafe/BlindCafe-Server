@@ -102,6 +102,32 @@ public class UserController {
         log.info("GET /api/user/image");
         return ResponseEntity.ok(userService.getProfileImagesForEdit(getUserId(authentication)));
     }
+    /**
+     * 유저 프로필 이미지 수정
+     */
+    @PatchMapping("/image")
+    public ResponseEntity<Void> editProfileImage(
+            Authentication authentication,
+            @RequestParam int priority,
+            @RequestParam MultipartFile image
+    ) {
+        log.info("PATCH /api/user/image");
+        userService.editProfileImage(getUserId(authentication), priority, image);
+        return ResponseEntity.ok().build();
+    }
+
+    /**
+     * 유저 프로필 이미지 삭제
+     */
+    @DeleteMapping("/image")
+    public ResponseEntity<Void> deleteProfileImage(
+            Authentication authentication,
+            @RequestParam int priority
+    ) {
+        log.info("DELETE /api/user/image");
+        userService.deleteProfileImage(getUserId(authentication), priority);
+        return ResponseEntity.ok().build();
+    }
 
     /**
      * 유저 닉네임 수정
@@ -137,20 +163,6 @@ public class UserController {
     ) {
         log.info("PATCH /api/user/device");
         userService.updateDeviceToken(getUserId(authentication), request);
-        return ResponseEntity.ok().build();
-    }
-
-    /**
-     * 유저 프로필 이미지 수정
-     */
-    @PatchMapping("/image")
-    public ResponseEntity<Void> editProfileImage(
-            Authentication authentication,
-            @RequestParam int priority,
-            @RequestParam MultipartFile image
-    ) {
-        log.info("PATCH /api/user/image");
-        userService.editProfileImage(getUserId(authentication), priority, image);
         return ResponseEntity.ok().build();
     }
 

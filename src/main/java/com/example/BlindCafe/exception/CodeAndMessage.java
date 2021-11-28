@@ -57,6 +57,8 @@ public enum CodeAndMessage {
     NOT_YET_PROFILE_OPEN("1130", "상대방이 프로필 작성 중"),
     REJECT_PROFILE_EXCHANGE("1131", "프로필 교환이 거절된 매칭입니다."),
 
+    NO_PROFILE_IMAGE("1140", "삭제할 프로필 사진이 없습니다."),
+
     INVALID_REQUEST("4000", "잘못된 요청입니다."),
     FAILED_AUTHORIZATION("4001", "검증에 실패했습니다."),
     EXPIRED_TOKEN("4002", "토큰의 기한이 만료되었습니다."),
