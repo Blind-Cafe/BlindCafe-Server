@@ -207,6 +207,8 @@ public class UserService {
     }
 
     private void updateMatchingStatus(Matching matching) {
+        if (Objects.isNull(matching))
+            return;
         if (!matching.getStatus().equals(MATCHING))
             return;
         if (matching.getExpiryTime().isAfter(LocalDateTime.now()))
