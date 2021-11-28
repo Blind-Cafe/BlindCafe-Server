@@ -152,6 +152,7 @@ public class MatchingService {
                 .drink(drink == null ? "미입력" : drink.getName())
                 .startTime(startTime)
                 .interest(matching.getInterest().getName())
+                .isContinuous(matching.getIsContinuous())
                 .build();
     }
 
