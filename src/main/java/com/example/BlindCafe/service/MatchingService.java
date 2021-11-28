@@ -29,6 +29,7 @@ import java.util.stream.Collectors;
 import static com.example.BlindCafe.exception.CodeAndMessage.*;
 import static com.example.BlindCafe.type.Gender.N;
 import static com.example.BlindCafe.type.ReasonType.FOR_LEAVE_ROOM;
+import static com.example.BlindCafe.type.ReasonType.FOR_WONT_EXCHANGE_PROFILE;
 import static com.example.BlindCafe.type.status.CommonStatus.NORMAL;
 import static com.example.BlindCafe.type.status.MatchingStatus.*;
 import static com.example.BlindCafe.type.status.UserStatus.NOT_REQUIRED_INFO;
@@ -151,6 +152,7 @@ public class MatchingService {
                 .drink(drink == null ? "미입력" : drink.getName())
                 .startTime(startTime)
                 .interest(matching.getInterest().getName())
+                .isContinuous(matching.getIsContinuous())
                 .build();
     }
 
@@ -565,7 +567,7 @@ public class MatchingService {
                     .orElseThrow(() -> new BlindCafeException(INVALID_TOPIC));
             return TopicDto.builder()
                     .type("image")
-                    .audio(TopicDto.ObjectDto.builder()
+                    .image(TopicDto.ObjectDto.builder()
                             .answer(image.getTitle())
                             .src(image.getSrc()).build())
                     .build();
@@ -573,17 +575,16 @@ public class MatchingService {
     }
 
     @Transactional
-    public OpenMatchingProfileDto openMatchingProfile(Long userId, Long matchingId, EditUserProfileDto.Request request) {
+    public OpenMatchingProfileDto.Response openMatchingProfile(Long userId, Long matchingId, OpenMatchingProfileDto.Request request) {
         User user = userRepository.findById(userId)
-                .filter(u -> u.getStatus().equals(NORMAL))
+                .filter(u -> u.getStatus().equals(UserStatus.NORMAL))
                 .orElseThrow(() -> new BlindCafeException(NO_USER));
+
         Matching matching = matchingRepository.findById(matchingId)
                 .orElseThrow(() -> new BlindCafeException(NO_MATCHING));
 
         // 닉네임 수정
         user.setNickname(request.getNickname());
-        // 매칭 상대방 수정
-        user.setPartnerGender(request.getPartnerGender());
         // 지역 수정
         user.setAddress(new Address(request.getState(), request.getRegion()));
 
@@ -600,7 +601,7 @@ public class MatchingService {
         if (partnerMatching.getStatus().equals(PROFILE_READY))
             result = true;
 
-        return OpenMatchingProfileDto.builder()
+        return OpenMatchingProfileDto.Response.builder()
                 .result(result)
                 .nickname(partnerMatching.getUser().getNickname())
                 .build();
@@ -629,6 +630,13 @@ public class MatchingService {
                 .filter(um -> um.getUser().equals(partner))
                 .findAny()
                 .orElseThrow(() -> new BlindCafeException(INVALID_MATCHING));
+
+        if (partnerMatching.getStatus().equals(PROFILE_OPEN)) {
+            return MatchingProfileDto.builder()
+                    .fill(false)
+                    .nickname(partner.getNickname())
+                    .build();
+        }
 
         return makeProfile(partner, user);
     }
@@ -661,5 +669,101 @@ public class MatchingService {
                 .interests(interests)
                 .age(user.getAge())
                 .build();
+    }
+
+    @Transactional
+    public OpenMatchingProfileDto.Response acceptPartnerProfile(Long userId, Long matchingId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BlindCafeException(NO_USER));
+
+        Matching matching = matchingRepository.findById(matchingId)
+                .orElseThrow(() -> new BlindCafeException(NO_MATCHING));
+
+        UserMatching userMatching = user.getUserMatchings().stream()
+                .filter(um -> um.getMatching().equals(matching))
+                .findAny().orElseThrow(() -> new BlindCafeException(NO_AUTHORIZATION_MATCHING));
+
+        UserMatching partnerMatching = matching.getUserMatchings().stream()
+                .filter(um -> !um.equals(userMatching))
+                .findAny().orElseThrow(() -> new BlindCafeException(INVALID_MATCHING));
+
+        User partner = partnerMatching.getUser();
+
+        MatchingStatus myMatchingStatus = userMatching.getStatus();
+
+        if (!myMatchingStatus.equals(PROFILE_READY)) {
+            // 거절 당한 경우
+            throw new BlindCafeException(REJECT_PROFILE_EXCHANGE);
+        }
+
+        // 1. profile_accept 으로 user matching 변경
+        userMatching.setStatus(PROFILE_ACCEPT);
+
+        // 2. 상대방 user matching 확인
+        MatchingStatus partnerMatchingStatus = partnerMatching.getStatus();
+
+        // 2-1. 상대방 아직 수락 안 했으면 대기
+        if (partnerMatchingStatus.equals(PROFILE_READY)) {
+            return OpenMatchingProfileDto.Response.builder()
+                    .result(false)
+                    .nickname(partner.getNickname())
+                    .build();
+        }
+
+        // 2-2. 상대방 수락했으면 7일방으로 + 7일 만료 다시 세팅
+        userMatching.setStatus(MATCHING_CONTINUE);
+        partnerMatching.setStatus(MATCHING_CONTINUE);
+
+        LocalDateTime now = LocalDateTime.now();
+        matching.setIsContinuous(true);
+        matching.setStatus(MATCHING_CONTINUE);
+        matching.setStartTime(now);
+        matching.setExpiryTime(now.plusDays(EXTEND_CHAT_DAYS));
+
+        // 2-2-1. 양쪽 다 음료(뱃지) 추가
+        UserDrink myDrink = UserDrink.builder()
+                .user(user)
+                .drink(partnerMatching.getDrink())
+                .build();
+        UserDrink partnerDrink = UserDrink.builder()
+                .user(partner)
+                .drink(userMatching.getDrink())
+                .build();
+
+        user.getUserDrinks().add(myDrink);
+        partner.getUserDrinks().add(partnerDrink);
+
+        return OpenMatchingProfileDto.Response.builder()
+                .result(true)
+                .nickname(partner.getNickname())
+                .build();
+    }
+
+    @Transactional
+    public void rejectExchangeProfile(Long userId, Long matchingId, Long reasonNum) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BlindCafeException(NO_USER));
+
+        Matching matching = matchingRepository.findById(matchingId)
+                .orElseThrow(() -> new BlindCafeException(NO_MATCHING));
+
+        Reason reason = reasonRepository.findByReasonTypeAndNum(FOR_WONT_EXCHANGE_PROFILE, reasonNum)
+                .orElseThrow(() -> new BlindCafeException(NO_REASON));
+
+        UserMatching userMatching = user.getUserMatchings().stream()
+                .filter(um -> um.getMatching().equals(matching))
+                .findAny().orElseThrow(() -> new BlindCafeException(NO_AUTHORIZATION_MATCHING));
+
+        // 1. 내 요청 OUT 으로 변경
+        userMatching.setStatus(OUT);
+        // 2. matching 상태 변경
+        matching.setStatus(FAILED_WONT_EXCHANGE);
+
+        // 3. 상대방 user matching 터진 status + 사유 추가
+        UserMatching partnerMatching = matching.getUserMatchings().stream()
+                .filter(um -> !um.equals(userMatching))
+                .findAny().orElseThrow(() -> new BlindCafeException(INVALID_MATCHING));
+        partnerMatching.setStatus(FAILED_WONT_EXCHANGE);
+        partnerMatching.setReason(reason);
     }
 }

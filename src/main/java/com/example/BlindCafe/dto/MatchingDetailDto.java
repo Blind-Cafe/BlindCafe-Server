@@ -22,4 +22,5 @@ public class MatchingDetailDto {
     private String drink;
     private String interest;
     private String startTime;
+    private boolean isContinuous;
 }

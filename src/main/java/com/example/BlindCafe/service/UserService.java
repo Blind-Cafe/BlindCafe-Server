@@ -319,28 +319,30 @@ public class UserService {
     }
 
     private void uploadProfileImage(User user, int priority, MultipartFile image) {
-        if (!Objects.isNull(image)) {
-            ProfileImage profileImage = profileImageRepository
-                    .findByUserIdAndPriorityAndStatus(
-                            user.getId(), priority, CommonStatus.NORMAL)
-                    .orElse(null);
+        ProfileImage profileImage = profileImageRepository
+                .findByUserIdAndPriorityAndStatus(
+                        user.getId(), priority, CommonStatus.NORMAL)
+                .orElse(null);
 
-            if (profileImage != null) {
-                user.getProfileImages().remove(profileImage);
-                profileImage.setStatus(DELETED);
-            }
-
-            String src = amazonS3Connector.uploadProfileImage(image, user.getId());
-
-            ProfileImage newProfileImage = ProfileImage.builder()
-                    .user(user)
-                    .src(src)
-                    .priority(priority)
-                    .status(CommonStatus.NORMAL)
-                    .build();
-            profileImageRepository.save(newProfileImage);
-            user.getProfileImages().add(newProfileImage);
+        if (profileImage != null) {
+            user.getProfileImages().remove(profileImage);
+            profileImage.setStatus(DELETED);
         }
+
+        if (Objects.isNull(image)) {
+            return;
+        }
+
+        String src = amazonS3Connector.uploadProfileImage(image, user.getId());
+
+        ProfileImage newProfileImage = ProfileImage.builder()
+                .user(user)
+                .src(src)
+                .priority(priority)
+                .status(CommonStatus.NORMAL)
+                .build();
+        profileImageRepository.save(newProfileImage);
+        user.getProfileImages().add(newProfileImage);
     }
 
     private void validatePriority(int priority) {

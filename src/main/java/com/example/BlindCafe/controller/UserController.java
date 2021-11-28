@@ -50,7 +50,7 @@ public class UserController {
     @PutMapping
     public ResponseEntity<EditUserProfileDto.Response> editProfile(
             Authentication authentication,
-            @Valid EditUserProfileDto.Request request
+            @Valid @RequestBody EditUserProfileDto.Request request
     ) {
         log.info("PUT /api/user");
         return ResponseEntity.ok(
