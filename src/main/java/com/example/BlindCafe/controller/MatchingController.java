@@ -119,7 +119,7 @@ public class MatchingController {
      * 프로필 교환 수락하기
      */
     @PostMapping("{matchingId}/partner")
-    public ResponseEntity<Void> acceptPartnerProfile(
+    public ResponseEntity<Void> acceptExchangeProfile(
             Authentication authentication,
             @PathVariable Long matchingId
     ) {
@@ -131,6 +131,16 @@ public class MatchingController {
     /**
      * 프로필 교환 거절하기
      */
+    @DeleteMapping("{matchingId}/partner")
+    public ResponseEntity<Void> rejectExchangeProfile(
+            Authentication authentication,
+            @PathVariable Long matchingId,
+            @RequestParam(value = "reason") Long reasonNum
+    ) {
+        log.info("DELETE /api/matching/{}/partner", matchingId);
+        matchingService.rejectExchangeProfile(getUserId(authentication), matchingId, reasonNum);
+        return ResponseEntity.ok().build();
+    }
 
     /**
      * 토픽 가져오기

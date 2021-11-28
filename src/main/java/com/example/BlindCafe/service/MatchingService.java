@@ -29,6 +29,7 @@ import java.util.stream.Collectors;
 import static com.example.BlindCafe.exception.CodeAndMessage.*;
 import static com.example.BlindCafe.type.Gender.N;
 import static com.example.BlindCafe.type.ReasonType.FOR_LEAVE_ROOM;
+import static com.example.BlindCafe.type.ReasonType.FOR_WONT_EXCHANGE_PROFILE;
 import static com.example.BlindCafe.type.status.CommonStatus.NORMAL;
 import static com.example.BlindCafe.type.status.MatchingStatus.*;
 import static com.example.BlindCafe.type.status.UserStatus.NOT_REQUIRED_INFO;
@@ -565,7 +566,7 @@ public class MatchingService {
                     .orElseThrow(() -> new BlindCafeException(INVALID_TOPIC));
             return TopicDto.builder()
                     .type("image")
-                    .audio(TopicDto.ObjectDto.builder()
+                    .image(TopicDto.ObjectDto.builder()
                             .answer(image.getTitle())
                             .src(image.getSrc()).build())
                     .build();
@@ -629,6 +630,13 @@ public class MatchingService {
                 .findAny()
                 .orElseThrow(() -> new BlindCafeException(INVALID_MATCHING));
 
+        if (partnerMatching.getStatus().equals(PROFILE_OPEN)) {
+            return MatchingProfileDto.builder()
+                    .fill(false)
+                    .nickname(partner.getNickname())
+                    .build();
+        }
+
         return makeProfile(partner, user);
     }
 
@@ -660,5 +668,53 @@ public class MatchingService {
                 .interests(interests)
                 .age(user.getAge())
                 .build();
+    }
+
+    public void acceptPartnerProfile(Long userId, Long matchingId) {
+
+        // 1. profile_accept 으로 user matching 변경
+
+        // 2. 상대방 user matching 확인
+        
+        // 2-1. 상대방 아직 수락 안 했으면 대기
+        
+        // 2-2. 상대방 수락했으면 7일방으로
+
+        // 7일 만료 다시 세팅
+        
+        // 2-2-1. 양쪽 다 뱃지 추가
+
+        // 2-2-2. isContinuous true
+
+        // Todo
+        // matching/{matchigId} api에서 isContinuous true일 때 업데이트 한번만 업데이트
+    }
+
+    @Transactional
+    public void rejectExchangeProfile(Long userId, Long matchingId, Long reasonNum) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BlindCafeException(NO_USER));
+
+        Matching matching = matchingRepository.findById(matchingId)
+                .orElseThrow(() -> new BlindCafeException(NO_MATCHING));
+
+        Reason reason = reasonRepository.findByReasonTypeAndNum(FOR_WONT_EXCHANGE_PROFILE, reasonNum)
+                .orElseThrow(() -> new BlindCafeException(NO_REASON));
+
+        UserMatching userMatching = user.getUserMatchings().stream()
+                .filter(um -> um.getMatching().equals(matching))
+                .findAny().orElseThrow(() -> new BlindCafeException(NO_AUTHORIZATION_MATCHING));
+
+        // 1. 내 요청 OUT 으로 변경
+        userMatching.setStatus(OUT);
+        // 2. matching 상태 변경
+        matching.setStatus(FAILED_WONT_EXCHANGE);
+
+        // 3. 상대방 user matching 터진 status + 사유 추가
+        UserMatching partnerMatching = matching.getUserMatchings().stream()
+                .filter(um -> !um.equals(userMatching))
+                .findAny().orElseThrow(() -> new BlindCafeException(INVALID_MATCHING));
+        partnerMatching.setStatus(FAILED_WONT_EXCHANGE);
+        partnerMatching.setReason(reason);
     }
 }
