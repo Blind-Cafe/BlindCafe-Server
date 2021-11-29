@@ -613,8 +613,29 @@ public class MatchingService {
         userMatching.setStatus(PROFILE_READY);
 
         boolean result = false;
-        if (partnerMatching.getStatus().equals(PROFILE_READY))
+        if (partnerMatching.getStatus().equals(PROFILE_READY)) {
             result = true;
+            // fcm
+            User partner = matching.getUserMatchings().stream()
+                    .filter(um -> !um.getUser().equals(user))
+                    .map(um -> um.getUser() )
+                    .findAny()
+                    .orElseThrow(() -> new BlindCafeException(INVALID_MATCHING));
+            fcmService.sendMessageTo(
+                    user.getDeviceId(),
+                    FcmMessage.PROFILE_OPEN.getTitle(),
+                    FcmMessage.PROFILE_OPEN.getBody(),
+                    FcmMessage.PROFILE_OPEN.getPath(),
+                    0L
+            );
+            fcmService.sendMessageTo(
+                    partner.getDeviceId(),
+                    FcmMessage.PROFILE_OPEN.getTitle(),
+                    FcmMessage.PROFILE_OPEN.getBody(),
+                    FcmMessage.PROFILE_OPEN.getPath(),
+                    0L
+            );
+        }
 
         return OpenMatchingProfileDto.Response.builder()
                 .result(result)
@@ -735,18 +756,33 @@ public class MatchingService {
         matching.setStartTime(now);
         matching.setExpiryTime(now.plusDays(EXTEND_CHAT_DAYS));
 
-        // 2-2-1. 양쪽 다 음료(뱃지) 추가
+        // 2-2-1. 양쪽 다 음료(뱃지) 추가 (내 음료로 수정)
         UserDrink myDrink = UserDrink.builder()
                 .user(user)
-                .drink(partnerMatching.getDrink())
+                .drink(userMatching.getDrink())
                 .build();
         UserDrink partnerDrink = UserDrink.builder()
                 .user(partner)
-                .drink(userMatching.getDrink())
+                .drink(partnerMatching.getDrink())
                 .build();
 
         user.getUserDrinks().add(myDrink);
         partner.getUserDrinks().add(partnerDrink);
+
+        fcmService.sendMessageTo(
+                user.getDeviceId(),
+                FcmMessage.MATCHING_CONTINUE.getTitle(),
+                FcmMessage.MATCHING_CONTINUE.getBody(),
+                FcmMessage.MATCHING_CONTINUE.getPath(),
+                0L
+        );
+        fcmService.sendMessageTo(
+                partner.getDeviceId(),
+                FcmMessage.MATCHING_CONTINUE.getTitle(),
+                FcmMessage.MATCHING_CONTINUE.getBody(),
+                FcmMessage.MATCHING_CONTINUE.getPath(),
+                0L
+        );
 
         return OpenMatchingProfileDto.Response.builder()
                 .result(true)

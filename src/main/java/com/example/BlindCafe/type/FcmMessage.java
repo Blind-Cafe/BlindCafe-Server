@@ -12,7 +12,7 @@ public enum FcmMessage {
     TWO_DAYS("이틀 달성", "48시간이 지나 🔈음성🔈을 전송할 수 있습니다. 확인해보세요", "CHAT"),
     THREE_DAYS("대화 종료", "💓3일의 대화가 종료됐습니다. 💓프로필을 교환해 대화를 이어가세요🥰", "HOME"),
     PROFILE_OPEN("상대방 프로필 도착", "💌상대방의 프로필이 도착했습니다💌", "HOME"),
-    MATCHING_CONTINUE("7일 대화 시작", "축하드립니다. ☕내 테이블에서 대화☕를 이어가세요", "CHAT"),
+    MATCHING_CONTINUE("7일 대화 시작", "축하드립니다. ☕내 테이블에서 대화☕를 이어가세요", "HOME"),
     LAST_CHAT("마지막 대화", "💗내일 이 대화방은 닫힙니다. 그동안 못다한 말을 해보세요💗", "CHAT");
 
     private final String title;
