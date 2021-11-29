@@ -612,7 +612,6 @@ public class MatchingService {
                 .findAny()
                 .orElseThrow(() -> new BlindCafeException(NO_AUTHORIZATION_MATCHING));
 
-
         /**
          * Todo
          * 지금 프록시에서 instanceof로 클래스 타입 확인이 안 돼서
@@ -630,6 +629,7 @@ public class MatchingService {
         if (topicId <= SUBJECT_LIMIT) {
             Subject subject = topicRepository.findSubjectById(topicId)
                     .orElseThrow(() -> new BlindCafeException(INVALID_TOPIC));
+            insertTopic(matching, subject.getSubject(), MessageType.TEXT_TOPIC);
             return TopicDto.builder()
                     .type("text")
                     .text(TopicDto.SubjectDto.builder()
@@ -638,6 +638,7 @@ public class MatchingService {
         } else if (topicId <= AUDIO_LIMIT) {
             Audio audio = topicRepository.findAudioById(topicId)
                     .orElseThrow(() -> new BlindCafeException(INVALID_TOPIC));
+            insertTopic(matching, audio.getSrc(), MessageType.AUDIO_TOPIC);
             return TopicDto.builder()
                     .type("audio")
                     .audio(TopicDto.ObjectDto.builder()
@@ -647,6 +648,7 @@ public class MatchingService {
         } else {
             Image image = topicRepository.findImageById(topicId)
                     .orElseThrow(() -> new BlindCafeException(INVALID_TOPIC));
+            insertTopic(matching, image.getSrc(), MessageType.IMAGE_TOPIC);
             return TopicDto.builder()
                     .type("image")
                     .image(TopicDto.ObjectDto.builder()
@@ -654,6 +656,36 @@ public class MatchingService {
                             .src(image.getSrc()).build())
                     .build();
         }
+    }
+
+    private void insertTopic(Matching matching, String contents, MessageType messageType) {
+        // 메세지 db에 저장
+        User admin = userRepository.findById(0L)
+                .orElseThrow(() -> new BlindCafeException(NO_USER));
+        Message message = new Message();
+        message.setMatching(matching);
+        message.setUser(admin);
+        message.setContents(contents);
+        message.setType(messageType);
+        Message savedMessage = messageRepository.save(message);
+
+        // 메세지 firestore 저장
+        LocalDateTime ldt = savedMessage.getCreatedAt();
+        Timestamp timestamp = Timestamp.valueOf(ldt);
+
+        FirestoreDto firestoreDto = FirestoreDto.builder()
+                .roomId(matching.getId())
+                .targetToken(null)
+                .message(new FirestoreDto.FirestoreMessage(
+                        Long.toString(savedMessage.getId()),
+                        Long.toString(admin.getId()),
+                        admin.getNickname(),
+                        savedMessage.getContents(),
+                        messageType.getFirestoreType(),
+                        timestamp
+                ))
+                .build();
+        firebaseService.insertMessage(firestoreDto);
     }
 
     @Transactional
