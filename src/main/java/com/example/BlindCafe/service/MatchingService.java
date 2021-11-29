@@ -237,7 +237,7 @@ public class MatchingService {
                     FcmMessage.MATCHING.getPath(),
                     0L
             );
-            
+
             // 메세지 db에 저장
             User admin = userRepository.findById(0L).orElseThrow(() -> new BlindCafeException(NO_USER));
             Message message = new Message();
@@ -256,14 +256,14 @@ public class MatchingService {
                     .targetToken(partner.getDeviceId())
                     .message(new FirestoreDto.FirestoreMessage(
                             Long.toString(savedMessage.getId()),
-                            Long.toString(user.getId()),
-                            user.getNickname(),
+                            Long.toString(admin.getId()),
+                            admin.getNickname(),
                             savedMessage.getContents(),
                             MessageType.DESCRIPTION.getFirestoreType(),
                             timestamp
                     ))
                     .build();
-            FcmMessageDto.Request req = firebaseService.insertMessage(firestoreDto);
+            firebaseService.insertMessage(firestoreDto);
 
             return CreateMatchingDto.Response.matchingBuilder()
                     .matchingStatus(userMatching.getStatus())
@@ -455,6 +455,12 @@ public class MatchingService {
         Matching matching = matchingRepository.findById(matchingId)
                 .orElseThrow(() -> new BlindCafeException(NO_MATCHING));
 
+        User partner = matching.getUserMatchings().stream()
+                .filter(um -> !um.getUser().equals(user))
+                .map(um -> um.getUser() )
+                .findAny()
+                .orElseThrow(() -> new BlindCafeException(INVALID_MATCHING));
+
         UserMatching userMatching = matching.getUserMatchings()
                 .stream()
                 .filter(m -> m.getUser().getId().equals(user.getId()))
@@ -464,6 +470,34 @@ public class MatchingService {
         userMatching.setDrink(drink);
         userMatching.setStatus(MATCHING);
 
+        // 메세지 db에 저장
+        User admin = userRepository.findById(0L).orElseThrow(() -> new BlindCafeException(NO_USER));
+        Message message = new Message();
+        message.setMatching(matching);
+        message.setUser(admin);
+        message.setContents(getDrinkDescription(user, drink));
+        message.setType(MessageType.DESCRIPTION);
+        Message savedMessage = messageRepository.save(message);
+
+        // 메세지 firestore 저장
+        LocalDateTime ldt = savedMessage.getCreatedAt();
+        Timestamp timestamp = Timestamp.valueOf(ldt);
+
+        FirestoreDto firestoreDto = FirestoreDto.builder()
+                .roomId(matching.getId())
+                .targetToken(partner.getDeviceId())
+                .message(new FirestoreDto.FirestoreMessage(
+                        Long.toString(savedMessage.getId()),
+                        Long.toString(admin.getId()),
+                        admin.getNickname(),
+                        savedMessage.getContents(),
+                        MessageType.DESCRIPTION.getFirestoreType(),
+                        timestamp
+                ))
+                .build();
+        firebaseService.insertMessage(firestoreDto);
+
+
         if (!matching.getStatus().equals(MATCHING)) {
             LocalDateTime now = LocalDateTime.now();
             matching.setStatus(MATCHING);
@@ -471,11 +505,6 @@ public class MatchingService {
             matching.setExpiryTime(now.plusDays(BASIC_CHAT_DAYS));
 
             // fcm
-            User partner = matching.getUserMatchings().stream()
-                    .filter(um -> !um.getUser().equals(user))
-                    .map(um -> um.getUser() )
-                    .findAny()
-                    .orElseThrow(() -> new BlindCafeException(INVALID_MATCHING));
             fcmService.sendMessageTo(
                     partner.getDeviceId(),
                     FcmMessage.MATCHING_OPEN.getTitle(),
@@ -488,14 +517,16 @@ public class MatchingService {
         userMatchingRepository.save(userMatching);
         matchingRepository.save(matching);
 
-        LocalDateTime ldt = matching.getStartTime();
-        Timestamp timestamp = Timestamp.valueOf(ldt);
         String startTime = String.valueOf(timestamp.getTime() / 1000);
 
         return DrinkDto.Response.builder()
                 .codeAndMessage(SUCCESS)
                 .startTime(startTime)
                 .build();
+    }
+
+    private String getDrinkDescription(User user, Drink drink) {
+        return drink.getName() + "를 주문한" + user.getNickname() + "님입니다.\n반갑게 맞아주세요.";
     }
 
     /**
