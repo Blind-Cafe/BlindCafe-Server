@@ -32,9 +32,9 @@ public class FirebaseCloudMessageService {
 
     private final ObjectMapper objectMapper;
 
-    public void sendMessageTo(String targetToken, String title, String body, String path, Long matchingId) {
+    public void sendMessageTo(String targetToken, String title, String body, String path, String type, Long matchingId) {
         try {
-            String message = makeMessage(targetToken, title, body, path, matchingId);
+            String message = makeMessage(targetToken, title, body, path, type, matchingId);
 
             OkHttpClient client = new OkHttpClient();
             RequestBody requestBody = RequestBody.create(message, MediaType.get("application/json; charset=utf-8"));
@@ -51,7 +51,7 @@ public class FirebaseCloudMessageService {
         }
     }
 
-    private String makeMessage(String targetToken, String title, String body, String path, Long matchingId) {
+    private String makeMessage(String targetToken, String title, String body, String path, String type, Long matchingId) {
         try {
             FcmMessageDto fcmMessage = FcmMessageDto.builder()
                     .message(FcmMessageDto.Message.builder()
@@ -64,6 +64,7 @@ public class FirebaseCloudMessageService {
                             )
                             .data(FcmMessageDto.FcmData.builder()
                                     .path(path)
+                                    .path(type)
                                     .matchingId(Long.toString(matchingId))
                                     .build()
                             )
