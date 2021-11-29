@@ -8,6 +8,7 @@ import com.example.BlindCafe.entity.topic.Subject;
 import com.example.BlindCafe.entity.topic.Topic;
 import com.example.BlindCafe.exception.BlindCafeException;
 import com.example.BlindCafe.firebase.FirebaseCloudMessageService;
+import com.example.BlindCafe.firebase.FirebaseService;
 import com.example.BlindCafe.repository.*;
 import com.example.BlindCafe.type.FcmMessage;
 import com.example.BlindCafe.type.Gender;
@@ -37,7 +38,8 @@ import static java.util.Comparator.comparing;
 @RequiredArgsConstructor
 public class MatchingService {
 
-    private final FirebaseCloudMessageService fcm;
+    private final FirebaseService firebaseService;
+    private final FirebaseCloudMessageService fcmService;
 
     private final UserRepository userRepository;
     private final UserMatchingRepository userMatchingRepository;
@@ -216,14 +218,14 @@ public class MatchingService {
             userMatchingRepository.save(partnerMatching);
 
             // FCM
-            fcm.sendMessageTo(
+            fcmService.sendMessageTo(
                     user.getDeviceId(),
                     FcmMessage.MATCHING.getTitle(),
                     FcmMessage.MATCHING.getBody(),
                     FcmMessage.MATCHING.getPath(),
                     0L
             );
-            fcm.sendMessageTo(
+            fcmService.sendMessageTo(
                     partner.getDeviceId(),
                     FcmMessage.MATCHING.getTitle(),
                     FcmMessage.MATCHING.getBody(),
@@ -431,6 +433,20 @@ public class MatchingService {
             matching.setStatus(MATCHING);
             matching.setStartTime(now);
             matching.setExpiryTime(now.plusDays(BASIC_CHAT_DAYS));
+
+            // fcm
+            User partner = matching.getUserMatchings().stream()
+                    .filter(um -> !um.getUser().equals(user))
+                    .map(um -> um.getUser() )
+                    .findAny()
+                    .orElseThrow(() -> new BlindCafeException(INVALID_MATCHING));
+            fcmService.sendMessageTo(
+                    partner.getDeviceId(),
+                    FcmMessage.MATCHING_OPEN.getTitle(),
+                    FcmMessage.MATCHING_OPEN.getBody(),
+                    FcmMessage.MATCHING_OPEN.getPath(),
+                    0L
+            );
         }
 
         userMatchingRepository.save(userMatching);
