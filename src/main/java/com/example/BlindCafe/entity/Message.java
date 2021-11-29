@@ -33,9 +33,4 @@ public class Message extends BaseTimeEntity {
 
     @Enumerated(STRING)
     private MessageType type;
-
-    public void setMatching(Matching matching) {
-        this.matching = matching;
-        matching.getMessages().add(this);
-    }
 }

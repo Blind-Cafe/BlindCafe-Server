@@ -321,7 +321,7 @@ public class MatchingService {
     }
 
     private String getFirstDescription(User user, User partner, Interest interest) {
-        return user.getNickname() + "님과 " + partner.getNickname() + "님이 선택한 PREFIX" + interest.getName() + " 테이블입니다.";
+        return user.getNickname() + "님과 " + partner.getNickname() + "님이 선택한 <" + interest.getName() + "> 테이블입니다.";
     }
 
     /**
@@ -526,7 +526,7 @@ public class MatchingService {
     }
 
     private String getDrinkDescription(User user, Drink drink) {
-        return drink.getName() + "를 주문한" + user.getNickname() + "님입니다.\n반갑게 맞아주세요.";
+        return drink.getName() + "를 주문한 " + user.getNickname() + "님입니다.\n반갑게 맞아주세요.";
     }
 
     /**
