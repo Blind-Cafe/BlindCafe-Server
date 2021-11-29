@@ -25,7 +25,8 @@ public class TestController {
                 request.getTargetToken(),
                 request.getTitle(),
                 request.getBody(),
-                request.getPath()
+                request.getPath(),
+                0L
         );
         return request;
     }

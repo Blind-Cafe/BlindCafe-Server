@@ -1,6 +1,7 @@
 package com.example.BlindCafe.controller;
 
 import com.example.BlindCafe.dto.*;
+import com.example.BlindCafe.service.ChatService;
 import com.example.BlindCafe.service.MatchingService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,6 +20,7 @@ import static com.example.BlindCafe.config.SecurityConfig.getUserId;
 public class MatchingController {
 
     private final MatchingService matchingService;
+    private final ChatService chatService;
 
     /**
      * 내 테이블 조회 - 프로필 교환을 완료한 상대방 목록 조회
@@ -151,6 +153,19 @@ public class MatchingController {
     ) {
         log.info("GET /api/matching/{}/topic", matchingId);
         return ResponseEntity.ok(matchingService.getTopic(getUserId(authentication), matchingId));
+    }
+
+    /**
+     * 채팅방 로그 찍기
+     */
+    @PostMapping("{matchingId}/log")
+    public ResponseEntity<Void> createRoomLog(
+            Authentication authentication,
+            @PathVariable Long matchingId
+    ) {
+        log.info("POST /api/matching/{}/log", matchingId);
+        matchingService.createRoomLog(getUserId(authentication), matchingId);
+        return ResponseEntity.ok().build();
     }
 
     /**

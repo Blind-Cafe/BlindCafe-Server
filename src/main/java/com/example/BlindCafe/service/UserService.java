@@ -331,7 +331,7 @@ public class UserService {
             profileImage.setStatus(DELETED);
         }
 
-        if (Objects.isNull(image)) {
+        if (Objects.isNull(image.getContentType())) {
             return;
         }
 
@@ -445,5 +445,20 @@ public class UserService {
         return ProfileImageListDto.builder()
                 .images(Arrays.asList(images))
                 .build();
+    }
+
+    @Transactional
+    public void deleteProfileImage(Long userId, int priority) {
+        validatePriority(priority);
+        User user = userRepository.findById(userId)
+                .filter(u -> u.getStatus().equals(NORMAL) || u.getStatus().equals(NOT_REQUIRED_INFO))
+                .orElseThrow(() -> new BlindCafeException(NO_USER));
+        ProfileImage profileImage = profileImageRepository
+                .findByUserIdAndPriorityAndStatus(
+                        user.getId(), priority, CommonStatus.NORMAL)
+                .orElseThrow(() -> new BlindCafeException(NO_PROFILE_IMAGE));
+
+        user.getProfileImages().remove(profileImage);
+        profileImage.setStatus(DELETED);
     }
 }

@@ -8,18 +8,21 @@ import com.example.BlindCafe.entity.topic.Subject;
 import com.example.BlindCafe.entity.topic.Topic;
 import com.example.BlindCafe.exception.BlindCafeException;
 import com.example.BlindCafe.firebase.FirebaseCloudMessageService;
+import com.example.BlindCafe.firebase.FirebaseService;
 import com.example.BlindCafe.repository.*;
 import com.example.BlindCafe.type.FcmMessage;
 import com.example.BlindCafe.type.Gender;
+import com.example.BlindCafe.type.MessageType;
 import com.example.BlindCafe.type.status.MatchingStatus;
 import com.example.BlindCafe.type.status.TopicStatus;
 import com.example.BlindCafe.type.status.UserStatus;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.persistence.Enumerated;
-import javax.validation.Valid;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -32,16 +35,15 @@ import static com.example.BlindCafe.type.ReasonType.FOR_LEAVE_ROOM;
 import static com.example.BlindCafe.type.ReasonType.FOR_WONT_EXCHANGE_PROFILE;
 import static com.example.BlindCafe.type.status.CommonStatus.NORMAL;
 import static com.example.BlindCafe.type.status.MatchingStatus.*;
-import static com.example.BlindCafe.type.status.UserStatus.NOT_REQUIRED_INFO;
 import static java.util.Comparator.comparing;
-import static javax.persistence.EnumType.STRING;
 
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class MatchingService {
 
-    private final FirebaseCloudMessageService fcm;
+    private final FirebaseService firebaseService;
+    private final FirebaseCloudMessageService fcmService;
 
     private final UserRepository userRepository;
     private final UserMatchingRepository userMatchingRepository;
@@ -49,6 +51,8 @@ public class MatchingService {
     private final DrinkRepository drinkRepository;
     private final ReasonRepository reasonRepository;
     private final TopicRepository topicRepository;
+    private final RoomLogRepository roomLogRepository;
+    private final MessageRepository messageRepository;
 
     private final static Long MAX_WAIT_TIME = 24L;
     private final static int BASIC_CHAT_DAYS = 3;
@@ -219,18 +223,47 @@ public class MatchingService {
             userMatchingRepository.save(partnerMatching);
 
             // FCM
-            fcm.sendMessageTo(
+            fcmService.sendMessageTo(
                     user.getDeviceId(),
                     FcmMessage.MATCHING.getTitle(),
                     FcmMessage.MATCHING.getBody(),
-                    FcmMessage.MATCHING.getPath()
+                    FcmMessage.MATCHING.getPath(),
+                    0L
             );
-            fcm.sendMessageTo(
+            fcmService.sendMessageTo(
                     partner.getDeviceId(),
                     FcmMessage.MATCHING.getTitle(),
                     FcmMessage.MATCHING.getBody(),
-                    FcmMessage.MATCHING.getPath()
+                    FcmMessage.MATCHING.getPath(),
+                    0L
             );
+
+            // 메세지 db에 저장
+            User admin = userRepository.findById(0L).orElseThrow(() -> new BlindCafeException(NO_USER));
+            Message message = new Message();
+            message.setMatching(matching);
+            message.setUser(admin);
+            message.setContents(getFirstDescription(user, partner, matching.getInterest()));
+            message.setType(MessageType.DESCRIPTION);
+            Message savedMessage = messageRepository.save(message);
+
+            // 메세지 firestore 저장
+            LocalDateTime ldt = savedMessage.getCreatedAt();
+            Timestamp timestamp = Timestamp.valueOf(ldt);
+
+            FirestoreDto firestoreDto = FirestoreDto.builder()
+                    .roomId(matching.getId())
+                    .targetToken(partner.getDeviceId())
+                    .message(new FirestoreDto.FirestoreMessage(
+                            Long.toString(savedMessage.getId()),
+                            Long.toString(admin.getId()),
+                            admin.getNickname(),
+                            savedMessage.getContents(),
+                            MessageType.DESCRIPTION.getFirestoreType(),
+                            timestamp
+                    ))
+                    .build();
+            firebaseService.insertMessage(firestoreDto);
 
             return CreateMatchingDto.Response.matchingBuilder()
                     .matchingStatus(userMatching.getStatus())
@@ -285,6 +318,10 @@ public class MatchingService {
     private List<Topic> getTopicsWithShuffle(List<Topic> topics, int count) {
         Collections.shuffle(topics);
         return topics.subList(0, count);
+    }
+
+    private String getFirstDescription(User user, User partner, Interest interest) {
+        return user.getNickname() + "님과 " + partner.getNickname() + "님이 선택한 PREFIX" + interest.getName() + " 테이블입니다.";
     }
 
     /**
@@ -418,6 +455,12 @@ public class MatchingService {
         Matching matching = matchingRepository.findById(matchingId)
                 .orElseThrow(() -> new BlindCafeException(NO_MATCHING));
 
+        User partner = matching.getUserMatchings().stream()
+                .filter(um -> !um.getUser().equals(user))
+                .map(um -> um.getUser() )
+                .findAny()
+                .orElseThrow(() -> new BlindCafeException(INVALID_MATCHING));
+
         UserMatching userMatching = matching.getUserMatchings()
                 .stream()
                 .filter(m -> m.getUser().getId().equals(user.getId()))
@@ -427,24 +470,63 @@ public class MatchingService {
         userMatching.setDrink(drink);
         userMatching.setStatus(MATCHING);
 
+        // 메세지 db에 저장
+        User admin = userRepository.findById(0L).orElseThrow(() -> new BlindCafeException(NO_USER));
+        Message message = new Message();
+        message.setMatching(matching);
+        message.setUser(admin);
+        message.setContents(getDrinkDescription(user, drink));
+        message.setType(MessageType.DESCRIPTION);
+        Message savedMessage = messageRepository.save(message);
+
+        // 메세지 firestore 저장
+        LocalDateTime ldt = savedMessage.getCreatedAt();
+        Timestamp timestamp = Timestamp.valueOf(ldt);
+
+        FirestoreDto firestoreDto = FirestoreDto.builder()
+                .roomId(matching.getId())
+                .targetToken(partner.getDeviceId())
+                .message(new FirestoreDto.FirestoreMessage(
+                        Long.toString(savedMessage.getId()),
+                        Long.toString(admin.getId()),
+                        admin.getNickname(),
+                        savedMessage.getContents(),
+                        MessageType.DESCRIPTION.getFirestoreType(),
+                        timestamp
+                ))
+                .build();
+        firebaseService.insertMessage(firestoreDto);
+
+
         if (!matching.getStatus().equals(MATCHING)) {
             LocalDateTime now = LocalDateTime.now();
             matching.setStatus(MATCHING);
             matching.setStartTime(now);
             matching.setExpiryTime(now.plusDays(BASIC_CHAT_DAYS));
+
+            // fcm
+            fcmService.sendMessageTo(
+                    partner.getDeviceId(),
+                    FcmMessage.MATCHING_OPEN.getTitle(),
+                    FcmMessage.MATCHING_OPEN.getBody(),
+                    FcmMessage.MATCHING_OPEN.getPath(),
+                    0L
+            );
         }
 
         userMatchingRepository.save(userMatching);
         matchingRepository.save(matching);
 
-        LocalDateTime ldt = matching.getStartTime();
-        Timestamp timestamp = Timestamp.valueOf(ldt);
         String startTime = String.valueOf(timestamp.getTime() / 1000);
 
         return DrinkDto.Response.builder()
                 .codeAndMessage(SUCCESS)
                 .startTime(startTime)
                 .build();
+    }
+
+    private String getDrinkDescription(User user, Drink drink) {
+        return drink.getName() + "를 주문한" + user.getNickname() + "님입니다.\n반갑게 맞아주세요.";
     }
 
     /**
@@ -598,8 +680,29 @@ public class MatchingService {
         userMatching.setStatus(PROFILE_READY);
 
         boolean result = false;
-        if (partnerMatching.getStatus().equals(PROFILE_READY))
+        if (partnerMatching.getStatus().equals(PROFILE_READY)) {
             result = true;
+            // fcm
+            User partner = matching.getUserMatchings().stream()
+                    .filter(um -> !um.getUser().equals(user))
+                    .map(um -> um.getUser() )
+                    .findAny()
+                    .orElseThrow(() -> new BlindCafeException(INVALID_MATCHING));
+            fcmService.sendMessageTo(
+                    user.getDeviceId(),
+                    FcmMessage.PROFILE_OPEN.getTitle(),
+                    FcmMessage.PROFILE_OPEN.getBody(),
+                    FcmMessage.PROFILE_OPEN.getPath(),
+                    0L
+            );
+            fcmService.sendMessageTo(
+                    partner.getDeviceId(),
+                    FcmMessage.PROFILE_OPEN.getTitle(),
+                    FcmMessage.PROFILE_OPEN.getBody(),
+                    FcmMessage.PROFILE_OPEN.getPath(),
+                    0L
+            );
+        }
 
         return OpenMatchingProfileDto.Response.builder()
                 .result(result)
@@ -720,18 +823,33 @@ public class MatchingService {
         matching.setStartTime(now);
         matching.setExpiryTime(now.plusDays(EXTEND_CHAT_DAYS));
 
-        // 2-2-1. 양쪽 다 음료(뱃지) 추가
+        // 2-2-1. 양쪽 다 음료(뱃지) 추가 (내 음료로 수정)
         UserDrink myDrink = UserDrink.builder()
                 .user(user)
-                .drink(partnerMatching.getDrink())
+                .drink(userMatching.getDrink())
                 .build();
         UserDrink partnerDrink = UserDrink.builder()
                 .user(partner)
-                .drink(userMatching.getDrink())
+                .drink(partnerMatching.getDrink())
                 .build();
 
         user.getUserDrinks().add(myDrink);
         partner.getUserDrinks().add(partnerDrink);
+
+        fcmService.sendMessageTo(
+                user.getDeviceId(),
+                FcmMessage.MATCHING_CONTINUE.getTitle(),
+                FcmMessage.MATCHING_CONTINUE.getBody(),
+                FcmMessage.MATCHING_CONTINUE.getPath(),
+                0L
+        );
+        fcmService.sendMessageTo(
+                partner.getDeviceId(),
+                FcmMessage.MATCHING_CONTINUE.getTitle(),
+                FcmMessage.MATCHING_CONTINUE.getBody(),
+                FcmMessage.MATCHING_CONTINUE.getPath(),
+                0L
+        );
 
         return OpenMatchingProfileDto.Response.builder()
                 .result(true)
@@ -765,5 +883,21 @@ public class MatchingService {
                 .findAny().orElseThrow(() -> new BlindCafeException(INVALID_MATCHING));
         partnerMatching.setStatus(FAILED_WONT_EXCHANGE);
         partnerMatching.setReason(reason);
+    }
+
+    @Transactional
+    public void createRoomLog(Long userId, Long matchingId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BlindCafeException(NO_USER));
+
+        Matching matching = matchingRepository.findById(matchingId)
+                .orElseThrow(() -> new BlindCafeException(NO_MATCHING));
+
+        RoomLog roomLog = RoomLog.builder()
+                .user(user)
+                .matching(matching)
+                .latestTime(LocalDateTime.now())
+                .build();
+        roomLogRepository.save(roomLog);
     }
 }

@@ -1,8 +1,6 @@
 package com.example.BlindCafe.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
+import lombok.*;
 
 @Getter
 @AllArgsConstructor
@@ -34,5 +32,18 @@ public class FcmMessageDto {
     @Builder
     public static class FcmData {
         private String path;
+        private String matchingId;
+    }
+
+    @Getter
+    @Setter
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class Request {
+        private String title;
+        private String body;
+        private String image;
+        private String path;
+        private Long matchingId;
     }
 }
