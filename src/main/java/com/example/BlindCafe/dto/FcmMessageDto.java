@@ -32,6 +32,7 @@ public class FcmMessageDto {
     @Builder
     public static class FcmData {
         private String path;
+        private String type;
         private String matchingId;
     }
 
