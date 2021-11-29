@@ -264,6 +264,8 @@ public class MatchingService {
                     .build();
             firebaseService.insertMessage(firestoreDto);
 
+            getFirstTopic(matching);
+
             return CreateMatchingDto.Response.matchingBuilder()
                     .matchingStatus(userMatching.getStatus())
                     .matchingId(matching.getId())
@@ -276,6 +278,24 @@ public class MatchingService {
                     .matchingStatus(userMatching.getStatus())
                     .build();
         }
+    }
+
+    private void getFirstTopic(Matching matching) {
+        MatchingTopic matchingTopic = matching.getTopics().stream()
+                .filter(mt -> mt.getStatus().equals(TopicStatus.WAIT))
+                .filter(mt -> mt.getId() <= SUBJECT_LIMIT)
+                .sorted(Comparator.comparing(MatchingTopic::getSequence))
+                .findFirst()
+                .orElseThrow(() -> new BlindCafeException(EXCEED_MATCHING_TOPIC));
+        Long topicId = matchingTopic.getTopic().getId();
+        matchingTopic.setStatus(TopicStatus.SELECT);
+
+        LocalDateTime time = LocalDateTime.now().plusMinutes(5);
+
+        Subject subject = topicRepository.findSubjectById(topicId)
+                .orElseThrow(() -> new BlindCafeException(INVALID_TOPIC));
+
+        insertTopic(matching, subject.getSubject(), MessageType.TEXT_TOPIC, time);
     }
 
     private List<MatchingTopic> makeMatchingTopics(Matching matching) {
@@ -629,7 +649,7 @@ public class MatchingService {
         if (topicId <= SUBJECT_LIMIT) {
             Subject subject = topicRepository.findSubjectById(topicId)
                     .orElseThrow(() -> new BlindCafeException(INVALID_TOPIC));
-            insertTopic(matching, subject.getSubject(), MessageType.TEXT_TOPIC);
+            insertTopic(matching, subject.getSubject(), MessageType.TEXT_TOPIC, LocalDateTime.now());
             return TopicDto.builder()
                     .type("text")
                     .text(TopicDto.SubjectDto.builder()
@@ -638,7 +658,7 @@ public class MatchingService {
         } else if (topicId <= AUDIO_LIMIT) {
             Audio audio = topicRepository.findAudioById(topicId)
                     .orElseThrow(() -> new BlindCafeException(INVALID_TOPIC));
-            insertTopic(matching, audio.getSrc(), MessageType.AUDIO_TOPIC);
+            insertTopic(matching, audio.getSrc(), MessageType.AUDIO_TOPIC, LocalDateTime.now());
             return TopicDto.builder()
                     .type("audio")
                     .audio(TopicDto.ObjectDto.builder()
@@ -648,7 +668,7 @@ public class MatchingService {
         } else {
             Image image = topicRepository.findImageById(topicId)
                     .orElseThrow(() -> new BlindCafeException(INVALID_TOPIC));
-            insertTopic(matching, image.getSrc(), MessageType.IMAGE_TOPIC);
+            insertTopic(matching, image.getSrc(), MessageType.IMAGE_TOPIC, LocalDateTime.now());
             return TopicDto.builder()
                     .type("image")
                     .image(TopicDto.ObjectDto.builder()
@@ -658,7 +678,7 @@ public class MatchingService {
         }
     }
 
-    private void insertTopic(Matching matching, String contents, MessageType messageType) {
+    private void insertTopic(Matching matching, String contents, MessageType messageType, LocalDateTime ldt) {
         // 메세지 db에 저장
         User admin = userRepository.findById(0L)
                 .orElseThrow(() -> new BlindCafeException(NO_USER));
@@ -667,10 +687,13 @@ public class MatchingService {
         message.setUser(admin);
         message.setContents(contents);
         message.setType(messageType);
+        message.setCreatedAt(ldt);
         Message savedMessage = messageRepository.save(message);
 
         // 메세지 firestore 저장
-        LocalDateTime ldt = savedMessage.getCreatedAt();
+        if (ldt.isAfter(LocalDateTime.now()))
+            messageType = MessageType.FIRST_TEXT_TOPIC;
+
         Timestamp timestamp = Timestamp.valueOf(ldt);
 
         FirestoreDto firestoreDto = FirestoreDto.builder()
