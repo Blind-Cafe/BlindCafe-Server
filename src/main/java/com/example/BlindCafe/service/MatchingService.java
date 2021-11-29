@@ -720,14 +720,7 @@ public class MatchingService {
                     .map(um -> um.getUser() )
                     .findAny()
                     .orElseThrow(() -> new BlindCafeException(INVALID_MATCHING));
-            fcmService.sendMessageTo(
-                    user.getDeviceId(),
-                    FcmMessage.PROFILE_OPEN.getTitle(),
-                    FcmMessage.PROFILE_OPEN.getBody(),
-                    FcmMessage.PROFILE_OPEN.getPath(),
-                    FcmMessage.PROFILE_OPEN.getType(),
-                    0L
-            );
+
             fcmService.sendMessageTo(
                     partner.getDeviceId(),
                     FcmMessage.PROFILE_OPEN.getTitle(),
@@ -874,14 +867,6 @@ public class MatchingService {
         insertDrink(matching, user, myDrink);
         insertDrink(matching, partner, partnerDrink);
 
-        fcmService.sendMessageTo(
-                user.getDeviceId(),
-                FcmMessage.MATCHING_CONTINUE.getTitle(),
-                FcmMessage.MATCHING_CONTINUE.getBody(),
-                FcmMessage.MATCHING_CONTINUE.getPath(),
-                FcmMessage.MATCHING_CONTINUE.getType(),
-                0L
-        );
         fcmService.sendMessageTo(
                 partner.getDeviceId(),
                 FcmMessage.MATCHING_CONTINUE.getTitle(),
