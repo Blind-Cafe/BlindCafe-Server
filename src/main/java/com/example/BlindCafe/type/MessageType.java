@@ -12,7 +12,8 @@ public enum MessageType {
     TEXT_TOPIC(4),
     IMAGE_TOPIC(5),
     AUDIO_TOPIC(6),
-    DESCRIPTION(7);
+    DESCRIPTION(7),
+    DRINK(8);
 
     private final Integer firestoreType;
 }

@@ -228,6 +228,7 @@ public class MatchingService {
                     FcmMessage.MATCHING.getTitle(),
                     FcmMessage.MATCHING.getBody(),
                     FcmMessage.MATCHING.getPath(),
+                    FcmMessage.MATCHING.getType(),
                     0L
             );
             fcmService.sendMessageTo(
@@ -235,6 +236,7 @@ public class MatchingService {
                     FcmMessage.MATCHING.getTitle(),
                     FcmMessage.MATCHING.getBody(),
                     FcmMessage.MATCHING.getPath(),
+                    FcmMessage.MATCHING.getType(),
                     0L
             );
 
@@ -510,6 +512,7 @@ public class MatchingService {
                     FcmMessage.MATCHING_OPEN.getTitle(),
                     FcmMessage.MATCHING_OPEN.getBody(),
                     FcmMessage.MATCHING_OPEN.getPath(),
+                    FcmMessage.MATCHING_OPEN.getType(),
                     0L
             );
         }
@@ -725,6 +728,7 @@ public class MatchingService {
                     FcmMessage.PROFILE_OPEN.getTitle(),
                     FcmMessage.PROFILE_OPEN.getBody(),
                     FcmMessage.PROFILE_OPEN.getPath(),
+                    FcmMessage.PROFILE_OPEN.getType(),
                     0L
             );
             fcmService.sendMessageTo(
@@ -732,6 +736,7 @@ public class MatchingService {
                     FcmMessage.PROFILE_OPEN.getTitle(),
                     FcmMessage.PROFILE_OPEN.getBody(),
                     FcmMessage.PROFILE_OPEN.getPath(),
+                    FcmMessage.PROFILE_OPEN.getType(),
                     0L
             );
         }
@@ -868,11 +873,16 @@ public class MatchingService {
         user.getUserDrinks().add(myDrink);
         partner.getUserDrinks().add(partnerDrink);
 
+        // 메세지 db에 저장
+        insertDrink(matching, user, myDrink);
+        insertDrink(matching, partner, partnerDrink);
+
         fcmService.sendMessageTo(
                 user.getDeviceId(),
                 FcmMessage.MATCHING_CONTINUE.getTitle(),
                 FcmMessage.MATCHING_CONTINUE.getBody(),
                 FcmMessage.MATCHING_CONTINUE.getPath(),
+                FcmMessage.MATCHING_CONTINUE.getType(),
                 0L
         );
         fcmService.sendMessageTo(
@@ -880,6 +890,7 @@ public class MatchingService {
                 FcmMessage.MATCHING_CONTINUE.getTitle(),
                 FcmMessage.MATCHING_CONTINUE.getBody(),
                 FcmMessage.MATCHING_CONTINUE.getPath(),
+                FcmMessage.MATCHING_CONTINUE.getType(),
                 0L
         );
 
@@ -887,6 +898,33 @@ public class MatchingService {
                 .result(true)
                 .nickname(partner.getNickname())
                 .build();
+    }
+
+    private void insertDrink(Matching matching, User user, UserDrink userDrink) {
+        Message message = new Message();
+        message.setMatching(matching);
+        message.setUser(user);
+        message.setContents(userDrink.getDrink().getName());
+        message.setType(MessageType.DRINK);
+        Message savedMessage = messageRepository.save(message);
+
+        // 메세지 firestore 저장
+        LocalDateTime ldt = savedMessage.getCreatedAt();
+        Timestamp timestamp = Timestamp.valueOf(ldt);
+
+        FirestoreDto firestoreDto = FirestoreDto.builder()
+                .roomId(matching.getId())
+                .targetToken(null)
+                .message(new FirestoreDto.FirestoreMessage(
+                        Long.toString(savedMessage.getId()),
+                        Long.toString(user.getId()),
+                        user.getNickname(),
+                        savedMessage.getContents(),
+                        MessageType.DRINK.getFirestoreType(),
+                        timestamp
+                ))
+                .build();
+        firebaseService.insertMessage(firestoreDto);
     }
 
     @Transactional
