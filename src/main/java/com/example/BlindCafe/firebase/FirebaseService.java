@@ -4,8 +4,7 @@ import com.example.BlindCafe.dto.FcmMessageDto;
 import com.example.BlindCafe.dto.FirestoreDto;
 import com.example.BlindCafe.exception.BlindCafeException;
 import com.example.BlindCafe.exception.CodeAndMessage;
-import com.example.BlindCafe.type.FcmPath;
-import com.example.BlindCafe.type.MessageType;
+import com.example.BlindCafe.type.FcmMessage;
 import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.Firestore;
 import com.google.cloud.firestore.WriteResult;
@@ -13,8 +12,6 @@ import com.google.firebase.cloud.FirestoreClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-
-import java.sql.Timestamp;
 
 @Slf4j
 @Service
@@ -47,7 +44,7 @@ public class FirebaseService {
 
         request.setTitle(message.getSenderName());
         request.setMatchingId(firestoreDto.getRoomId());
-        request.setPath(FcmPath.CHAT.toString());
+        request.setPath(FcmMessage.MATCHING.getPath());
 
         if (message.getType() == 1) {
             // text

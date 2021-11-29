@@ -12,9 +12,13 @@ import com.example.BlindCafe.firebase.FirebaseService;
 import com.example.BlindCafe.repository.*;
 import com.example.BlindCafe.type.FcmMessage;
 import com.example.BlindCafe.type.Gender;
+import com.example.BlindCafe.type.MessageType;
 import com.example.BlindCafe.type.status.MatchingStatus;
 import com.example.BlindCafe.type.status.TopicStatus;
 import com.example.BlindCafe.type.status.UserStatus;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -48,6 +52,7 @@ public class MatchingService {
     private final ReasonRepository reasonRepository;
     private final TopicRepository topicRepository;
     private final RoomLogRepository roomLogRepository;
+    private final MessageRepository messageRepository;
 
     private final static Long MAX_WAIT_TIME = 24L;
     private final static int BASIC_CHAT_DAYS = 3;
@@ -232,6 +237,33 @@ public class MatchingService {
                     FcmMessage.MATCHING.getPath(),
                     0L
             );
+            
+            // 메세지 db에 저장
+            User admin = userRepository.findById(0L).orElseThrow(() -> new BlindCafeException(NO_USER));
+            Message message = new Message();
+            message.setMatching(matching);
+            message.setUser(admin);
+            message.setContents(getFirstDescription(user, partner, matching.getInterest()));
+            message.setType(MessageType.DESCRIPTION);
+            Message savedMessage = messageRepository.save(message);
+
+            // 메세지 firestore 저장
+            LocalDateTime ldt = savedMessage.getCreatedAt();
+            Timestamp timestamp = Timestamp.valueOf(ldt);
+
+            FirestoreDto firestoreDto = FirestoreDto.builder()
+                    .roomId(matching.getId())
+                    .targetToken(partner.getDeviceId())
+                    .message(new FirestoreDto.FirestoreMessage(
+                            Long.toString(savedMessage.getId()),
+                            Long.toString(user.getId()),
+                            user.getNickname(),
+                            savedMessage.getContents(),
+                            MessageType.DESCRIPTION.getFirestoreType(),
+                            timestamp
+                    ))
+                    .build();
+            FcmMessageDto.Request req = firebaseService.insertMessage(firestoreDto);
 
             return CreateMatchingDto.Response.matchingBuilder()
                     .matchingStatus(userMatching.getStatus())
@@ -286,6 +318,10 @@ public class MatchingService {
     private List<Topic> getTopicsWithShuffle(List<Topic> topics, int count) {
         Collections.shuffle(topics);
         return topics.subList(0, count);
+    }
+
+    private String getFirstDescription(User user, User partner, Interest interest) {
+        return user.getNickname() + "님과 " + partner.getNickname() + "님이 선택한 PREFIX" + interest.getName() + " 테이블입니다.";
     }
 
     /**
