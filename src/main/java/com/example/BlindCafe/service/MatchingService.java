@@ -74,6 +74,7 @@ public class MatchingService {
                 .map(userMatching -> userMatching.getMatching())
                 .map(matching -> makeMatchingDto(matching, user, now))
                 .filter(matchingDto -> !Objects.isNull(matchingDto))
+                .sorted(Comparator.comparing(MatchingListDto.MatchingDto::getTime).reversed())
                 .collect(Collectors.toList());
 
         return new MatchingListDto(matchings);
@@ -101,7 +102,7 @@ public class MatchingService {
                 .sorted(Comparator.comparing(RoomLog::getLatestTime).reversed())
                 .findFirst().orElse(null);
 
-        Message latestMessage = messageRepository.findByMatching(matching).stream()
+        Message latestMessage = messageRepository.findAllByMatching(matching).stream()
                 .filter(message -> message.getCreatedAt().isBefore(LocalDateTime.now()))
                 .filter(message -> isValidMessageType(message))
                 .sorted(Comparator.comparing(Message::getCreatedAt).reversed())
@@ -112,7 +113,7 @@ public class MatchingService {
 
         if (!Objects.isNull(latestMessage)) {
             boolean received = true;
-            if (latestMessage.getCreatedAt().isAfter(roomLog.getLatestTime()))
+            if (Objects.isNull(roomLog) || latestMessage.getCreatedAt().isAfter(roomLog.getLatestTime()))
                 received = false;
             String contents = "";
             if (latestMessage.getType().equals(MessageType.TEXT)) {
@@ -130,14 +131,16 @@ public class MatchingService {
                     .latestMessage(contents)
                     .received(received)
                     .expiryTime(expiryTime)
+                    .time(latestMessage.getCreatedAt())
                     .build();
         } else {
             return MatchingListDto.MatchingDto.builder()
                     .matchingId(matching.getId())
                     .partner(new MatchingListDto.Partner(partner))
-                    .latestMessage(null)
+                    .latestMessage("")
                     .received(true)
                     .expiryTime(expiryTime)
+                    .time(LocalDateTime.MIN)
                     .build();
         }
     }
@@ -306,7 +309,7 @@ public class MatchingService {
                     .build();
             firebaseService.insertMessage(firestoreDto);
 
-            getFirstTopic(matching);
+            // getFirstTopic(matching);
 
             return CreateMatchingDto.Response.matchingBuilder()
                     .matchingStatus(userMatching.getStatus())
@@ -322,23 +325,50 @@ public class MatchingService {
         }
     }
 
-    private void getFirstTopic(Matching matching) {
-        MatchingTopic matchingTopic = matching.getTopics().stream()
-                .filter(mt -> mt.getStatus().equals(TopicStatus.WAIT))
-                .filter(mt -> mt.getId() <= SUBJECT_LIMIT)
-                .sorted(Comparator.comparing(MatchingTopic::getSequence))
-                .findFirst()
-                .orElseThrow(() -> new BlindCafeException(EXCEED_MATCHING_TOPIC));
-        Long topicId = matchingTopic.getTopic().getId();
-        matchingTopic.setStatus(TopicStatus.SELECT);
-
-        LocalDateTime time = LocalDateTime.now().plusMinutes(5);
-
-        Subject subject = topicRepository.findSubjectById(topicId)
-                .orElseThrow(() -> new BlindCafeException(INVALID_TOPIC));
-
-        insertTopic(matching, subject.getSubject(), MessageType.TEXT_TOPIC, time);
-    }
+//    private void getFirstTopic(Matching matching) {
+//        MatchingTopic matchingTopic = matching.getTopics().stream()
+//                .filter(mt -> mt.getStatus().equals(TopicStatus.WAIT))
+//                .filter(mt -> mt.getTopic().getId() <= SUBJECT_LIMIT)
+//                .sorted(Comparator.comparing(MatchingTopic::getSequence))
+//                .findFirst()
+//                .orElseThrow(() -> new BlindCafeException(EXCEED_MATCHING_TOPIC));
+//        Long topicId = matchingTopic.getTopic().getId();
+//        matchingTopic.setStatus(TopicStatus.SELECT);
+//
+//        LocalDateTime time = LocalDateTime.now().plusMinutes(5);
+//
+//        Subject subject = topicRepository.findSubjectById(topicId)
+//                .orElseThrow(() -> new BlindCafeException(INVALID_TOPIC));
+//
+//        // 메세지 db에 저장
+//        User admin = userRepository.findById(0L)
+//                .orElseThrow(() -> new BlindCafeException(NO_USER));
+//        Message message = new Message();
+//        message.setMatching(matching);
+//        message.setUser(admin);
+//        message.setContents("벨을 눌러 다양한 대화 토픽을 받아보세요!\\n예시를 보여드릴게요.");
+//        message.setType(MessageType.DESCRIPTION);
+//        message.setCreatedAt(time);
+//        Message savedMessage = messageRepository.save(message);
+//
+//        Timestamp timestamp = Timestamp.valueOf(time);
+//
+//        FirestoreDto firestoreDto = FirestoreDto.builder()
+//                .roomId(matching.getId())
+//                .targetToken(null)
+//                .message(new FirestoreDto.FirestoreMessage(
+//                        Long.toString(savedMessage.getId()),
+//                        Long.toString(admin.getId()),
+//                        admin.getNickname(),
+//                        savedMessage.getContents(),
+//                        message.getType().getFirestoreType(),
+//                        timestamp
+//                ))
+//                .build();
+//        firebaseService.insertMessage(firestoreDto);
+//
+//        insertTopic(matching, subject.getSubject(), MessageType.TEXT_TOPIC, time);
+//    }
 
     private List<MatchingTopic> makeMatchingTopics(Matching matching) {
         Long interestId = matching.getInterest().getId();
@@ -731,10 +761,6 @@ public class MatchingService {
         message.setType(messageType);
         message.setCreatedAt(ldt);
         Message savedMessage = messageRepository.save(message);
-
-        // 메세지 firestore 저장
-        if (ldt.isAfter(LocalDateTime.now()))
-            messageType = MessageType.FIRST_TEXT_TOPIC;
 
         Timestamp timestamp = Timestamp.valueOf(ldt);
 
