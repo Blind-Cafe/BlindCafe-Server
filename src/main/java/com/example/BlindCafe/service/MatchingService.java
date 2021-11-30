@@ -16,6 +16,7 @@ import com.example.BlindCafe.type.MessageType;
 import com.example.BlindCafe.type.status.MatchingStatus;
 import com.example.BlindCafe.type.status.TopicStatus;
 import com.example.BlindCafe.type.status.UserStatus;
+import com.example.BlindCafe.util.Scheduler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,6 +25,7 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 import static com.example.BlindCafe.exception.CodeAndMessage.*;
@@ -58,7 +60,8 @@ public class MatchingService {
     private final static Long MAX_INTEREST_ID = 9L;
     private final static Long SUBJECT_LIMIT = 1000L;
     private final static Long AUDIO_LIMIT = 2000L;
-    private final static Long IMAGE_LIMIT = 3000L;
+
+    private final Scheduler scheduler;
 
     /**
      * 내 테이블 조회 - 프로필 교환을 완료한 상대방 목록 조회
@@ -171,8 +174,22 @@ public class MatchingService {
         User partner = matching.getUserMatchings().stream()
                 .filter(um -> !um.getUser().equals(user))
                 .map(um -> um.getUser())
-                .filter(u -> u.getStatus().equals(UserStatus.NORMAL))
                 .findAny().orElseThrow(() -> new BlindCafeException(INVALID_MATCHING));
+
+        if (partner.getStatus().equals(UserStatus.RETIRED) || partner.getStatus().equals(UserStatus.SUSPENDED)) {
+            try {
+                matching.getUserMatchings().stream().
+                        filter(um -> um.getUser().equals(user))
+                        .findAny().get().setStatus(FAILED_LEAVE_ROOM);
+                matching.getUserMatchings().stream().
+                        filter(um -> um.getUser().equals(partner))
+                        .findAny().get().setStatus(OUT);
+                matching.setStatus(FAILED_LEAVE_ROOM);
+                throw new BlindCafeException(INVALID_MATCHING);
+            } catch (Exception e) {
+                throw new BlindCafeException(INVALID_MATCHING);
+            }
+        }
 
         ProfileImage profileImage = partner.getProfileImages()
                 .stream().sorted(Comparator.comparing(ProfileImage::getPriority))
@@ -311,6 +328,10 @@ public class MatchingService {
             firebaseService.insertMessage(firestoreDto);
 
             // getFirstTopic(matching);
+
+            /**
+             * 토픽 3분 뒤 생성
+             */
 
             return CreateMatchingDto.Response.matchingBuilder()
                     .matchingStatus(userMatching.getStatus())
