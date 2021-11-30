@@ -16,6 +16,7 @@ public class FcmMessageDto {
         private String token;
         private Notification notification;
         private FcmData data;
+        private Apns apns;
     }
 
     @Getter
@@ -31,6 +32,33 @@ public class FcmMessageDto {
     @AllArgsConstructor
     @Builder
     public static class FcmData {
+        private String title;
+        private String body;
+        private String path;
+        private String type;
+        private String matchingId;
+    }
+
+    @Getter
+    @AllArgsConstructor
+    @Builder
+    public static class Apns {
+        private Payload payload;
+    }
+
+    @Getter
+    @AllArgsConstructor
+    @Builder
+    public static class Payload {
+        private Aps aps;
+    }
+
+    @Getter
+    @AllArgsConstructor
+    @Builder
+    public static class Aps {
+        private String title;
+        private String body;
         private String path;
         private String type;
         private String matchingId;
