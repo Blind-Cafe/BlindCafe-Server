@@ -9,6 +9,4 @@ import java.util.Optional;
 
 public interface MessageRepository extends JpaRepository<Message, Long> {
     List<Message> findAllByMatching(Matching matching);
-
-    Optional<Message> findByMatching(Matching matching);
 }
