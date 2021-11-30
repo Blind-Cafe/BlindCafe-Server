@@ -97,17 +97,59 @@ public class MatchingService {
                 .findAny()
                 .map(partnerMatching -> partnerMatching.getUser()).orElse(null);
 
-        if (partner != null) {
+        RoomLog roomLog = roomLogRepository.findByUserAndMatching(user, matching).stream()
+                .sorted(Comparator.comparing(RoomLog::getLatestTime).reversed())
+                .findFirst().orElse(null);
+
+        Message latestMessage = messageRepository.findByMatching(matching).stream()
+                .filter(message -> message.getCreatedAt().isBefore(LocalDateTime.now()))
+                .filter(message -> isValidMessageType(message))
+                .sorted(Comparator.comparing(Message::getCreatedAt).reversed())
+                .findFirst().orElse(null);
+
+        if (Objects.isNull(partner))
+            return null;
+
+        if (!Objects.isNull(latestMessage)) {
+            boolean received = true;
+            if (latestMessage.getCreatedAt().isAfter(roomLog.getLatestTime()))
+                received = false;
+            String contents = "";
+            if (latestMessage.getType().equals(MessageType.TEXT)) {
+                contents = latestMessage.getContents();
+            } else if (latestMessage.getType().equals(MessageType.IMAGE)) {
+                contents = "사진이 전송되었습니다.";
+            } else if (latestMessage.getType().equals(MessageType.AUDIO)) {
+                contents = "음성메시지가 전송되었습니다.";
+            } else {
+                contents = "토픽이 전송되었습니다.";
+            }
             return MatchingListDto.MatchingDto.builder()
                     .matchingId(matching.getId())
                     .partner(new MatchingListDto.Partner(partner))
-                    .latestMessage("none")
-                    .received(true)
+                    .latestMessage(contents)
+                    .received(received)
                     .expiryTime(expiryTime)
                     .build();
         } else {
-            return null;
+            return MatchingListDto.MatchingDto.builder()
+                    .matchingId(matching.getId())
+                    .partner(new MatchingListDto.Partner(partner))
+                    .latestMessage(null)
+                    .received(true)
+                    .expiryTime(expiryTime)
+                    .build();
         }
+    }
+
+    private boolean isValidMessageType(Message message) {
+        MessageType messageType = message.getType();
+        if (messageType.equals(MessageType.DESCRIPTION) ||
+        messageType.equals(MessageType.DRINK)) {
+            return false;
+        }
+        else
+            return true;
     }
 
     /**
