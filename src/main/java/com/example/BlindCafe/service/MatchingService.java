@@ -71,6 +71,7 @@ public class MatchingService {
         List<MatchingListDto.MatchingDto> matchings = user.getUserMatchings().stream()
                 .filter(userMatching -> !Objects.isNull(userMatching.getMatching()))
                 .filter(userMatching -> userMatching.getMatching().getIsContinuous())
+                .filter(userMatching -> userMatching.getMatching().getStatus().equals(MATCHING_CONTINUE))
                 .map(userMatching -> userMatching.getMatching())
                 .map(matching -> makeMatchingDto(matching, user, now))
                 .filter(matchingDto -> !Objects.isNull(matchingDto))
