@@ -251,12 +251,11 @@ public class MatchingService {
 
         UserMatching partnerMatching = searchAbleMatching(user);
 
-        UserMatching userMatching = UserMatching.builder()
-                .user(user)
-                .status(WAIT)
-                .build();
-
         if (partnerMatching != null) {
+            UserMatching userMatching = UserMatching.builder()
+                    .user(user)
+                    .status(WAIT)
+                    .build();
             User partner = partnerMatching.getUser();
 
             // 매칭 상대를 찾은 경우
@@ -285,8 +284,6 @@ public class MatchingService {
 
             userMatching.setMatching(matching);
             partnerMatching.setMatching(matching);
-            userMatchingRepository.save(userMatching);
-            userMatchingRepository.save(partnerMatching);
 
             // FCM
             fcmService.sendMessageTo(
@@ -340,6 +337,10 @@ public class MatchingService {
                     .partnerNickname(partner.getNickname())
                     .build();
         } else {
+            UserMatching userMatching = UserMatching.builder()
+                    .user(user)
+                    .status(WAIT)
+                    .build();
             userMatchingRepository.save(userMatching);
             return CreateMatchingDto.Response.noneMatchingBuilder()
                     .matchingStatus(userMatching.getStatus())
@@ -585,8 +586,8 @@ public class MatchingService {
         // 첫 번째 토픽
         scheduleService.serveFirstTopic(matchingId);
 
-        userMatchingRepository.save(userMatching);
-        matchingRepository.save(matching);
+        // userMatchingRepository.save(userMatching);
+        // matchingRepository.save(matching);
 
         String startTime = String.valueOf(timestamp.getTime() / 1000);
 
