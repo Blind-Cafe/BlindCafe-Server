@@ -83,7 +83,7 @@ public class ChatService {
                 req.getTitle(),
                 req.getBody(),
                 req.getPath(),
-                "1",
+                "T",
                 req.getMatchingId()
         );
     }

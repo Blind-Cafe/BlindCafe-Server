@@ -16,9 +16,7 @@ import com.example.BlindCafe.type.MessageType;
 import com.example.BlindCafe.type.status.MatchingStatus;
 import com.example.BlindCafe.type.status.TopicStatus;
 import com.example.BlindCafe.type.status.UserStatus;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
+import com.example.BlindCafe.util.TopicServeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +25,8 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 import static com.example.BlindCafe.exception.CodeAndMessage.*;
@@ -44,6 +44,7 @@ public class MatchingService {
 
     private final FirebaseService firebaseService;
     private final FirebaseCloudMessageService fcmService;
+    private final TopicServeService topicServeService;
 
     private final UserRepository userRepository;
     private final UserMatchingRepository userMatchingRepository;
@@ -59,9 +60,10 @@ public class MatchingService {
     private final static int EXTEND_CHAT_DAYS = 7;
     private final static Long PUBLIC_INTEREST_ID = 0L;
     private final static Long MAX_INTEREST_ID = 9L;
-    private final static Long SUBJECT_LIMIT = 1000L;
-    private final static Long AUDIO_LIMIT = 2000L;
-    private final static Long IMAGE_LIMIT = 3000L;
+    public final static Long SUBJECT_LIMIT = 1000L;
+    public final static Long AUDIO_LIMIT = 2000L;
+
+    ExecutorService executor = Executors.newFixedThreadPool(30);
 
     /**
      * 내 테이블 조회 - 프로필 교환을 완료한 상대방 목록 조회
@@ -74,9 +76,11 @@ public class MatchingService {
         List<MatchingListDto.MatchingDto> matchings = user.getUserMatchings().stream()
                 .filter(userMatching -> !Objects.isNull(userMatching.getMatching()))
                 .filter(userMatching -> userMatching.getMatching().getIsContinuous())
+                .filter(userMatching -> userMatching.getMatching().getStatus().equals(MATCHING_CONTINUE))
                 .map(userMatching -> userMatching.getMatching())
                 .map(matching -> makeMatchingDto(matching, user, now))
                 .filter(matchingDto -> !Objects.isNull(matchingDto))
+                .sorted(Comparator.comparing(MatchingListDto.MatchingDto::getTime).reversed())
                 .collect(Collectors.toList());
 
         return new MatchingListDto(matchings);
@@ -100,17 +104,61 @@ public class MatchingService {
                 .findAny()
                 .map(partnerMatching -> partnerMatching.getUser()).orElse(null);
 
-        if (partner != null) {
+        RoomLog roomLog = roomLogRepository.findByUserAndMatching(user, matching).stream()
+                .sorted(Comparator.comparing(RoomLog::getLatestTime).reversed())
+                .findFirst().orElse(null);
+
+        Message latestMessage = messageRepository.findAllByMatching(matching).stream()
+                .filter(message -> message.getCreatedAt().isBefore(LocalDateTime.now()))
+                .filter(message -> isValidMessageType(message))
+                .sorted(Comparator.comparing(Message::getCreatedAt).reversed())
+                .findFirst().orElse(null);
+
+        if (Objects.isNull(partner))
+            return null;
+
+        if (!Objects.isNull(latestMessage)) {
+            boolean received = true;
+            if (Objects.isNull(roomLog) || latestMessage.getCreatedAt().isAfter(roomLog.getLatestTime()))
+                received = false;
+            String contents = "";
+            if (latestMessage.getType().equals(MessageType.TEXT)) {
+                contents = latestMessage.getContents();
+            } else if (latestMessage.getType().equals(MessageType.IMAGE)) {
+                contents = "사진이 전송되었습니다.";
+            } else if (latestMessage.getType().equals(MessageType.AUDIO)) {
+                contents = "음성메시지가 전송되었습니다.";
+            } else {
+                contents = "토픽이 전송되었습니다.";
+            }
             return MatchingListDto.MatchingDto.builder()
                     .matchingId(matching.getId())
                     .partner(new MatchingListDto.Partner(partner))
-                    .latestMessage("none")
-                    .received(true)
+                    .latestMessage(contents)
+                    .received(received)
                     .expiryTime(expiryTime)
+                    .time(latestMessage.getCreatedAt())
                     .build();
         } else {
-            return null;
+            return MatchingListDto.MatchingDto.builder()
+                    .matchingId(matching.getId())
+                    .partner(new MatchingListDto.Partner(partner))
+                    .latestMessage("")
+                    .received(true)
+                    .expiryTime(expiryTime)
+                    .time(LocalDateTime.MIN)
+                    .build();
         }
+    }
+
+    private boolean isValidMessageType(Message message) {
+        MessageType messageType = message.getType();
+        if (messageType.equals(MessageType.DESCRIPTION) ||
+        messageType.equals(MessageType.DRINK)) {
+            return false;
+        }
+        else
+            return true;
     }
 
     /**
@@ -128,8 +176,26 @@ public class MatchingService {
         User partner = matching.getUserMatchings().stream()
                 .filter(um -> !um.getUser().equals(user))
                 .map(um -> um.getUser())
-                .filter(u -> u.getStatus().equals(UserStatus.NORMAL))
                 .findAny().orElseThrow(() -> new BlindCafeException(INVALID_MATCHING));
+
+        topicServeService.serveFirstTopic(matchingId);
+
+        if (partner.getStatus().equals(UserStatus.RETIRED) || partner.getStatus().equals(UserStatus.SUSPENDED)) {
+            try {
+                UserMatching userMatching = matching.getUserMatchings().stream().
+                        filter(um -> um.getUser().equals(user))
+                        .findAny().get();
+                userMatching.setStatus(FAILED_LEAVE_ROOM);
+                userMatching.setReason(reasonRepository.findByReasonTypeAndNum(FOR_LEAVE_ROOM, 1L).get());
+                matching.getUserMatchings().stream().
+                        filter(um -> um.getUser().equals(partner))
+                        .findAny().get().setStatus(OUT);
+                matching.setStatus(FAILED_LEAVE_ROOM);
+                throw new BlindCafeException(INVALID_MATCHING);
+            } catch (Exception e) {
+                throw new BlindCafeException(INVALID_MATCHING);
+            }
+        }
 
         ProfileImage profileImage = partner.getProfileImages()
                 .stream().sorted(Comparator.comparing(ProfileImage::getPriority))
@@ -185,12 +251,11 @@ public class MatchingService {
 
         UserMatching partnerMatching = searchAbleMatching(user);
 
-        UserMatching userMatching = UserMatching.builder()
-                .user(user)
-                .status(WAIT)
-                .build();
-
         if (partnerMatching != null) {
+            UserMatching userMatching = UserMatching.builder()
+                    .user(user)
+                    .status(WAIT)
+                    .build();
             User partner = partnerMatching.getUser();
 
             // 매칭 상대를 찾은 경우
@@ -219,8 +284,6 @@ public class MatchingService {
 
             userMatching.setMatching(matching);
             partnerMatching.setMatching(matching);
-            userMatchingRepository.save(userMatching);
-            userMatchingRepository.save(partnerMatching);
 
             // FCM
             fcmService.sendMessageTo(
@@ -274,6 +337,10 @@ public class MatchingService {
                     .partnerNickname(partner.getNickname())
                     .build();
         } else {
+            UserMatching userMatching = UserMatching.builder()
+                    .user(user)
+                    .status(WAIT)
+                    .build();
             userMatchingRepository.save(userMatching);
             return CreateMatchingDto.Response.noneMatchingBuilder()
                     .matchingStatus(userMatching.getStatus())
@@ -499,7 +566,6 @@ public class MatchingService {
                 .build();
         firebaseService.insertMessage(firestoreDto);
 
-
         if (!matching.getStatus().equals(MATCHING)) {
             LocalDateTime now = LocalDateTime.now();
             matching.setStatus(MATCHING);
@@ -517,8 +583,11 @@ public class MatchingService {
             );
         }
 
-        userMatchingRepository.save(userMatching);
-        matchingRepository.save(matching);
+        // 첫 번째 토픽
+        topicServeService.serveFirstTopic(matchingId);
+
+        // userMatchingRepository.save(userMatching);
+        // matchingRepository.save(matching);
 
         String startTime = String.valueOf(timestamp.getTime() / 1000);
 
@@ -632,7 +701,7 @@ public class MatchingService {
         if (topicId <= SUBJECT_LIMIT) {
             Subject subject = topicRepository.findSubjectById(topicId)
                     .orElseThrow(() -> new BlindCafeException(INVALID_TOPIC));
-            insertTopic(matching, subject.getSubject(), MessageType.TEXT_TOPIC);
+            insertTopic(matching, subject.getSubject(), MessageType.TEXT_TOPIC, LocalDateTime.now());
             return TopicDto.builder()
                     .type("text")
                     .text(TopicDto.SubjectDto.builder()
@@ -641,7 +710,7 @@ public class MatchingService {
         } else if (topicId <= AUDIO_LIMIT) {
             Audio audio = topicRepository.findAudioById(topicId)
                     .orElseThrow(() -> new BlindCafeException(INVALID_TOPIC));
-            insertTopic(matching, audio.getSrc(), MessageType.AUDIO_TOPIC);
+            insertTopic(matching, audio.getSrc(), MessageType.AUDIO_TOPIC, LocalDateTime.now());
             return TopicDto.builder()
                     .type("audio")
                     .audio(TopicDto.ObjectDto.builder()
@@ -651,7 +720,7 @@ public class MatchingService {
         } else {
             Image image = topicRepository.findImageById(topicId)
                     .orElseThrow(() -> new BlindCafeException(INVALID_TOPIC));
-            insertTopic(matching, image.getSrc(), MessageType.IMAGE_TOPIC);
+            insertTopic(matching, image.getSrc(), MessageType.IMAGE_TOPIC, LocalDateTime.now());
             return TopicDto.builder()
                     .type("image")
                     .image(TopicDto.ObjectDto.builder()
@@ -661,7 +730,7 @@ public class MatchingService {
         }
     }
 
-    private void insertTopic(Matching matching, String contents, MessageType messageType) {
+    private void insertTopic(Matching matching, String contents, MessageType messageType, LocalDateTime ldt) {
         // 메세지 db에 저장
         User admin = userRepository.findById(0L)
                 .orElseThrow(() -> new BlindCafeException(NO_USER));
@@ -670,10 +739,9 @@ public class MatchingService {
         message.setUser(admin);
         message.setContents(contents);
         message.setType(messageType);
+        message.setCreatedAt(ldt);
         Message savedMessage = messageRepository.save(message);
 
-        // 메세지 firestore 저장
-        LocalDateTime ldt = savedMessage.getCreatedAt();
         Timestamp timestamp = Timestamp.valueOf(ldt);
 
         FirestoreDto firestoreDto = FirestoreDto.builder()
@@ -723,14 +791,7 @@ public class MatchingService {
                     .map(um -> um.getUser() )
                     .findAny()
                     .orElseThrow(() -> new BlindCafeException(INVALID_MATCHING));
-            fcmService.sendMessageTo(
-                    user.getDeviceId(),
-                    FcmMessage.PROFILE_OPEN.getTitle(),
-                    FcmMessage.PROFILE_OPEN.getBody(),
-                    FcmMessage.PROFILE_OPEN.getPath(),
-                    FcmMessage.PROFILE_OPEN.getType(),
-                    0L
-            );
+
             fcmService.sendMessageTo(
                     partner.getDeviceId(),
                     FcmMessage.PROFILE_OPEN.getTitle(),
@@ -828,6 +889,17 @@ public class MatchingService {
                 .findAny().orElseThrow(() -> new BlindCafeException(INVALID_MATCHING));
 
         User partner = partnerMatching.getUser();
+        if (partner.getStatus().equals(UserStatus.SUSPENDED) || partner.getStatus().equals(UserStatus.RETIRED)) {
+            try {
+                userMatching.setStatus(FAILED_WONT_EXCHANGE);
+                userMatching.setReason(reasonRepository.findByReasonTypeAndNum(FOR_LEAVE_ROOM, 1L).get());
+                partnerMatching.setStatus(OUT);
+                matching.setStatus(FAILED_WONT_EXCHANGE);
+                throw new BlindCafeException(REJECT_PROFILE_EXCHANGE);
+            } catch (Exception e) {
+                throw new BlindCafeException(REJECT_PROFILE_EXCHANGE);
+            }
+        }
 
         MatchingStatus myMatchingStatus = userMatching.getStatus();
 
@@ -877,14 +949,6 @@ public class MatchingService {
         insertDrink(matching, user, myDrink);
         insertDrink(matching, partner, partnerDrink);
 
-        fcmService.sendMessageTo(
-                user.getDeviceId(),
-                FcmMessage.MATCHING_CONTINUE.getTitle(),
-                FcmMessage.MATCHING_CONTINUE.getBody(),
-                FcmMessage.MATCHING_CONTINUE.getPath(),
-                FcmMessage.MATCHING_CONTINUE.getType(),
-                0L
-        );
         fcmService.sendMessageTo(
                 partner.getDeviceId(),
                 FcmMessage.MATCHING_CONTINUE.getTitle(),

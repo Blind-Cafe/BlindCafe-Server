@@ -5,6 +5,8 @@ import com.example.BlindCafe.entity.ProfileImage;
 import com.example.BlindCafe.entity.User;
 import lombok.*;
 
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 
@@ -25,6 +27,7 @@ public class MatchingListDto {
         private String latestMessage;
         private boolean received;
         private String expiryTime;
+        private LocalDateTime time;
     }
 
     @Getter
