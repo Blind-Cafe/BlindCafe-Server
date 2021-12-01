@@ -64,6 +64,8 @@ public enum CodeAndMessage {
     FIREBASE_CREDENTIALS_ERROR("1160", "Firebase 인증 에러"),
     FIREBASE_INSERT_ERROR("1161", "Firebase 데이터 저장 에러" ),
 
+    TOPIC_SERVE_THREAD_ERROR("1170", "토픽 제공 스레드 에러입니다."),
+
     INVALID_REQUEST("4000", "잘못된 요청입니다."),
     FAILED_AUTHORIZATION("4001", "검증에 실패했습니다."),
     EXPIRED_TOKEN("4002", "토큰의 기한이 만료되었습니다."),

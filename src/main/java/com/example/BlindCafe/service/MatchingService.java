@@ -16,7 +16,7 @@ import com.example.BlindCafe.type.MessageType;
 import com.example.BlindCafe.type.status.MatchingStatus;
 import com.example.BlindCafe.type.status.TopicStatus;
 import com.example.BlindCafe.type.status.UserStatus;
-import com.example.BlindCafe.util.Scheduler;
+import com.example.BlindCafe.util.ScheduleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,6 +25,7 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
@@ -43,6 +44,7 @@ public class MatchingService {
 
     private final FirebaseService firebaseService;
     private final FirebaseCloudMessageService fcmService;
+    private final ScheduleService scheduleService;
 
     private final UserRepository userRepository;
     private final UserMatchingRepository userMatchingRepository;
@@ -58,10 +60,10 @@ public class MatchingService {
     private final static int EXTEND_CHAT_DAYS = 7;
     private final static Long PUBLIC_INTEREST_ID = 0L;
     private final static Long MAX_INTEREST_ID = 9L;
-    private final static Long SUBJECT_LIMIT = 1000L;
-    private final static Long AUDIO_LIMIT = 2000L;
+    public final static Long SUBJECT_LIMIT = 1000L;
+    public final static Long AUDIO_LIMIT = 2000L;
 
-    private final Scheduler scheduler;
+    ExecutorService executor = Executors.newFixedThreadPool(30);
 
     /**
      * 내 테이블 조회 - 프로필 교환을 완료한 상대방 목록 조회
@@ -176,11 +178,15 @@ public class MatchingService {
                 .map(um -> um.getUser())
                 .findAny().orElseThrow(() -> new BlindCafeException(INVALID_MATCHING));
 
+        scheduleService.serveFirstTopic(matchingId);
+
         if (partner.getStatus().equals(UserStatus.RETIRED) || partner.getStatus().equals(UserStatus.SUSPENDED)) {
             try {
-                matching.getUserMatchings().stream().
+                UserMatching userMatching = matching.getUserMatchings().stream().
                         filter(um -> um.getUser().equals(user))
-                        .findAny().get().setStatus(FAILED_LEAVE_ROOM);
+                        .findAny().get();
+                userMatching.setStatus(FAILED_LEAVE_ROOM);
+                userMatching.setReason(reasonRepository.findByReasonTypeAndNum(FOR_LEAVE_ROOM, 1L).get());
                 matching.getUserMatchings().stream().
                         filter(um -> um.getUser().equals(partner))
                         .findAny().get().setStatus(OUT);
@@ -327,12 +333,6 @@ public class MatchingService {
                     .build();
             firebaseService.insertMessage(firestoreDto);
 
-            // getFirstTopic(matching);
-
-            /**
-             * 토픽 3분 뒤 생성
-             */
-
             return CreateMatchingDto.Response.matchingBuilder()
                     .matchingStatus(userMatching.getStatus())
                     .matchingId(matching.getId())
@@ -346,51 +346,6 @@ public class MatchingService {
                     .build();
         }
     }
-
-//    private void getFirstTopic(Matching matching) {
-//        MatchingTopic matchingTopic = matching.getTopics().stream()
-//                .filter(mt -> mt.getStatus().equals(TopicStatus.WAIT))
-//                .filter(mt -> mt.getTopic().getId() <= SUBJECT_LIMIT)
-//                .sorted(Comparator.comparing(MatchingTopic::getSequence))
-//                .findFirst()
-//                .orElseThrow(() -> new BlindCafeException(EXCEED_MATCHING_TOPIC));
-//        Long topicId = matchingTopic.getTopic().getId();
-//        matchingTopic.setStatus(TopicStatus.SELECT);
-//
-//        LocalDateTime time = LocalDateTime.now().plusMinutes(5);
-//
-//        Subject subject = topicRepository.findSubjectById(topicId)
-//                .orElseThrow(() -> new BlindCafeException(INVALID_TOPIC));
-//
-//        // 메세지 db에 저장
-//        User admin = userRepository.findById(0L)
-//                .orElseThrow(() -> new BlindCafeException(NO_USER));
-//        Message message = new Message();
-//        message.setMatching(matching);
-//        message.setUser(admin);
-//        message.setContents("벨을 눌러 다양한 대화 토픽을 받아보세요!\\n예시를 보여드릴게요.");
-//        message.setType(MessageType.DESCRIPTION);
-//        message.setCreatedAt(time);
-//        Message savedMessage = messageRepository.save(message);
-//
-//        Timestamp timestamp = Timestamp.valueOf(time);
-//
-//        FirestoreDto firestoreDto = FirestoreDto.builder()
-//                .roomId(matching.getId())
-//                .targetToken(null)
-//                .message(new FirestoreDto.FirestoreMessage(
-//                        Long.toString(savedMessage.getId()),
-//                        Long.toString(admin.getId()),
-//                        admin.getNickname(),
-//                        savedMessage.getContents(),
-//                        message.getType().getFirestoreType(),
-//                        timestamp
-//                ))
-//                .build();
-//        firebaseService.insertMessage(firestoreDto);
-//
-//        insertTopic(matching, subject.getSubject(), MessageType.TEXT_TOPIC, time);
-//    }
 
     private List<MatchingTopic> makeMatchingTopics(Matching matching) {
         Long interestId = matching.getInterest().getId();
@@ -610,7 +565,6 @@ public class MatchingService {
                 .build();
         firebaseService.insertMessage(firestoreDto);
 
-
         if (!matching.getStatus().equals(MATCHING)) {
             LocalDateTime now = LocalDateTime.now();
             matching.setStatus(MATCHING);
@@ -627,6 +581,9 @@ public class MatchingService {
                     0L
             );
         }
+
+        // 첫 번째 토픽
+        scheduleService.serveFirstTopic(matchingId);
 
         userMatchingRepository.save(userMatching);
         matchingRepository.save(matching);
@@ -931,6 +888,17 @@ public class MatchingService {
                 .findAny().orElseThrow(() -> new BlindCafeException(INVALID_MATCHING));
 
         User partner = partnerMatching.getUser();
+        if (partner.getStatus().equals(UserStatus.SUSPENDED) || partner.getStatus().equals(UserStatus.RETIRED)) {
+            try {
+                userMatching.setStatus(FAILED_WONT_EXCHANGE);
+                userMatching.setReason(reasonRepository.findByReasonTypeAndNum(FOR_LEAVE_ROOM, 1L).get());
+                partnerMatching.setStatus(OUT);
+                matching.setStatus(FAILED_WONT_EXCHANGE);
+                throw new BlindCafeException(REJECT_PROFILE_EXCHANGE);
+            } catch (Exception e) {
+                throw new BlindCafeException(REJECT_PROFILE_EXCHANGE);
+            }
+        }
 
         MatchingStatus myMatchingStatus = userMatching.getStatus();
 
