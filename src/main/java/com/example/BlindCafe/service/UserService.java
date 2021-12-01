@@ -38,6 +38,7 @@ public class UserService {
     private final UserInterestRepository userInterestRepository;
     private final InterestOrderRepository interestOrderRepository;
     private final ProfileImageRepository profileImageRepository;
+    private final MatchingRepository matchingRepository;
     private final ReasonRepository reasonRepository;
     private final AmazonS3Connector amazonS3Connector;
 
@@ -159,7 +160,13 @@ public class UserService {
         } else {
             UserMatching partnerMatching = matching.getUserMatchings().stream()
                     .filter(um -> !um.equals(userMatching))
-                    .findAny().orElseThrow(() -> new BlindCafeException(INVALID_MATCHING));
+                    .findAny().orElse(null);
+
+            if (Objects.isNull(partnerMatching)) {
+                userMatching.setStatus(OUT);
+                throw new BlindCafeException(INVALID_MATCHING);
+            }
+
 
             if (status.equals(FAILED_LEAVE_ROOM) ||
                     status.equals(FAILED_REPORT) ||
