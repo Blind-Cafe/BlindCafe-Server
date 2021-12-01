@@ -1,21 +1,16 @@
 package com.example.BlindCafe.util;
 
 import com.example.BlindCafe.dto.FirestoreDto;
-import com.example.BlindCafe.entity.Matching;
-import com.example.BlindCafe.entity.MatchingTopic;
-import com.example.BlindCafe.entity.Message;
-import com.example.BlindCafe.entity.User;
+import com.example.BlindCafe.entity.*;
 import com.example.BlindCafe.entity.topic.Subject;
 import com.example.BlindCafe.exception.BlindCafeException;
 import com.example.BlindCafe.firebase.FirebaseService;
 import com.example.BlindCafe.repository.*;
-import com.example.BlindCafe.service.MatchingService;
 import com.example.BlindCafe.type.MessageType;
 import com.example.BlindCafe.type.status.MatchingStatus;
 import com.example.BlindCafe.type.status.TopicStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,7 +27,7 @@ import static com.example.BlindCafe.service.MatchingService.SUBJECT_LIMIT;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class ScheduleService {
+public class TopicServeService {
 
     private final MatchingRepository matchingRepository;
     private final MatchingTopicRepository matchingTopicRepository;
@@ -43,6 +38,7 @@ public class ScheduleService {
     private final FirebaseService firebaseService;
 
     private final static int WAIT_TIME = 1000 * 60 * 3;
+    private final static int SCHEDULED_TIME = 1000 * 60 * 10;
 
     @Async
     @Transactional
@@ -83,7 +79,7 @@ public class ScheduleService {
                             Message message = new Message();
                             message.setMatching(matching);
                             message.setUser(admin);
-                            message.setContents("벨을 눌러 다양한 대화 토픽을 받아보세요!\\n예시를 보여드릴게요.");
+                            message.setContents("벨을 눌러 다양한 대화 토픽을 받아보세요!\n예시를 보여드릴게요.");
                             message.setType(MessageType.DESCRIPTION);
                             message.setCreatedAt(time);
                             Message savedMessage = messageRepository.save(message);
@@ -144,4 +140,65 @@ public class ScheduleService {
                 .build();
         firebaseService.insertMessage(firestoreDto);
     }
+
+//    /**
+//     * 3일 끝났는지 확인
+//     */
+//    @Scheduled(fixedDelay = SCHEDULED_TIME)
+//    private void checkBasicMatching() {
+//        LocalDateTime now = LocalDateTime.now();
+//        List<Matching> matchings = matchingRepository.findAll().stream()
+//                .filter(matching -> matching.getStatus().equals(MatchingStatus.MATCHING))
+//                .filter(matching -> matching.getExpiryTime().isAfter(now))
+//                .collect(Collectors.toList());
+//    }
+//
+//    /**
+//     * 7일 끝났는지 확인
+//     */
+//    @Scheduled(fixedDelay = SCHEDULED_TIME)
+//    private void checkContinuousMatching() {
+//
+//    }
+//
+//    /**
+//     * 24시간 푸쉬
+//     */
+//    @Scheduled(fixedDelay = SCHEDULED_TIME)
+//    private void checkOneDay() {
+//
+//    }
+//
+//    /**
+//     * 48시간 푸쉬
+//     */
+//    @Scheduled(fixedDelay = SCHEDULED_TIME)
+//    private void checkTwoDays() {
+//
+//    }
+//
+//    /**
+//     * 7일 종류 하루 전
+//     */
+//    @Scheduled(fixedDelay = SCHEDULED_TIME)
+//    private void checkEndOfMatching() {
+//
+//    }
+//
+//    /**
+//     * 7시간 뒤 프로필 자동 전송
+//     */
+//    @Scheduled(fixedDelay = SCHEDULED_TIME)
+//    private void sendProfile() {
+//
+//    }
+//
+//    /**
+//     * 매칭 관련 유저에게 푸쉬 보내기
+//     */
+//    private void sendPushMessage(Matching matching) {
+//        List<User> users = matching.getUserMatchings().stream()
+//                .map(UserMatching::getUser)
+//                .collect(Collectors.toList());
+//    }
 }

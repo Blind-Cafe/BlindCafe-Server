@@ -20,7 +20,6 @@ import static com.example.BlindCafe.config.SecurityConfig.getUserId;
 public class MatchingController {
 
     private final MatchingService matchingService;
-    private final ChatService chatService;
 
     /**
      * 내 테이블 조회 - 프로필 교환을 완료한 상대방 목록 조회

@@ -16,7 +16,7 @@ import com.example.BlindCafe.type.MessageType;
 import com.example.BlindCafe.type.status.MatchingStatus;
 import com.example.BlindCafe.type.status.TopicStatus;
 import com.example.BlindCafe.type.status.UserStatus;
-import com.example.BlindCafe.util.ScheduleService;
+import com.example.BlindCafe.util.TopicServeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -44,7 +44,7 @@ public class MatchingService {
 
     private final FirebaseService firebaseService;
     private final FirebaseCloudMessageService fcmService;
-    private final ScheduleService scheduleService;
+    private final TopicServeService topicServeService;
 
     private final UserRepository userRepository;
     private final UserMatchingRepository userMatchingRepository;
@@ -178,7 +178,7 @@ public class MatchingService {
                 .map(um -> um.getUser())
                 .findAny().orElseThrow(() -> new BlindCafeException(INVALID_MATCHING));
 
-        scheduleService.serveFirstTopic(matchingId);
+        topicServeService.serveFirstTopic(matchingId);
 
         if (partner.getStatus().equals(UserStatus.RETIRED) || partner.getStatus().equals(UserStatus.SUSPENDED)) {
             try {
@@ -584,7 +584,7 @@ public class MatchingService {
         }
 
         // 첫 번째 토픽
-        scheduleService.serveFirstTopic(matchingId);
+        topicServeService.serveFirstTopic(matchingId);
 
         // userMatchingRepository.save(userMatching);
         // matchingRepository.save(matching);
