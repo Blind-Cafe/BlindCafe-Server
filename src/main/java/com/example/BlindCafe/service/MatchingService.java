@@ -249,6 +249,14 @@ public class MatchingService {
         if (user.getStatus().equals(UserStatus.NOT_REQUIRED_INFO))
             throw new BlindCafeException(NOT_REQUIRED_INFO_FOR_MATCHING);
 
+        List<UserMatching> userMatchings = user.getUserMatchings().stream()
+                .filter(userMatching -> userMatching.getStatus().equals(WAIT) || userMatching.getStatus().equals(FOUND))
+                .collect(Collectors.toList());
+
+        if (!Objects.isNull(userMatchings)) {
+            throw new BlindCafeException(DUPLICATED_MATCHING_REQUEST);
+        }
+
         UserMatching partnerMatching = searchAbleMatching(user);
 
         UserMatching userMatching = UserMatching.builder()
