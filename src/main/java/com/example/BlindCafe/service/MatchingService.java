@@ -251,11 +251,13 @@ public class MatchingService {
 
         UserMatching partnerMatching = searchAbleMatching(user);
 
+        UserMatching userMatching = UserMatching.builder()
+                .user(user)
+                .status(WAIT)
+                .build();
+
         if (partnerMatching != null) {
-            UserMatching userMatching = UserMatching.builder()
-                    .user(user)
-                    .status(WAIT)
-                    .build();
+
             User partner = partnerMatching.getUser();
 
             // 매칭 상대를 찾은 경우
@@ -284,6 +286,7 @@ public class MatchingService {
 
             userMatching.setMatching(matching);
             partnerMatching.setMatching(matching);
+            userMatchingRepository.save(userMatching);
 
             // FCM
             fcmService.sendMessageTo(
@@ -337,10 +340,6 @@ public class MatchingService {
                     .partnerNickname(partner.getNickname())
                     .build();
         } else {
-            UserMatching userMatching = UserMatching.builder()
-                    .user(user)
-                    .status(WAIT)
-                    .build();
             userMatchingRepository.save(userMatching);
             return CreateMatchingDto.Response.noneMatchingBuilder()
                     .matchingStatus(userMatching.getStatus())
