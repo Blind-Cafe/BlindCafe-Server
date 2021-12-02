@@ -594,7 +594,7 @@ public class MatchingService {
                     FcmMessage.MATCHING_OPEN.getBody(),
                     FcmMessage.MATCHING_OPEN.getPath(),
                     FcmMessage.MATCHING_OPEN.getType(),
-                    0L
+                    matchingId
             );
         }
 
@@ -940,7 +940,7 @@ public class MatchingService {
 
         // 2-2. 상대방 수락했으면 7일방으로 + 7일 만료 다시 세팅
         userMatching.setStatus(MATCHING_CONTINUE);
-        partnerMatching.setStatus(MATCHING_CONTINUE);
+        partnerMatching.setStatus(MATCHING_CONTINUE_YET);
 
         LocalDateTime now = LocalDateTime.now();
         matching.setIsContinuous(true);
