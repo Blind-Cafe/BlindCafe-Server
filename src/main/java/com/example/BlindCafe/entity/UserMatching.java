@@ -38,6 +38,6 @@ public class UserMatching extends BaseTimeEntity {
     private Reason reason;
 
     @Enumerated(STRING)
-    @Column(length = 20, nullable = false)
+    @Column(nullable = false)
     private MatchingStatus status;
 }
