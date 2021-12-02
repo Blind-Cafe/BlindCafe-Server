@@ -855,6 +855,7 @@ public class MatchingService {
                 .filter(pi -> pi.getStatus().equals(NORMAL))
                 .findFirst()
                 .orElse(null);
+
         String src = Objects.isNull(profileImage) ? null : profileImage.getSrc();
         String region = Objects.isNull(user.getAddress()) ? null : user.getAddress().toString();
 
