@@ -249,13 +249,23 @@ public class MatchingService {
         if (user.getStatus().equals(UserStatus.NOT_REQUIRED_INFO))
             throw new BlindCafeException(NOT_REQUIRED_INFO_FOR_MATCHING);
 
+        List<UserMatching> userMatchings = user.getUserMatchings().stream()
+                .filter(userMatching -> userMatching.getStatus().equals(WAIT) || userMatching.getStatus().equals(FOUND))
+                .collect(Collectors.toList());
+
+        if (!Objects.isNull(userMatchings)) {
+            throw new BlindCafeException(DUPLICATED_MATCHING_REQUEST);
+        }
+
         UserMatching partnerMatching = searchAbleMatching(user);
 
+        UserMatching userMatching = UserMatching.builder()
+                .user(user)
+                .status(WAIT)
+                .build();
+
         if (partnerMatching != null) {
-            UserMatching userMatching = UserMatching.builder()
-                    .user(user)
-                    .status(WAIT)
-                    .build();
+
             User partner = partnerMatching.getUser();
 
             // 매칭 상대를 찾은 경우
@@ -284,6 +294,7 @@ public class MatchingService {
 
             userMatching.setMatching(matching);
             partnerMatching.setMatching(matching);
+            userMatchingRepository.save(userMatching);
 
             // FCM
             fcmService.sendMessageTo(
@@ -337,10 +348,6 @@ public class MatchingService {
                     .partnerNickname(partner.getNickname())
                     .build();
         } else {
-            UserMatching userMatching = UserMatching.builder()
-                    .user(user)
-                    .status(WAIT)
-                    .build();
             userMatchingRepository.save(userMatching);
             return CreateMatchingDto.Response.noneMatchingBuilder()
                     .matchingStatus(userMatching.getStatus())
@@ -848,6 +855,7 @@ public class MatchingService {
                 .filter(pi -> pi.getStatus().equals(NORMAL))
                 .findFirst()
                 .orElse(null);
+
         String src = Objects.isNull(profileImage) ? null : profileImage.getSrc();
         String region = Objects.isNull(user.getAddress()) ? null : user.getAddress().toString();
 
@@ -880,8 +888,8 @@ public class MatchingService {
         Matching matching = matchingRepository.findById(matchingId)
                 .orElseThrow(() -> new BlindCafeException(NO_MATCHING));
 
-        UserMatching userMatching = user.getUserMatchings().stream()
-                .filter(um -> um.getMatching().equals(matching))
+        UserMatching userMatching = matching.getUserMatchings().stream()
+                .filter(um -> um.getUser().equals(user))
                 .findAny().orElseThrow(() -> new BlindCafeException(NO_AUTHORIZATION_MATCHING));
 
         UserMatching partnerMatching = matching.getUserMatchings().stream()

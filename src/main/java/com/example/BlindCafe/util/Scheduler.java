@@ -68,7 +68,7 @@ public class Scheduler {
     private void checkBasicMatching(List<Matching> matchings, LocalDateTime time) {
         matchings = matchings.stream()
                 .filter(matching -> matching.getStatus().equals(MatchingStatus.MATCHING))
-                .filter(matching -> matching.getExpiryTime().isAfter(time))
+                .filter(matching -> matching.getExpiryTime().isBefore(time))
                 .collect(Collectors.toList());
         for (Matching matching : matchings) {
             matching.setStatus(MatchingStatus.PROFILE_EXCHANGE);
@@ -86,7 +86,7 @@ public class Scheduler {
     private void checkContinuousMatching(List<Matching> matchings, LocalDateTime time) {
         matchings = matchings.stream()
                 .filter(matching -> matching.getStatus().equals(MatchingStatus.MATCHING_CONTINUE))
-                .filter(matching -> matching.getExpiryTime().isAfter(time))
+                .filter(matching -> matching.getExpiryTime().isBefore(time))
                 .collect(Collectors.toList());
         for (Matching matching : matchings) {
             matching.setStatus(MatchingStatus.FAILED_EXPIRED);
