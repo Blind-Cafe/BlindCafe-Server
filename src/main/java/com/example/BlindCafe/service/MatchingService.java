@@ -888,8 +888,8 @@ public class MatchingService {
         Matching matching = matchingRepository.findById(matchingId)
                 .orElseThrow(() -> new BlindCafeException(NO_MATCHING));
 
-        UserMatching userMatching = user.getUserMatchings().stream()
-                .filter(um -> um.getMatching().equals(matching))
+        UserMatching userMatching = matching.getUserMatchings().stream()
+                .filter(um -> um.getUser().equals(user))
                 .findAny().orElseThrow(() -> new BlindCafeException(NO_AUTHORIZATION_MATCHING));
 
         UserMatching partnerMatching = matching.getUserMatchings().stream()
