@@ -91,12 +91,20 @@ public class MatchingService {
                 ChronoUnit.DAYS.between(now, matching.getExpiryTime()) : -1L;
 
         String expiryTime = "";
-        if (restDay > 0L) {
-            expiryTime = restDay + "일 남음";
-        } else if (restDay == 0L) {
-            expiryTime = ChronoUnit.HOURS.between(now, matching.getExpiryTime()) + "시간 남음";
-        } else {
+        if (matching.getStatus().equals(FAILED_EXPIRED)) {
             expiryTime = "만료";
+        } else {
+            if (restDay > 0L) {
+                expiryTime = restDay + "일 남음";
+            } else if (restDay == 0L) {
+                Long restTime = ChronoUnit.HOURS.between(now, matching.getExpiryTime());
+                if (restTime < 0)
+                    expiryTime = "만료";
+                else
+                    expiryTime = restTime + "시간 남음";
+            } else {
+                expiryTime = "만료";
+            }
         }
 
         User partner = matching.getUserMatchings().stream()
