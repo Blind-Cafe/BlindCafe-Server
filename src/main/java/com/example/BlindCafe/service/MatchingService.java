@@ -253,7 +253,7 @@ public class MatchingService {
                 .filter(userMatching -> userMatching.getStatus().equals(WAIT) || userMatching.getStatus().equals(FOUND))
                 .collect(Collectors.toList());
 
-        if (!Objects.isNull(userMatchings)) {
+        if (userMatchings.size() > 0) {
             throw new BlindCafeException(DUPLICATED_MATCHING_REQUEST);
         }
 
