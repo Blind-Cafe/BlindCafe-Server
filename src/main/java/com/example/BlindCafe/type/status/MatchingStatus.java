@@ -17,6 +17,7 @@ public enum MatchingStatus {
     PROFILE_OPEN("프로필 공개 여부 선택"),
     PROFILE_READY("프로필 공개"),
     PROFILE_ACCEPT("프로필 교환 수락"),
+    MATCHING_CONTINUE_YET("프로필 교환 성공 후 대기"),
 
     CANCEL_REQUEST_EXPIRED("시간 초과로 인해 요청 취소"),
     CANCEL_REQUEST("요청 취소"),

@@ -76,7 +76,7 @@ public class MatchingService {
         List<MatchingListDto.MatchingDto> matchings = user.getUserMatchings().stream()
                 .filter(userMatching -> !Objects.isNull(userMatching.getMatching()))
                 .filter(userMatching -> userMatching.getMatching().getIsContinuous())
-                .filter(userMatching -> userMatching.getMatching().getStatus().equals(MATCHING_CONTINUE))
+                .filter(userMatching -> userMatching.getMatching().getStatus().equals(MATCHING_CONTINUE) || userMatching.getMatching().getStatus().equals(FAILED_EXPIRED))
                 .map(userMatching -> userMatching.getMatching())
                 .map(matching -> makeMatchingDto(matching, user, now))
                 .filter(matchingDto -> !Objects.isNull(matchingDto))
@@ -91,12 +91,20 @@ public class MatchingService {
                 ChronoUnit.DAYS.between(now, matching.getExpiryTime()) : -1L;
 
         String expiryTime = "";
-        if (restDay > 0L) {
-            expiryTime = restDay + "일 남음";
-        } else if (restDay == 0L) {
-            expiryTime = ChronoUnit.HOURS.between(now, matching.getExpiryTime()) + "시간 남음";
-        } else {
+        if (matching.getStatus().equals(FAILED_EXPIRED)) {
             expiryTime = "만료";
+        } else {
+            if (restDay > 0L) {
+                expiryTime = restDay + "일 남음";
+            } else if (restDay == 0L) {
+                Long restTime = ChronoUnit.HOURS.between(now, matching.getExpiryTime());
+                if (restTime < 0)
+                    expiryTime = "만료";
+                else
+                    expiryTime = restTime + "시간 남음";
+            } else {
+                expiryTime = "만료";
+            }
         }
 
         User partner = matching.getUserMatchings().stream()
@@ -253,7 +261,7 @@ public class MatchingService {
                 .filter(userMatching -> userMatching.getStatus().equals(WAIT) || userMatching.getStatus().equals(FOUND))
                 .collect(Collectors.toList());
 
-        if (!Objects.isNull(userMatchings)) {
+        if (userMatchings.size() > 0) {
             throw new BlindCafeException(DUPLICATED_MATCHING_REQUEST);
         }
 
@@ -586,7 +594,7 @@ public class MatchingService {
                     FcmMessage.MATCHING_OPEN.getBody(),
                     FcmMessage.MATCHING_OPEN.getPath(),
                     FcmMessage.MATCHING_OPEN.getType(),
-                    0L
+                    matchingId
             );
         }
 
@@ -932,7 +940,7 @@ public class MatchingService {
 
         // 2-2. 상대방 수락했으면 7일방으로 + 7일 만료 다시 세팅
         userMatching.setStatus(MATCHING_CONTINUE);
-        partnerMatching.setStatus(MATCHING_CONTINUE);
+        partnerMatching.setStatus(MATCHING_CONTINUE_YET);
 
         LocalDateTime now = LocalDateTime.now();
         matching.setIsContinuous(true);

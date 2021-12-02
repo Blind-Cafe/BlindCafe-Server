@@ -50,6 +50,7 @@ public class Scheduler {
         List<Matching> matchings = matchingRepository.findAll();
         checkDayFunction(matchings, now, ONE_DAY);
         checkDayFunction(matchings, now, TWO_DAYS);
+        checkEndOfBasicMatching(matchings, now);
         sendProfile(matchings, now);
     }
 
@@ -59,7 +60,7 @@ public class Scheduler {
     public void updateOneDay() {
         LocalDateTime now = LocalDateTime.now();
         List<Matching> matchings = matchingRepository.findAll();
-        checkEndOfMatching(matchings, now);
+        checkEndOfContinuousMatching(matchings, now);
     }
 
     /**
@@ -135,7 +136,7 @@ public class Scheduler {
     /**
      * 6. 7일 종류 하루 전
      */
-    private void checkEndOfMatching(List<Matching> matchings, LocalDateTime time) {
+    private void checkEndOfContinuousMatching(List<Matching> matchings, LocalDateTime time) {
         matchings = matchings.stream()
                 .filter(matching -> matching.getStatus().equals(MatchingStatus.MATCHING_CONTINUE))
                 .filter(matching -> ChronoUnit.DAYS.between(time, matching.getExpiryTime()) == 1L)
@@ -144,6 +145,20 @@ public class Scheduler {
             sendPushMessage(matching, FcmMessage.LAST_CHAT, null);
         }
     }
+
+    /**
+     * 7. 3일 대화 종료 1시간 전
+     */
+    private void checkEndOfBasicMatching(List<Matching> matchings, LocalDateTime time) {
+        matchings = matchings.stream()
+                .filter(matching -> matching.getStatus().equals(MatchingStatus.MATCHING))
+                .filter(matching -> ChronoUnit.HOURS.between(time, matching.getExpiryTime()) == 1L)
+                .collect(Collectors.toList());
+        for (Matching matching : matchings) {
+            sendPushMessage(matching, FcmMessage.END_OF_ONE_HOUR, null);
+        }
+    }
+
 
     /**
      * 매칭 관련 유저에게 푸쉬 보내기

@@ -187,6 +187,10 @@ public class UserService {
             Timestamp timestamp = Timestamp.valueOf(ldt);
             String startTime = String.valueOf(timestamp.getTime() / 1000);
 
+            if (status.equals(MATCHING_CONTINUE_YET)) {
+                userMatching.setStatus(MATCHING_CONTINUE);
+            }
+
             return UserHomeDto.Response.matchingBuilder()
                     .codeAndMessage(SUCCESS)
                     .matchingStatus(userMatching.getStatus())
@@ -208,7 +212,8 @@ public class UserService {
             status.equals(FAILED_WONT_EXCHANGE) ||
             status.equals(PROFILE_OPEN) ||
             status.equals(PROFILE_READY) ||
-            status.equals(PROFILE_ACCEPT)
+            status.equals(PROFILE_ACCEPT) ||
+            status.equals(MATCHING_CONTINUE_YET)
         ) return true;
         return false;
     }

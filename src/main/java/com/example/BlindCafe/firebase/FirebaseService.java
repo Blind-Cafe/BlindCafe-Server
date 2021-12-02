@@ -44,7 +44,7 @@ public class FirebaseService {
 
         request.setTitle(message.getSenderName());
         request.setMatchingId(firestoreDto.getRoomId());
-        request.setPath(FcmMessage.MATCHING.getPath());
+        request.setPath(FcmMessage.ONE_DAY.getPath());
 
         if (message.getType() == 1) {
             // text
