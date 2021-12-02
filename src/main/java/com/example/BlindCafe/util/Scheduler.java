@@ -1,13 +1,17 @@
 package com.example.BlindCafe.util;
 
-import com.example.BlindCafe.entity.Matching;
-import com.example.BlindCafe.entity.User;
-import com.example.BlindCafe.entity.UserMatching;
+import com.example.BlindCafe.entity.*;
+import com.example.BlindCafe.exception.BlindCafeException;
+import com.example.BlindCafe.exception.CodeAndMessage;
 import com.example.BlindCafe.firebase.FirebaseCloudMessageService;
 import com.example.BlindCafe.repository.MatchingRepository;
+import com.example.BlindCafe.repository.ProfileImageRepository;
+import com.example.BlindCafe.repository.UserRepository;
 import com.example.BlindCafe.type.FcmMessage;
+import com.example.BlindCafe.type.status.CommonStatus;
 import com.example.BlindCafe.type.status.MatchingStatus;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,6 +23,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class Scheduler {
 
@@ -29,13 +34,17 @@ public class Scheduler {
     private final static Long ONE_DAY = 24L;
     private final static Long TWO_DAYS = 48L;
 
+    private final ProfileImageRepository profileImageRepository;
     private final MatchingRepository matchingRepository;
     private final FirebaseCloudMessageService firebaseCloudMessageService;
+
+    private final static String DEFAULT_IMAGE = "https://dpb9ox8h2ie20.cloudfront.net/users/profiles/0/profile_default.png";
 
     // task 1, 2
     @Scheduled(fixedDelay = DELAY_TEN_MIN)
     @Transactional
     public void updateTenMin() {
+        log.info("Do task 1,2 per 10 min");
         LocalDateTime now = LocalDateTime.now();
         List<Matching> matchings = matchingRepository.findAll();
         checkBasicMatching(matchings, now);
@@ -46,6 +55,7 @@ public class Scheduler {
     @Scheduled(fixedDelay = DELAY_ONE_HOUR)
     @Transactional
     public void updateOneHour() {
+        log.info("Do task 3,4,5 per 1 hour");
         LocalDateTime now = LocalDateTime.now();
         List<Matching> matchings = matchingRepository.findAll();
         checkDayFunction(matchings, now, ONE_DAY);
@@ -58,6 +68,7 @@ public class Scheduler {
     @Scheduled(fixedDelay = DELAY_ONE_DAY)
     @Transactional
     public void updateOneDay() {
+        log.info("Do task 6 per 1 Day");
         LocalDateTime now = LocalDateTime.now();
         List<Matching> matchings = matchingRepository.findAll();
         checkEndOfContinuousMatching(matchings, now);
@@ -126,8 +137,24 @@ public class Scheduler {
             List<UserMatching> userMatchings = matching.getUserMatchings();
             for (UserMatching userMatching: userMatchings) {
                 if (userMatching.getStatus().equals(MatchingStatus.PROFILE_OPEN)) {
+                    User user = userMatching.getUser();
+                    if (user.getProfileImages().stream()
+                            .filter(profileImage -> profileImage.getStatus().equals(CommonStatus.NORMAL))
+                            .collect(Collectors.toList()).size() == 0) {
+                        ProfileImage profileImage = ProfileImage.builder()
+                                .user(user)
+                                .priority(1)
+                                .src(DEFAULT_IMAGE)
+                                .status(CommonStatus.NORMAL)
+                                .build();
+                        profileImageRepository.save(profileImage);
+                    }
+                    if (Objects.isNull(user.getAddress())) {
+                        Address address = new Address("", "");
+                        user.setAddress(address);
+                    }
                     userMatching.setStatus(MatchingStatus.PROFILE_READY);
-                    sendPushMessage(matching, FcmMessage.PROFILE_OPEN, userMatching.getUser());
+                    sendPushMessage(matching, FcmMessage.PROFILE_OPEN, user);
                 }
             }
         }
