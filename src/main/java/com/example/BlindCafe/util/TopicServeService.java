@@ -55,9 +55,14 @@ public class TopicServeService {
                                 matchingTopicRepository.findAllByMatching(matching).stream()
                                         .sorted(Comparator.comparing(MatchingTopic::getSequence))
                                         .collect(Collectors.toList());
-                        if (matchingTopics.stream().
-                                findFirst()
-                                .get().getStatus().equals(TopicStatus.WAIT)) {
+                        if (matchingTopics.stream()
+                                .findFirst()
+                                .get().getStatus().equals(TopicStatus.WAIT) &&
+                            matchingTopics.stream()
+                                .filter(mt -> mt.getTopic().getId() <= SUBJECT_LIMIT)
+                                .sorted(Comparator.comparing(MatchingTopic::getSequence))
+                                .findFirst().get().getStatus().equals(TopicStatus.WAIT)
+                        ) {
                             MatchingTopic matchingTopic = matchingTopics.stream()
                                     .filter(mt -> mt.getStatus().equals(TopicStatus.WAIT))
                                     .filter(mt -> mt.getTopic().getId() <= SUBJECT_LIMIT)
