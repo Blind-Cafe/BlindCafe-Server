@@ -118,10 +118,14 @@ public class Scheduler {
                 .filter(matching -> ChronoUnit.HOURS.between(matching.getStartTime(), time) == hour)
                 .collect(Collectors.toList());
         for (Matching matching : matchings) {
-            if (hour == ONE_DAY)
+            if (hour == ONE_DAY && !matching.getPush().isPush_one_day()) {
                 sendPushMessage(matching, FcmMessage.ONE_DAY, null);
-            if (hour == TWO_DAYS)
+                matching.getPush().setPush_one_day(true);
+            }
+            if (hour == TWO_DAYS && !matching.getPush().isPush_two_days()) {
                 sendPushMessage(matching, FcmMessage.TWO_DAYS, null);
+                matching.getPush().setPush_two_days(true);
+            }
         }
     }
 
@@ -155,6 +159,7 @@ public class Scheduler {
                     }
                     userMatching.setStatus(MatchingStatus.PROFILE_READY);
                     sendPushMessage(matching, FcmMessage.PROFILE_OPEN, user);
+                    matching.getPush().setPush_profile_open(true);
                 }
             }
         }
@@ -169,7 +174,10 @@ public class Scheduler {
                 .filter(matching -> ChronoUnit.DAYS.between(time, matching.getExpiryTime()) == 1L)
                 .collect(Collectors.toList());
         for (Matching matching : matchings) {
-            sendPushMessage(matching, FcmMessage.LAST_CHAT, null);
+            if (!matching.getPush().isPush_last_chat()) {
+                sendPushMessage(matching, FcmMessage.LAST_CHAT, null);
+                matching.getPush().setPush_last_chat(true);
+            }
         }
     }
 
@@ -182,7 +190,10 @@ public class Scheduler {
                 .filter(matching -> ChronoUnit.HOURS.between(time, matching.getExpiryTime()) == 1L)
                 .collect(Collectors.toList());
         for (Matching matching : matchings) {
-            sendPushMessage(matching, FcmMessage.END_OF_ONE_HOUR, null);
+            if (!matching.getPush().isPush_end_of_one_hour()) {
+                sendPushMessage(matching, FcmMessage.END_OF_ONE_HOUR, null);
+                matching.getPush().setPush_end_of_one_hour(true);
+            }
         }
     }
 
