@@ -473,4 +473,10 @@ public class UserService {
         user.getProfileImages().remove(profileImage);
         profileImage.setStatus(DELETED);
     }
+
+    public UserProfileResponse getProfile(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BlindCafeException(NO_USER));
+        return new UserProfileResponse(user);
+    }
 }
