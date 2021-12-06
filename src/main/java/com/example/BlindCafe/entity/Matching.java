@@ -45,6 +45,9 @@ public class Matching extends BaseTimeEntity {
     @Column(columnDefinition = "boolean default false", nullable = false)
     private Boolean isContinuous;
 
+    @Embedded
+    private Push push;
+
     @Enumerated(STRING)
     @Column(columnDefinition = "varchar(20) default 'MATCHING'", nullable = false)
     private MatchingStatus status;

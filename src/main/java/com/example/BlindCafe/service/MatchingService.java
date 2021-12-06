@@ -285,10 +285,13 @@ public class MatchingService {
                     getUserInterestSortedByPriority(user)
             );
 
+            Push push = new Push();
+
             Matching matching = Matching.builder()
                     .interest(commonInterest)
                     .isContinuous(false)
                     .startTime(LocalDateTime.now())
+                    .push(push)
                     .status(MATCHING_NOT_START)
                     .build();
 
@@ -321,6 +324,8 @@ public class MatchingService {
                     FcmMessage.MATCHING.getType(),
                     0L
             );
+
+            matching.getPush().setPush_matching(true);
 
             // 메세지 db에 저장
             User admin = userRepository.findById(0L).orElseThrow(() -> new BlindCafeException(NO_USER));
@@ -596,6 +601,7 @@ public class MatchingService {
                     FcmMessage.MATCHING_OPEN.getType(),
                     matchingId
             );
+            matching.getPush().setPush_matching_open(true);
         }
 
         // 첫 번째 토픽
@@ -815,6 +821,7 @@ public class MatchingService {
                     FcmMessage.PROFILE_OPEN.getType(),
                     0L
             );
+            matching.getPush().setPush_profile_open(true);
         }
 
         return OpenMatchingProfileDto.Response.builder()
@@ -973,6 +980,7 @@ public class MatchingService {
                 FcmMessage.MATCHING_CONTINUE.getType(),
                 0L
         );
+        matching.getPush().setPush_matching_continue(true);
 
         return OpenMatchingProfileDto.Response.builder()
                 .result(true)
