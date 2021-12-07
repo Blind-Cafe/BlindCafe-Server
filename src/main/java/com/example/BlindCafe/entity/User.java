@@ -1,5 +1,6 @@
 package com.example.BlindCafe.entity;
 
+import com.example.BlindCafe.type.DeviceType;
 import com.example.BlindCafe.type.Gender;
 import com.example.BlindCafe.type.Social;
 import com.example.BlindCafe.type.status.UserStatus;
@@ -72,6 +73,9 @@ public class User extends BaseTimeEntity {
     private Address address;
 
     private String deviceId;
+
+    @Enumerated(STRING)
+    private DeviceType deviceType;
 
     @Enumerated(STRING)
     private UserStatus status;
