@@ -72,6 +72,18 @@ public class UserController {
     }
 
     /**
+     * 밝은 채팅방 프로필 조회
+     */
+    @GetMapping("{userId}/profile")
+    public ResponseEntity<UserProfileResponse> getProfile(
+            Authentication authentication,
+            @PathVariable Long userId
+    ) {
+        log.info("GET /api/user/{}/profile", userId);
+        return ResponseEntity.ok(userService.getProfile(userId));
+    }
+
+    /**
      * 홈화면 (유저 매칭 상태 확인)
      */
     @GetMapping("/home")

@@ -1,6 +1,7 @@
 package com.example.BlindCafe.dto;
 
 import com.example.BlindCafe.exception.CodeAndMessage;
+import com.example.BlindCafe.type.DeviceType;
 import com.example.BlindCafe.type.Social;
 import lombok.*;
 
@@ -18,6 +19,7 @@ public class LoginDto {
         private String token;
         @NotNull
         private String deviceId;
+        private DeviceType deviceType;
     }
 
     @Getter

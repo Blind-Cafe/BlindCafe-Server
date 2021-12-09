@@ -5,6 +5,7 @@ import com.example.BlindCafe.entity.User;
 import com.example.BlindCafe.exception.BlindCafeException;
 import com.example.BlindCafe.exception.CodeAndMessage;
 import com.example.BlindCafe.repository.UserRepository;
+import com.example.BlindCafe.type.DeviceType;
 import com.example.BlindCafe.type.Social;
 import com.example.BlindCafe.type.status.UserStatus;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +34,7 @@ public class AuthService {
     public LoginDto.Response signin(LoginDto.Request request, Social social) {
         LoginDto.SocialResponse socialResponse = getInfoByToken(request.getToken(), social);
         String deviceId = request.getDeviceId();
+        DeviceType deviceType = request.getDeviceType();
 
         Optional<User> userOptional = userRepository.findBySocialId(socialResponse.getSocialId());
         boolean isRegistered = userOptional.isPresent();
@@ -46,7 +48,10 @@ public class AuthService {
                 // 디바이스 토큰 업데이트
                 if (!user.getDeviceId().equals(deviceId)) {
                     user.setDeviceId(deviceId);
-                    userRepository.save(user);
+                }
+                // 기종 업데이트
+                if (!user.getDeviceType().equals(deviceType)) {
+                    user.setDeviceType(deviceType);
                 }
                 if (user.getStatus().equals(NOT_REQUIRED_INFO)) {
                     // 필수 정보가 입력되지 않은 경우
@@ -62,6 +67,7 @@ public class AuthService {
                     .socialId(socialResponse.getSocialId())
                     .socialType(socialResponse.getSocialType())
                     .deviceId(deviceId)
+                    .deviceType(deviceType)
                     .status(UserStatus.NOT_REQUIRED_INFO)
                     .build();
             userRepository.save(user);

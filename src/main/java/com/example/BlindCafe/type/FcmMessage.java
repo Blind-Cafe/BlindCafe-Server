@@ -14,7 +14,9 @@ public enum FcmMessage {
     THREE_DAYS("대화 종료", "💓3일의 대화가 종료됐습니다. 💓프로필을 교환해 대화를 이어가세요🥰", "HOME", "F"),
     PROFILE_OPEN("상대방 프로필 도착", "💌상대방의 프로필이 도착했습니다💌", "HOME", "F"),
     MATCHING_CONTINUE("7일 대화 시작", "축하드립니다. ☕내 테이블에서 대화☕를 이어가세요", "MATCHING", "F"),
-    LAST_CHAT("마지막 대화", "💗내일 이 대화방은 닫힙니다. 그동안 못다한 말을 해보세요💗", "CHAT", "T");
+    LAST_CHAT("마지막 대화", "💗내일 이 대화방은 닫힙니다. 그동안 못다한 말을 해보세요💗", "CHAT", "T"),
+    MATCHING_UP("⏳매칭 요청 급상승 중⏳", "현재 신규 유저와 매칭 요청이 증가하고 있어요. 매칭을 요청하세요!", "HOME", "F");
+
 
     private final String title;
     private final String body;
