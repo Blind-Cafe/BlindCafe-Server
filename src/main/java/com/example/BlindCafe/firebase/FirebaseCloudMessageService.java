@@ -3,6 +3,7 @@ package com.example.BlindCafe.firebase;
 import com.example.BlindCafe.dto.FcmMessageDto;
 import com.example.BlindCafe.exception.BlindCafeException;
 import com.example.BlindCafe.exception.CodeAndMessage;
+import com.example.BlindCafe.type.DeviceType;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.auth.oauth2.GoogleCredentials;
@@ -32,9 +33,9 @@ public class FirebaseCloudMessageService {
 
     private final ObjectMapper objectMapper;
 
-    public void sendMessageTo(String targetToken, String title, String body, String path, String type, Long matchingId) {
+    public void sendMessageTo(String targetToken, String title, String body, String path, String type, Long matchingId, DeviceType deviceType) {
         try {
-            String message = makeMessage(targetToken, title, body, path, type, matchingId);
+            String message = makeMessage(targetToken, title, body, path, type, matchingId, deviceType);
 
             OkHttpClient client = new OkHttpClient();
             RequestBody requestBody = RequestBody.create(message, MediaType.get("application/json; charset=utf-8"));
@@ -51,8 +52,12 @@ public class FirebaseCloudMessageService {
         }
     }
 
-    private String makeMessage(String targetToken, String title, String body, String path, String type, Long matchingId) {
+    private String makeMessage(String targetToken, String title, String body, String path, String type, Long matchingId, DeviceType deviceType) {
         try {
+            /**
+             * deviceType에 따라서 message 만들기
+             */
+            
             FcmMessageDto fcmMessage = FcmMessageDto.builder()
                     .message(FcmMessageDto.Message.builder()
                             .token(targetToken)

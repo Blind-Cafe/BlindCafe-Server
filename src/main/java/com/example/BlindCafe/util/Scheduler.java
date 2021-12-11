@@ -217,7 +217,8 @@ public class Scheduler {
                     fcmMessage.getBody(),
                     fcmMessage.getPath(),
                     fcmMessage.getType(),
-                    matching.getId()
+                    matching.getId(),
+                    null
             );
         }
     }
