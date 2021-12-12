@@ -6,6 +6,7 @@ import com.example.BlindCafe.exception.CodeAndMessage;
 import com.example.BlindCafe.firebase.FirebaseCloudMessageService;
 import com.example.BlindCafe.repository.MatchingRepository;
 import com.example.BlindCafe.repository.ProfileImageRepository;
+import com.example.BlindCafe.repository.UserMatchingRepository;
 import com.example.BlindCafe.repository.UserRepository;
 import com.example.BlindCafe.type.FcmMessage;
 import com.example.BlindCafe.type.status.CommonStatus;
@@ -36,6 +37,7 @@ public class Scheduler {
 
     private final ProfileImageRepository profileImageRepository;
     private final MatchingRepository matchingRepository;
+    private final UserMatchingRepository userMatchingRepository;
     private final FirebaseCloudMessageService firebaseCloudMessageService;
 
     private final static String DEFAULT_IMAGE = "https://dpb9ox8h2ie20.cloudfront.net/users/profiles/0/profile_default.png";
@@ -55,12 +57,14 @@ public class Scheduler {
     @Scheduled(fixedDelay = DELAY_ONE_HOUR)
     @Transactional
     public void updateOneHour() {
-        log.info("Do task 3,4,5 per 1 hour");
+        log.info("Do task 3,4,5,7,8 per 1 hour");
         LocalDateTime now = LocalDateTime.now();
         List<Matching> matchings = matchingRepository.findAll();
         checkDayFunction(matchings, now, ONE_DAY);
         checkDayFunction(matchings, now, TWO_DAYS);
         checkEndOfBasicMatching(matchings, now);
+        List<UserMatching> userMatchings = userMatchingRepository.findAll();
+        cancelOldRequest(userMatchings, now);
         sendProfile(matchings, now);
     }
 
@@ -194,6 +198,19 @@ public class Scheduler {
                 sendPushMessage(matching, FcmMessage.END_OF_ONE_HOUR, null);
                 matching.getPush().setPush_end_of_one_hour(true);
             }
+        }
+    }
+
+    /**
+     * 8. 24시간 넘은 요청 취소
+     */
+    private void cancelOldRequest(List<UserMatching> userMatchings, LocalDateTime now) {
+        userMatchings = userMatchings.stream()
+                .filter(userMatching -> userMatching.getStatus().equals(MatchingStatus.WAIT))
+                .filter(userMatching -> ChronoUnit.HOURS.between(userMatching.getCreatedAt(), now) >= 24L)
+                .collect(Collectors.toList());
+        for (UserMatching userMatching: userMatchings) {
+            userMatching.setStatus(MatchingStatus.OUT);
         }
     }
 
