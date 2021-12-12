@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Objects;
 import java.util.Optional;
 
 import static com.example.BlindCafe.auth.SocialUtils.verifyAppleToken;
@@ -34,7 +35,7 @@ public class AuthService {
     public LoginDto.Response signin(LoginDto.Request request, Social social) {
         LoginDto.SocialResponse socialResponse = getInfoByToken(request.getToken(), social);
         String deviceId = request.getDeviceId();
-        DeviceType deviceType = request.getDeviceType();
+        DeviceType deviceType = Objects.isNull(request.getDeviceType()) ? null : request.getDeviceType();
 
         Optional<User> userOptional = userRepository.findBySocialId(socialResponse.getSocialId());
         boolean isRegistered = userOptional.isPresent();
