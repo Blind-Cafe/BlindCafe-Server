@@ -189,20 +189,16 @@ public class MatchingService {
         topicServeService.serveFirstTopic(matchingId);
 
         if (partner.getStatus().equals(UserStatus.RETIRED) || partner.getStatus().equals(UserStatus.SUSPENDED)) {
-            try {
-                UserMatching userMatching = matching.getUserMatchings().stream().
-                        filter(um -> um.getUser().equals(user))
-                        .findAny().get();
-                userMatching.setStatus(FAILED_LEAVE_ROOM);
-                userMatching.setReason(reasonRepository.findByReasonTypeAndNum(FOR_LEAVE_ROOM, 1L).get());
-                matching.getUserMatchings().stream().
-                        filter(um -> um.getUser().equals(partner))
-                        .findAny().get().setStatus(OUT);
-                matching.setStatus(FAILED_LEAVE_ROOM);
-                throw new BlindCafeException(INVALID_MATCHING);
-            } catch (Exception e) {
-                throw new BlindCafeException(INVALID_MATCHING);
-            }
+            UserMatching userMatching = matching.getUserMatchings().stream().
+                    filter(um -> um.getUser().equals(user))
+                    .findAny().get();
+            userMatching.setStatus(FAILED_LEAVE_ROOM);
+            userMatching.setReason(reasonRepository.findByReasonTypeAndNum(FOR_LEAVE_ROOM, 1L).get());
+            matching.getUserMatchings().stream().
+                    filter(um -> um.getUser().equals(partner))
+                    .findAny().get().setStatus(OUT);
+            matching.setStatus(FAILED_LEAVE_ROOM);
+            throw new BlindCafeException(INVALID_MATCHING);
         }
 
         ProfileImage profileImage = partner.getProfileImages()
@@ -314,7 +310,8 @@ public class MatchingService {
                     FcmMessage.MATCHING.getBody(),
                     FcmMessage.MATCHING.getPath(),
                     FcmMessage.MATCHING.getType(),
-                    0L
+                    0L,
+                    null
             );
             fcmService.sendMessageTo(
                     partner.getDeviceId(),
@@ -322,7 +319,8 @@ public class MatchingService {
                     FcmMessage.MATCHING.getBody(),
                     FcmMessage.MATCHING.getPath(),
                     FcmMessage.MATCHING.getType(),
-                    0L
+                    0L,
+                    null
             );
 
             matching.getPush().setPush_matching(true);
@@ -599,7 +597,8 @@ public class MatchingService {
                     FcmMessage.MATCHING_OPEN.getBody(),
                     FcmMessage.MATCHING_OPEN.getPath(),
                     FcmMessage.MATCHING_OPEN.getType(),
-                    matchingId
+                    matchingId,
+                    null
             );
             matching.getPush().setPush_matching_open(true);
         }
@@ -819,7 +818,8 @@ public class MatchingService {
                     FcmMessage.PROFILE_OPEN.getBody(),
                     FcmMessage.PROFILE_OPEN.getPath(),
                     FcmMessage.PROFILE_OPEN.getType(),
-                    0L
+                    0L,
+                    null
             );
             matching.getPush().setPush_profile_open(true);
         }
@@ -978,7 +978,8 @@ public class MatchingService {
                 FcmMessage.MATCHING_CONTINUE.getBody(),
                 FcmMessage.MATCHING_CONTINUE.getPath(),
                 FcmMessage.MATCHING_CONTINUE.getType(),
-                0L
+                0L,
+                null
         );
         matching.getPush().setPush_matching_continue(true);
 
