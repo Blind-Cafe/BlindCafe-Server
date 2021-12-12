@@ -210,7 +210,7 @@ public class Scheduler {
                 .filter(userMatching -> ChronoUnit.HOURS.between(userMatching.getCreatedAt(), now) >= 24L)
                 .collect(Collectors.toList());
         for (UserMatching userMatching: userMatchings) {
-            userMatching.setStatus(MatchingStatus.OUT);
+            userMatching.setStatus(MatchingStatus.CANCEL_REQUEST);
         }
     }
 
