@@ -35,7 +35,9 @@ public class AuthService {
     public LoginDto.Response signin(LoginDto.Request request, Social social) {
         LoginDto.SocialResponse socialResponse = getInfoByToken(request.getToken(), social);
         String deviceId = request.getDeviceId();
-        DeviceType deviceType = Objects.isNull(request.getDeviceType()) ? null : request.getDeviceType();
+        DeviceType deviceType = request.getDeviceType();
+        if (Objects.isNull(deviceType))
+            deviceType = DeviceType.AOS;
 
         Optional<User> userOptional = userRepository.findBySocialId(socialResponse.getSocialId());
         boolean isRegistered = userOptional.isPresent();
