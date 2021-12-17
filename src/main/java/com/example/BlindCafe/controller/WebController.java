@@ -6,11 +6,21 @@ import org.springframework.web.bind.annotation.GetMapping;
 
 @Slf4j
 @Controller
-public class IndexController {
+public class WebController {
 
     @GetMapping("/")
     public String home() {
-        log.info("GET /");
-        return "index";
+        return "home";
     }
+
+    @GetMapping("/policy/privacy")
+    public String privacy() {
+        return "policy/privacy";
+    }
+
+    @GetMapping("/policy/usage")
+    public String usage() {
+        return "policy/usage";
+    }
+
 }
