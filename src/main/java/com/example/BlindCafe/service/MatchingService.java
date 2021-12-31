@@ -13,6 +13,7 @@ import com.example.BlindCafe.repository.*;
 import com.example.BlindCafe.type.FcmMessage;
 import com.example.BlindCafe.type.Gender;
 import com.example.BlindCafe.type.MessageType;
+import com.example.BlindCafe.type.status.CommonStatus;
 import com.example.BlindCafe.type.status.MatchingStatus;
 import com.example.BlindCafe.type.status.TopicStatus;
 import com.example.BlindCafe.type.status.UserStatus;
@@ -33,6 +34,7 @@ import static com.example.BlindCafe.exception.CodeAndMessage.*;
 import static com.example.BlindCafe.type.Gender.N;
 import static com.example.BlindCafe.type.ReasonType.FOR_LEAVE_ROOM;
 import static com.example.BlindCafe.type.ReasonType.FOR_WONT_EXCHANGE_PROFILE;
+import static com.example.BlindCafe.type.status.CommonStatus.DELETED;
 import static com.example.BlindCafe.type.status.CommonStatus.NORMAL;
 import static com.example.BlindCafe.type.status.MatchingStatus.*;
 import static java.util.Comparator.comparing;
@@ -47,6 +49,7 @@ public class MatchingService {
     private final TopicServeService topicServeService;
 
     private final UserRepository userRepository;
+    private final ProfileImageRepository profileImageRepository;
     private final UserMatchingRepository userMatchingRepository;
     private final MatchingRepository matchingRepository;
     private final DrinkRepository drinkRepository;
@@ -62,6 +65,7 @@ public class MatchingService {
     private final static Long MAX_INTEREST_ID = 9L;
     public final static Long SUBJECT_LIMIT = 1000L;
     public final static Long AUDIO_LIMIT = 2000L;
+    private final static String DEFAULT_PROFILE_IMAGE = "https://dpb9ox8h2ie20.cloudfront.net/users/profiles/0/profile_default.png";
 
     ExecutorService executor = Executors.newFixedThreadPool(30);
 
@@ -186,19 +190,17 @@ public class MatchingService {
                 .map(um -> um.getUser())
                 .findAny().orElseThrow(() -> new BlindCafeException(INVALID_MATCHING));
 
-        topicServeService.serveFirstTopic(matchingId);
-
-        if (partner.getStatus().equals(UserStatus.RETIRED) || partner.getStatus().equals(UserStatus.SUSPENDED)) {
-            UserMatching userMatching = matching.getUserMatchings().stream().
-                    filter(um -> um.getUser().equals(user))
-                    .findAny().get();
-            userMatching.setStatus(FAILED_LEAVE_ROOM);
-            userMatching.setReason(reasonRepository.findByReasonTypeAndNum(FOR_LEAVE_ROOM, 1L).get());
-            matching.getUserMatchings().stream().
-                    filter(um -> um.getUser().equals(partner))
-                    .findAny().get().setStatus(OUT);
-            matching.setStatus(FAILED_LEAVE_ROOM);
-            throw new BlindCafeException(INVALID_MATCHING);
+        if (partner.getStatus().equals(UserStatus.RETIRED)) {
+            partner.setNickname("(알 수 없음)");
+            partner.getProfileImages().forEach(profileImage -> profileImage.setStatus(DELETED));
+            ProfileImage newProfileImage = ProfileImage.builder()
+                    .user(partner)
+                    .src(DEFAULT_PROFILE_IMAGE)
+                    .priority(1)
+                    .status(CommonStatus.NORMAL)
+                    .build();
+            profileImageRepository.save(newProfileImage);
+            partner.getProfileImages().add(newProfileImage);
         }
 
         ProfileImage profileImage = partner.getProfileImages()
