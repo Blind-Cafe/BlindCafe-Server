@@ -913,19 +913,6 @@ public class MatchingService {
                 .filter(um -> !um.equals(userMatching))
                 .findAny().orElseThrow(() -> new BlindCafeException(INVALID_MATCHING));
 
-        User partner = partnerMatching.getUser();
-        if (partner.getStatus().equals(UserStatus.SUSPENDED) || partner.getStatus().equals(UserStatus.RETIRED)) {
-            try {
-                userMatching.setStatus(FAILED_WONT_EXCHANGE);
-                userMatching.setReason(reasonRepository.findByReasonTypeAndNum(FOR_LEAVE_ROOM, 1L).get());
-                partnerMatching.setStatus(OUT);
-                matching.setStatus(FAILED_WONT_EXCHANGE);
-                throw new BlindCafeException(REJECT_PROFILE_EXCHANGE);
-            } catch (Exception e) {
-                throw new BlindCafeException(REJECT_PROFILE_EXCHANGE);
-            }
-        }
-
         MatchingStatus myMatchingStatus = userMatching.getStatus();
 
         if (!myMatchingStatus.equals(PROFILE_READY)) {
@@ -937,6 +924,10 @@ public class MatchingService {
         userMatching.setStatus(PROFILE_ACCEPT);
 
         // 2. 상대방 user matching 확인
+        User partner = partnerMatching.getUser();
+        if (partner.getStatus().equals(UserStatus.SUSPENDED) || partner.getStatus().equals(UserStatus.RETIRED)) {
+            partnerMatching.setStatus(PROFILE_ACCEPT);
+        }
         MatchingStatus partnerMatchingStatus = partnerMatching.getStatus();
 
         // 2-1. 상대방 아직 수락 안 했으면 대기
