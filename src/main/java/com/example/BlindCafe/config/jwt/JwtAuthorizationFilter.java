@@ -1,17 +1,13 @@
-package com.example.BlindCafe.auth.jwt;
+package com.example.BlindCafe.config.jwt;
 
 
-import com.example.BlindCafe.dto.ErrorResponse;
 import com.example.BlindCafe.entity.User;
 import com.example.BlindCafe.exception.BlindCafeException;
-import com.example.BlindCafe.exception.CodeAndMessage;
 import com.example.BlindCafe.repository.UserRepository;
-import com.example.BlindCafe.type.status.UserStatus;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.example.BlindCafe.entity.type.status.UserStatus;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.MalformedJwtException;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -23,9 +19,9 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.Optional;
 
-import static com.example.BlindCafe.auth.jwt.JwtProperties.HEADER_NAME;
+import static com.example.BlindCafe.config.jwt.JwtProperties.HEADER_NAME;
+import static com.example.BlindCafe.entity.type.status.UserStatus.SUSPENDED;
 import static com.example.BlindCafe.exception.CodeAndMessage.*;
 
 /**
@@ -58,19 +54,16 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
 
     private Authentication getUsernamePasswordAuthenticationToken(String token) {
         try {
-            String socialId = JwtUtils.getUserSocialId(token);
-            if (socialId != null) {
-                User user = userRepository.findBySocialId(socialId)
+            String uid = JwtUtils.getUsedId(token);
+            if (uid != null) {
+                User user = userRepository.findById(Long.parseLong(uid))
                         .orElseThrow(() -> new BlindCafeException(FORBIDDEN_AUTHORIZATION));
-                if (user.getStatus().equals(UserStatus.SUSPENDED))
+                if (user.getStatus().equals(SUSPENDED))
                     throw new BlindCafeException(SUSPENDED_USER, user.getNickname());
                 if (user.getStatus().equals(UserStatus.RETIRED))
                     throw new BlindCafeException(NO_USER);
-
                 if (user != null) {
-                    return new UsernamePasswordAuthenticationToken(
-                            user, // principal
-                            null);
+                    return new UsernamePasswordAuthenticationToken(user, null);
                 }
             }
         } catch (ExpiredJwtException e) {
