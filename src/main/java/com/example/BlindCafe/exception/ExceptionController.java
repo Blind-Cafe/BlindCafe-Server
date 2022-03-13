@@ -1,6 +1,6 @@
 package com.example.BlindCafe.exception;
 
-import com.example.BlindCafe.dto.ErrorResponse;
+import com.example.BlindCafe.dto.response.ErrorResponse;
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -49,8 +49,8 @@ public class ExceptionController {
                 request.getRequestURI(), e.getMessage());
 
         ErrorResponse errorResponse = ErrorResponse.builder()
-                .code(INVALID_REQUEST.getCode())
-                .message(INVALID_REQUEST.getMessage())
+                .code(BAD_REQUEST.getCode())
+                .message(BAD_REQUEST.getMessage())
                 .build();
         return ResponseEntity.badRequest().body(errorResponse);
     }

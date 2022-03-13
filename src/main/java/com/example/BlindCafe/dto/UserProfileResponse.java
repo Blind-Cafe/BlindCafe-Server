@@ -4,7 +4,7 @@ import com.example.BlindCafe.entity.Interest;
 import com.example.BlindCafe.entity.InterestOrder;
 import com.example.BlindCafe.entity.ProfileImage;
 import com.example.BlindCafe.entity.User;
-import com.example.BlindCafe.type.status.CommonStatus;
+import com.example.BlindCafe.entity.type.status.CommonStatus;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 

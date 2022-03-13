@@ -1,7 +1,7 @@
 package com.example.BlindCafe.dto;
 
 import com.example.BlindCafe.entity.*;
-import com.example.BlindCafe.type.Gender;
+import com.example.BlindCafe.entity.type.Gender;
 import lombok.*;
 
 import javax.persistence.Enumerated;
@@ -10,8 +10,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.example.BlindCafe.type.status.CommonStatus.NORMAL;
-import static com.example.BlindCafe.type.status.CommonStatus.SELECTED;
+import static com.example.BlindCafe.entity.type.status.CommonStatus.NORMAL;
 import static javax.persistence.EnumType.STRING;
 
 @Getter

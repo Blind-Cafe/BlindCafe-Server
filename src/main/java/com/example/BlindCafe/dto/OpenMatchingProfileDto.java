@@ -1,6 +1,5 @@
 package com.example.BlindCafe.dto;
 
-import com.example.BlindCafe.type.Gender;
 import lombok.*;
 
 import javax.validation.constraints.NotNull;

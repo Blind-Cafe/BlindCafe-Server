@@ -1,9 +1,9 @@
 package com.example.BlindCafe.entity;
 
-import com.example.BlindCafe.type.DeviceType;
-import com.example.BlindCafe.type.Gender;
-import com.example.BlindCafe.type.Social;
-import com.example.BlindCafe.type.status.UserStatus;
+import com.example.BlindCafe.entity.type.Platform;
+import com.example.BlindCafe.entity.type.Gender;
+import com.example.BlindCafe.entity.type.Social;
+import com.example.BlindCafe.entity.type.status.UserStatus;
 import lombok.*;
 
 import javax.persistence.*;
@@ -16,13 +16,11 @@ import static javax.persistence.EnumType.STRING;
 @Entity
 @Getter
 @Setter
-@Builder
-@AllArgsConstructor
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class User extends BaseTimeEntity {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id")
     private Long id;
 
@@ -52,11 +50,6 @@ public class User extends BaseTimeEntity {
     @OneToMany(mappedBy = "user", cascade = ALL)
     private List<InterestOrder> interestOrders = new ArrayList<>();
 
-    /*
-     * @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-     * private List<UserInterest> userInterests = new ArrayList<>();
-     */
-
     @OneToMany(mappedBy = "user", cascade = ALL)
     private List<ProfileImage> profileImages = new ArrayList<>();
 
@@ -72,11 +65,31 @@ public class User extends BaseTimeEntity {
     @Embedded
     private Address address;
 
-    private String deviceId;
+    private String deviceToken;
 
     @Enumerated(STRING)
-    private DeviceType deviceType;
+    private Platform platform;
 
     @Enumerated(STRING)
     private UserStatus status;
+
+    public static User create(
+            Social socialType,
+            String socialId,
+            Platform platform,
+            String deviceToken
+    ) {
+        User user = new User();
+        user.setSocialType(socialType);
+        user.setSocialId(socialId);
+        user.setPlatform(platform);
+        user.setDeviceToken(deviceToken);
+        user.setStatus(UserStatus.NOT_YET);
+        return user;
+    }
+
+    public void updateDevice(Platform platform, String deviceToken) {
+        this.setPlatform(platform);
+        this.setDeviceToken(deviceToken);
+    }
 }

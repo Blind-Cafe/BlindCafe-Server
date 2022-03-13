@@ -1,6 +1,7 @@
-package com.example.BlindCafe.auth.jwt;
+package com.example.BlindCafe.config.jwt;
 
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.util.Pair;
 
 import java.nio.charset.StandardCharsets;
@@ -8,15 +9,12 @@ import java.security.Key;
 import java.util.Map;
 import java.util.Random;
 
-/**
- * Todo 
- * 시크릿키 변경하기
- */
 public class JwtKey {
+
     private static final Map<String, String> SECRET_KEY_SET = Map.of(
-            "key1", "Exmaple1Exmaple1Exmaple1Exmaple1Exmaple1Exmaple1Exmaple1Exmaple1Exmaple1Exmaple1Exmaple1",
-            "key2", "Exmaple2Exmaple2Exmaple2Exmaple2Exmaple2Exmaple2Exmaple2Exmaple2Exmaple2Exmaple2Exmaple2",
-            "key3", "Exmaple3Exmaple3Exmaple3Exmaple3Exmaple3Exmaple3Exmaple3Exmaple3Exmaple3Exmaple3Exmaple3"
+            "key1", JwtProperties.key1,
+            "key2", JwtProperties.key2,
+            "key3", JwtProperties.key3
     );
 
     private static final String[] KID_SET = SECRET_KEY_SET.keySet().toArray(new String[0]);
@@ -24,7 +22,6 @@ public class JwtKey {
 
     /**
      * SECRET_KEY_SET 에서 랜덤한 KEY 가져오기
-     *
      * @return kid, key Pair
      */
     public static Pair<String, Key> getRandomKey() {
@@ -35,8 +32,7 @@ public class JwtKey {
 
     /**
      * kid로 Key찾기
-     *
-     * @param kid kid
+     * @param kid
      * @return Key
      */
     public static Key getKey(String kid) {

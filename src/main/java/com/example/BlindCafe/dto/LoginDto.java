@@ -1,8 +1,9 @@
 package com.example.BlindCafe.dto;
 
+import com.example.BlindCafe.dto.response.ApiResponse;
 import com.example.BlindCafe.exception.CodeAndMessage;
-import com.example.BlindCafe.type.DeviceType;
-import com.example.BlindCafe.type.Social;
+import com.example.BlindCafe.entity.type.Platform;
+import com.example.BlindCafe.entity.type.Social;
 import lombok.*;
 
 import javax.validation.constraints.NotNull;
@@ -19,7 +20,7 @@ public class LoginDto {
         private String token;
         @NotNull
         private String deviceId;
-        private DeviceType deviceType;
+        private Platform platform;
     }
 
     @Getter

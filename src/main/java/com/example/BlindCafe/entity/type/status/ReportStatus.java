@@ -1,4 +1,4 @@
-package com.example.BlindCafe.type.status;
+package com.example.BlindCafe.entity.type.status;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

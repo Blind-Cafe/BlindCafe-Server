@@ -1,6 +1,6 @@
 package com.example.BlindCafe.entity;
 
-import com.example.BlindCafe.type.MessageType;
+import com.example.BlindCafe.entity.type.MessageType;
 import lombok.*;
 
 import javax.persistence.*;
