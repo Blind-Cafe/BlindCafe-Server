@@ -1,16 +1,14 @@
 package com.example.BlindCafe.dto;
 
-import com.example.BlindCafe.entity.Matching;
 import com.example.BlindCafe.entity.ProfileImage;
 import com.example.BlindCafe.entity.User;
 import lombok.*;
 
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 
-import static com.example.BlindCafe.type.status.CommonStatus.NORMAL;
+import static com.example.BlindCafe.entity.type.status.CommonStatus.NORMAL;
 
 @Getter
 @AllArgsConstructor

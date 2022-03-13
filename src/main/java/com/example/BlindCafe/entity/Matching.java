@@ -1,6 +1,6 @@
 package com.example.BlindCafe.entity;
 
-import com.example.BlindCafe.type.status.MatchingStatus;
+import com.example.BlindCafe.entity.type.status.MatchingStatus;
 import lombok.*;
 
 import javax.persistence.*;

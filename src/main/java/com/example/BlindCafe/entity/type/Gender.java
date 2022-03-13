@@ -1,13 +1,15 @@
-package com.example.BlindCafe.type;
+package com.example.BlindCafe.entity.type;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public enum DeviceType {
-    AOS("안드로이드"),
-    IOS("애플");
+public enum Gender {
+
+    M("남성"),
+    F("여성"),
+    N("상관없음");
 
     private final String description;
 }

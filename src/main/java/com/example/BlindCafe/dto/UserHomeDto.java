@@ -1,8 +1,8 @@
 package com.example.BlindCafe.dto;
 
+import com.example.BlindCafe.dto.response.ApiResponse;
 import com.example.BlindCafe.exception.CodeAndMessage;
-import com.example.BlindCafe.type.status.MatchingStatus;
-import lombok.AllArgsConstructor;
+import com.example.BlindCafe.entity.type.status.MatchingStatus;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;

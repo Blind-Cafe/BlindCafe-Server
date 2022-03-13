@@ -1,7 +1,7 @@
 package com.example.BlindCafe.repository;
 
 import com.example.BlindCafe.entity.ProfileImage;
-import com.example.BlindCafe.type.status.CommonStatus;
+import com.example.BlindCafe.entity.type.status.CommonStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

@@ -1,7 +1,7 @@
 package com.example.BlindCafe.repository;
 
 import com.example.BlindCafe.entity.UserMatching;
-import com.example.BlindCafe.type.status.MatchingStatus;
+import com.example.BlindCafe.entity.type.status.MatchingStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

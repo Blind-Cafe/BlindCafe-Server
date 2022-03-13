@@ -1,10 +1,10 @@
 package com.example.BlindCafe.dto;
 
+import com.example.BlindCafe.dto.response.ApiResponse;
 import com.example.BlindCafe.exception.CodeAndMessage;
 import lombok.*;
 
 import javax.validation.constraints.NotNull;
-import java.time.LocalDateTime;
 
 public class DrinkDto {
 

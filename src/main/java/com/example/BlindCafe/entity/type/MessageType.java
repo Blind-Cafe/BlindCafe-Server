@@ -1,4 +1,4 @@
-package com.example.BlindCafe.type;
+package com.example.BlindCafe.entity.type;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

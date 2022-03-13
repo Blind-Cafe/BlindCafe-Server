@@ -1,17 +1,13 @@
 package com.example.BlindCafe.dto;
 
-import com.example.BlindCafe.entity.ProfileImage;
 import com.example.BlindCafe.entity.User;
-import com.example.BlindCafe.type.Gender;
-import com.example.BlindCafe.type.status.CommonStatus;
+import com.example.BlindCafe.entity.type.Gender;
 import lombok.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import javax.persistence.Enumerated;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static javax.persistence.EnumType.STRING;
 
