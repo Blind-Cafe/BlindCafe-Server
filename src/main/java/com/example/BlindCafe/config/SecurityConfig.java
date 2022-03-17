@@ -38,7 +38,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
         // authorization
         http.authorizeRequests()
-                .antMatchers("/", "/api/login").permitAll();
+                .antMatchers("/", "/api/auth/login").permitAll();
         // jwt filter
         http.addFilterBefore(
                 new JwtAuthorizationFilter(userRepository),
@@ -50,5 +50,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     public void configure(WebSecurity web) {
         // 정적 리소스 spring security 대상에서 제외
         web.ignoring().requestMatchers(PathRequest.toStaticResources().atCommonLocations());
+    }
+
+    public static User getUser(Authentication authentication) {
+        return (User) authentication.getPrincipal();
     }
 }

@@ -31,6 +31,7 @@ import static com.example.BlindCafe.exception.CodeAndMessage.*;
 @RequiredArgsConstructor
 public class JwtAuthorizationFilter extends OncePerRequestFilter {
 
+    public static final String UID = "UID";
     private final UserRepository userRepository;
 
     @Override
@@ -48,6 +49,8 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
         if (token != null) {
             Authentication authentication = getUsernamePasswordAuthenticationToken(token);
             SecurityContextHolder.getContext().setAuthentication(authentication);
+            User user = (User) authentication.getPrincipal();
+            response.setHeader(UID, user.getId().toString());
         }
         chain.doFilter(request, response);
     }
