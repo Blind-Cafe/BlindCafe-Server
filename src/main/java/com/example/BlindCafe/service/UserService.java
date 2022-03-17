@@ -1,12 +1,14 @@
 package com.example.BlindCafe.service;
 
 import com.example.BlindCafe.dto.*;
-import com.example.BlindCafe.dto.CreateUserInfoDto;
+import com.example.BlindCafe.dto.request.AddUserInfoRequest;
+import com.example.BlindCafe.dto.request.EditInterestRequest;
 import com.example.BlindCafe.entity.*;
+import com.example.BlindCafe.entity.type.status.UserStatus;
 import com.example.BlindCafe.exception.BlindCafeException;
 import com.example.BlindCafe.repository.*;
-import com.example.BlindCafe.type.status.CommonStatus;
-import com.example.BlindCafe.type.status.MatchingStatus;
+import com.example.BlindCafe.entity.type.status.CommonStatus;
+import com.example.BlindCafe.entity.type.status.MatchingStatus;
 import com.example.BlindCafe.util.AmazonS3Connector;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -20,12 +22,10 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.example.BlindCafe.exception.CodeAndMessage.*;
-import static com.example.BlindCafe.type.Gender.N;
-import static com.example.BlindCafe.type.ReasonType.FOR_RETIRED;
-import static com.example.BlindCafe.type.status.CommonStatus.*;
-import static com.example.BlindCafe.type.status.MatchingStatus.*;
-import static com.example.BlindCafe.type.status.UserStatus.*;
-import static com.example.BlindCafe.type.status.UserStatus.NORMAL;
+import static com.example.BlindCafe.entity.type.Gender.N;
+import static com.example.BlindCafe.entity.type.ReasonType.FOR_RETIRED;
+import static com.example.BlindCafe.entity.type.status.CommonStatus.*;
+import static com.example.BlindCafe.entity.type.status.MatchingStatus.*;
 
 @Service
 @Transactional(readOnly = true)
@@ -38,7 +38,6 @@ public class UserService {
     private final UserInterestRepository userInterestRepository;
     private final InterestOrderRepository interestOrderRepository;
     private final ProfileImageRepository profileImageRepository;
-    private final MatchingRepository matchingRepository;
     private final ReasonRepository reasonRepository;
     private final AmazonS3Connector amazonS3Connector;
 
@@ -47,79 +46,58 @@ public class UserService {
     private static int index;
     private static int editIndex;
 
-
     @Transactional
-    public CreateUserInfoDto.Response addUserInfo(User user, CreateUserInfoDto.Request request) {
+    public void addUserInfo(Long userId, AddUserInfoRequest request) {
         validateAddUserInfo(request);
 
-        // 유저 정보 저장
-        user.setAge(request.getAge());
-        user.setMyGender(request.getMyGender());
-        user.setNickname(request.getNickname());
-        user.setPartnerGender(request.getPartnerGender());
-        user.setStatus(NORMAL);
-        userRepository.save(user);
+        // 사용자 조회
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BlindCafeException(EMPTY_USER));
 
-        // 관심사 저장
-        index = 0;
-        request.getInterests().forEach(interest -> {
-            // 메인
-            Interest mainInterest = interestRepository.findById(interest.getMain())
-                    .orElseThrow(()-> new BlindCafeException(INVALID_MAIN_INTEREST));
+        // 이미 추가 정보를 입력받은 경우 핸들링
+        if (user.getStatus().equals(UserStatus.NORMAL))
+            throw new BlindCafeException(ALREADY_REQUIRED_INFO);
 
-            UserInterest userInterest = UserInterest.builder()
-                    .user(user)
-                    .interest(mainInterest)
-                    .build();
-            userInterestRepository.save(userInterest);
+        // 사용자 추가 정보 저장
+        user.addRequiredInfo(request.getAge(), request.getMyGender(), request.getEmail(), request.getNickname(), request.getPartnerGender());
 
-            // 세부
-            interest.getSub().forEach(sub -> {
-                UserInterest subInterest = UserInterest.builder()
-                        .user(user)
-                        .interest(mainInterest.getChild()
-                                .stream()
-                                .filter(si -> si.getName().equals(sub))
-                                .findAny().orElseThrow(() -> new BlindCafeException(INVALID_SUB_INTEREST))
-                        )
-                        .build();
-                userInterestRepository.save(subInterest);
-            });
-
-            interestOrderArr[index][0] = interest.getMain().intValue();
-            interestOrderArr[index][1] = interest.getSub().size();
-            index++;
+        // 관심사 조회
+        Map<Long, List<String>> interestMap = new HashMap<>();
+        // HashMap의 keySet()사용할 경우 main interest의 순서가 변경되기 때문에 별도의 list 활용
+        List<Long> mainInterestIds = new ArrayList<>();
+        request.getInterests().forEach(i -> {
+            interestMap.put(i.getMain(), i.getSub());
+            mainInterestIds.add(i.getMain());
         });
 
-        // 관심사 순위 저장
-        sortBySubInterestCount();
-        for (int priority=0; priority<USER_INTEREST_LENGTH; priority++) {
-            InterestOrder interestOrder = InterestOrder.builder()
-                    .user(user)
-                    .interest(
-                            interestRepository.findById(
-                                    Long.valueOf(interestOrderArr[priority][0])
-                            ).orElseThrow(()-> new BlindCafeException(INVALID_MAIN_INTEREST)))
-                    .priority(priority+1)
-                    .build();
-            interestOrderRepository.save(interestOrder);
-        }
+        List<Interest> mainInterests = interestRepository.findByIdIn(mainInterestIds);
+        if (mainInterests.size() != USER_INTEREST_LENGTH)
+            throw new BlindCafeException(INVALID_MAIN_INTEREST);
 
-        return CreateUserInfoDto.Response.builder()
-                .codeAndMessage(SUCCESS).build();
+        // 관심사 저장
+        List<Interest> userInterest = new ArrayList<>();
+        mainInterests.forEach(mainInterest -> {
+            // 메인관심사
+            userInterest.add(mainInterest);
+            // 세부관심사 저장
+            interestMap.get(mainInterest).forEach(sub -> {
+                Interest subInterest = mainInterest.getChild()
+                        .stream()
+                        .filter(si -> si.getName().equals(sub))
+                        .findAny().orElseThrow(() -> new BlindCafeException(INVALID_SUB_INTEREST));
+                userInterest.add(subInterest);
+            });
+        });
+        user.updateInterest(userInterest);
     }
 
-    private void validateAddUserInfo(CreateUserInfoDto.Request request) {
+    private void validateAddUserInfo(AddUserInfoRequest request) {
         if (request.getMyGender().equals(N))
-            throw new BlindCafeException(INVALID_REQUEST);
-    }
+            throw new BlindCafeException(BAD_REQUEST);
 
-    private void sortBySubInterestCount() {
-        Arrays.sort(interestOrderArr, new Comparator<int[]>() {
-            @Override
-            public int compare(int[] o1, int[] o2) {
-                return o2[1] - o1[1];
-        }});
+        // TODO 지금은 닉네임 중복체크, 이후 변경 사항에 따라 수정 예정
+        userRepository.findByNickname(request.getNickname())
+                .ifPresent(u -> { throw new BlindCafeException(DUPLICATED_NICKNAME); });
     }
 
     @Transactional
@@ -333,14 +311,14 @@ public class UserService {
     }
 
     private void uploadProfileImage(User user, int priority, MultipartFile image) {
-        ProfileImage profileImage = profileImageRepository
+        Avatar avatar = profileImageRepository
                 .findByUserIdAndPriorityAndStatus(
                         user.getId(), priority, CommonStatus.NORMAL)
                 .orElse(null);
 
-        if (profileImage != null) {
-            user.getProfileImages().remove(profileImage);
-            profileImage.setStatus(DELETED);
+        if (avatar != null) {
+            user.getAvatars().remove(avatar);
+            avatar.setStatus(DELETED);
         }
 
         if (Objects.isNull(image.getContentType())) {
@@ -349,14 +327,14 @@ public class UserService {
 
         String src = amazonS3Connector.uploadProfileImage(image, user.getId());
 
-        ProfileImage newProfileImage = ProfileImage.builder()
+        Avatar newAvatar = Avatar.builder()
                 .user(user)
                 .src(src)
                 .priority(priority)
                 .status(CommonStatus.NORMAL)
                 .build();
-        profileImageRepository.save(newProfileImage);
-        user.getProfileImages().add(newProfileImage);
+        profileImageRepository.save(newAvatar);
+        user.getAvatars().add(newAvatar);
     }
 
     private void validatePriority(int priority) {
@@ -431,10 +409,10 @@ public class UserService {
                 .filter(u -> u.getStatus().equals(NORMAL) || u.getStatus().equals(NOT_REQUIRED_INFO))
                 .orElseThrow(() -> new BlindCafeException(NO_USER));
         return ProfileImageListDto.builder()
-                .images(user.getProfileImages().stream()
+                .images(user.getAvatars().stream()
                         .filter(profileImage -> profileImage.getStatus().equals(CommonStatus.NORMAL))
-                        .sorted(Comparator.comparing(ProfileImage::getPriority))
-                        .map(ProfileImage::getSrc)
+                        .sorted(Comparator.comparing(Avatar::getPriority))
+                        .map(Avatar::getSrc)
                         .collect(Collectors.toList()))
                 .build();
     }
@@ -445,12 +423,12 @@ public class UserService {
                 .orElseThrow(() -> new BlindCafeException(NO_USER));
         String[] images = new String[3];
         Arrays.fill(images, "");
-        ArrayList<ProfileImage> profileImages = new ArrayList<>();
-        profileImages.addAll(user.getProfileImages().stream()
+        ArrayList<Avatar> avatars = new ArrayList<>();
+        avatars.addAll(user.getAvatars().stream()
                 .filter(profileImage -> profileImage.getStatus().equals(CommonStatus.NORMAL))
-                .sorted(Comparator.comparing(ProfileImage::getPriority))
+                .sorted(Comparator.comparing(Avatar::getPriority))
                 .collect(Collectors.toList()));
-        for (ProfileImage pi: profileImages) {
+        for (Avatar pi: avatars) {
             images[pi.getPriority()-1] = pi.getSrc();
         }
 
@@ -465,13 +443,13 @@ public class UserService {
         User user = userRepository.findById(userId)
                 .filter(u -> u.getStatus().equals(NORMAL) || u.getStatus().equals(NOT_REQUIRED_INFO))
                 .orElseThrow(() -> new BlindCafeException(NO_USER));
-        ProfileImage profileImage = profileImageRepository
+        Avatar avatar = profileImageRepository
                 .findByUserIdAndPriorityAndStatus(
                         user.getId(), priority, CommonStatus.NORMAL)
                 .orElseThrow(() -> new BlindCafeException(NO_PROFILE_IMAGE));
 
-        user.getProfileImages().remove(profileImage);
-        profileImage.setStatus(DELETED);
+        user.getAvatars().remove(avatar);
+        avatar.setStatus(DELETED);
     }
 
     public UserProfileResponse getProfile(Long userId) {

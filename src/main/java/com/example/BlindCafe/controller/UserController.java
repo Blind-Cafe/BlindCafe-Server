@@ -1,8 +1,9 @@
 package com.example.BlindCafe.controller;
 
+import com.example.BlindCafe.config.SecurityConfig;
+import com.example.BlindCafe.config.jwt.JwtAuthorizationFilter;
 import com.example.BlindCafe.dto.*;
-import com.example.BlindCafe.dto.CreateUserInfoDto;
-import com.example.BlindCafe.entity.User;
+import com.example.BlindCafe.dto.request.AddUserInfoRequest;
 import com.example.BlindCafe.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -13,7 +14,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
 
-import static com.example.BlindCafe.config.SecurityConfig.getUserId;
+import static com.example.BlindCafe.config.SecurityConfig.getUser;
+import static com.example.BlindCafe.config.jwt.JwtAuthorizationFilter.UID;
+
 @Slf4j
 @RestController
 @RequiredArgsConstructor
@@ -23,25 +26,27 @@ public class UserController {
     private final UserService userService;
 
     /**
-     * 마이페이지 (유저 정보 조회)
-     */
-    @GetMapping
-    public ResponseEntity<UserDetailDto> getUserDetail(Authentication authentication) {
-        log.info("GET /api/user");
-        return ResponseEntity.ok(userService.getUserDetail(getUserId(authentication)));
-    }
-
-    /**
      * 유저 정보 추가 입력(온보딩)
      */
     @PostMapping
-    public ResponseEntity<CreateUserInfoDto.Response> addUserInfo(
-            Authentication authentication,
-            @Valid @RequestBody CreateUserInfoDto.Request request
+    public ResponseEntity<Void> addUserInfo(
+            @RequestHeader(value = UID) String uid,
+            @Valid @RequestBody AddUserInfoRequest request
     ) {
         log.info("POST /api/user");
-        User user = (User) authentication.getPrincipal();
-        return ResponseEntity.ok(userService.addUserInfo(user, request));
+        userService.addUserInfo(Long.parseLong(uid), request);
+        return ResponseEntity.ok().build();
+    }
+
+    /**
+     * 마이페이지 (유저 정보 조회)
+     */
+    @GetMapping
+    public ResponseEntity<UserDetailDto> getUserDetail(
+            Authentication authentication
+    ) {
+        log.info("GET /api/user");
+        return ResponseEntity.ok(userService.getUserDetail(Long.parseLong(uid)));
     }
 
     /**

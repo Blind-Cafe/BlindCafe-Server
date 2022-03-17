@@ -6,8 +6,6 @@ import javax.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
 
-import static javax.persistence.FetchType.LAZY;
-
 @Entity
 @Getter
 public class Interest {
@@ -20,12 +18,12 @@ public class Interest {
     @Column(length = 10, nullable = false)
     private String name;
 
-    private Boolean isParent;
+    private Boolean isMain;
 
-    @ManyToOne(fetch = LAZY)
-    @JoinColumn(name = "parent_id")
-    private Interest parent;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "main_interest_id")
+    private Interest main;
 
-    @OneToMany(mappedBy = "parent")
+    @OneToMany(mappedBy = "main")
     private List<Interest> child = new ArrayList<>();
 }
