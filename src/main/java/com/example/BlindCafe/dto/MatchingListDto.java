@@ -1,6 +1,6 @@
 package com.example.BlindCafe.dto;
 
-import com.example.BlindCafe.entity.ProfileImage;
+import com.example.BlindCafe.entity.Avatar;
 import com.example.BlindCafe.entity.User;
 import lombok.*;
 
@@ -37,12 +37,12 @@ public class MatchingListDto {
         private String nickname;
 
         public Partner(User user) {
-            ProfileImage profileImage = user.getProfileImages()
-                    .stream().sorted(Comparator.comparing(ProfileImage::getPriority))
+            Avatar avatar = user.getAvatars()
+                    .stream().sorted(Comparator.comparing(Avatar::getPriority))
                     .filter(pi -> pi.getStatus().equals(NORMAL))
                     .findFirst()
                     .orElse(null);
-            String src = profileImage != null ? profileImage.getSrc() : null;
+            String src = avatar != null ? avatar.getSrc() : null;
 
             this.userId = user.getId();
             this.profileImage = src;

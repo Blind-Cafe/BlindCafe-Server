@@ -31,13 +31,13 @@ public class UserDetailDto {
     private List<Long> drinks;
 
     public static UserDetailDto fromEntity(User user) {
-        ProfileImage profileImage = user.getProfileImages()
-                .stream().sorted(Comparator.comparing(ProfileImage::getPriority))
+        Avatar avatar = user.getAvatars()
+                .stream().sorted(Comparator.comparing(Avatar::getPriority))
                 .filter(pi -> pi.getStatus().equals(NORMAL))
                 .findFirst()
                 .orElse(null);
-        String src = profileImage != null ?
-                profileImage.getSrc() : null;
+        String src = avatar != null ?
+                avatar.getSrc() : null;
         String region = user.getAddress() != null ?
                 user.getAddress().toString() : null;
 

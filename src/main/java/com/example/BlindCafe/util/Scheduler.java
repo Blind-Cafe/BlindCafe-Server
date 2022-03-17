@@ -1,16 +1,13 @@
 package com.example.BlindCafe.util;
 
 import com.example.BlindCafe.entity.*;
-import com.example.BlindCafe.exception.BlindCafeException;
-import com.example.BlindCafe.exception.CodeAndMessage;
 import com.example.BlindCafe.firebase.FirebaseCloudMessageService;
 import com.example.BlindCafe.repository.MatchingRepository;
 import com.example.BlindCafe.repository.ProfileImageRepository;
 import com.example.BlindCafe.repository.UserMatchingRepository;
-import com.example.BlindCafe.repository.UserRepository;
-import com.example.BlindCafe.type.FcmMessage;
-import com.example.BlindCafe.type.status.CommonStatus;
-import com.example.BlindCafe.type.status.MatchingStatus;
+import com.example.BlindCafe.entity.type.FcmMessage;
+import com.example.BlindCafe.entity.type.status.CommonStatus;
+import com.example.BlindCafe.entity.type.status.MatchingStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -146,16 +143,16 @@ public class Scheduler {
             for (UserMatching userMatching: userMatchings) {
                 if (userMatching.getStatus().equals(MatchingStatus.PROFILE_OPEN)) {
                     User user = userMatching.getUser();
-                    if (user.getProfileImages().stream()
+                    if (user.getAvatars().stream()
                             .filter(profileImage -> profileImage.getStatus().equals(CommonStatus.NORMAL))
                             .collect(Collectors.toList()).size() == 0) {
-                        ProfileImage profileImage = ProfileImage.builder()
+                        Avatar avatar = Avatar.builder()
                                 .user(user)
                                 .priority(1)
                                 .src(DEFAULT_IMAGE)
                                 .status(CommonStatus.NORMAL)
                                 .build();
-                        profileImageRepository.save(profileImage);
+                        profileImageRepository.save(avatar);
                     }
                     if (Objects.isNull(user.getAddress())) {
                         Address address = new Address("", "");
