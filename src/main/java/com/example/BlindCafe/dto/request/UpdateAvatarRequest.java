@@ -10,7 +10,7 @@ import org.springframework.web.multipart.MultipartFile;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class UploadAvatarRequest {
+public class UpdateAvatarRequest {
     private int sequence;
     private MultipartFile image;
 }

@@ -11,6 +11,6 @@ import java.util.List;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class EditInterestRequest {
+public class UpdateInterestRequest {
     private List<Long> interests;
 }

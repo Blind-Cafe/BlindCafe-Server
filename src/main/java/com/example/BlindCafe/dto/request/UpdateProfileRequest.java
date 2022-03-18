@@ -11,7 +11,7 @@ import javax.validation.constraints.NotNull;
 @Getter
 @Setter
 @NoArgsConstructor
-public class EditProfileRequest {
+public class UpdateProfileRequest {
 
     @NotNull
     String state;
