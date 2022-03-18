@@ -6,6 +6,7 @@ import com.example.BlindCafe.domain.*;
 import com.example.BlindCafe.domain.type.status.UserStatus;
 import com.example.BlindCafe.dto.request.EditInterestRequest;
 import com.example.BlindCafe.dto.request.EditProfileRequest;
+import com.example.BlindCafe.dto.request.UploadAvatarRequest;
 import com.example.BlindCafe.dto.response.AvatarListResponse;
 import com.example.BlindCafe.dto.response.UserDetailResponse;
 import com.example.BlindCafe.exception.BlindCafeException;
@@ -15,7 +16,6 @@ import com.example.BlindCafe.util.AmazonS3Connector;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.*;
 import java.util.regex.Matcher;
@@ -38,7 +38,8 @@ public class UserService {
 
     private final AmazonS3Connector amazonS3Connector;
 
-    private final static int USER_INTEREST_LENGTH = 3;
+    private static final int USER_INTEREST_LENGTH = 3;
+    private static final int USER_AVATAR_MAX_LENGTH = 3;
 
     /**
      * 사용자 추가 정보 입력
@@ -126,70 +127,36 @@ public class UserService {
         return AvatarListResponse.fromEntity(user);
     }
 
-
-
+    /**
+     * 프로필 이미지 업로드/수정
+     */
     @Transactional
-    public EditNicknameDto.Response editNickname(Long userId, EditNicknameDto.Request request) {
+    public void uploadAvatar(Long userId, UploadAvatarRequest request) {
+        int sequence = request.getSequence();
+        validateAvatarSequence(sequence);
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new BlindCafeException(NO_USER));
-        user.setNickname(request.getNickname());
-        return EditNicknameDto.Response.fromEntity(user);
+                .orElseThrow(() -> new BlindCafeException(EMPTY_USER));
+        // S3에 이미지 업로드
+        String src = amazonS3Connector.uploadAvatar(request.getImage(), userId);
+        user.updateAvatar(src, sequence);
     }
 
+    /**
+     * 프로필 이미지 삭제
+     */
     @Transactional
-    public EditAddressDto.Response editAddress(Long userId, EditAddressDto.Request request) {
+    public void deleteAvatar(Long userId, int sequence) {
+        validateAvatarSequence(sequence);
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new BlindCafeException(NO_USER));
-        user.setAddress(new Address(request.getState(), request.getRegion()));
-        return EditAddressDto.Response.fromEntity(user);
+                .orElseThrow(() -> new BlindCafeException(EMPTY_USER));
+        user.deleteAvatar(sequence);
     }
 
-    @Transactional
-    public void editProfileImage(
-            Long userId,
-            int priority,
-            MultipartFile image
-    ) {
-        validatePriority(priority);
-
-        User user = userRepository.findById(userId)
-                .filter(u -> u.getStatus().equals(NORMAL) || u.getStatus().equals(NOT_REQUIRED_INFO))
-                .orElseThrow(() -> new BlindCafeException(NO_USER));
-
-        uploadProfileImage(user, priority, image);
+    private void validateAvatarSequence(int sequence) {
+        if (sequence < 1 && sequence > USER_AVATAR_MAX_LENGTH)
+            throw new BlindCafeException(INVALID_PROFILE_IMAGE_SEQUENCE);
     }
 
-    private void uploadProfileImage(User user, int priority, MultipartFile image) {
-        Avatar avatar = profileImageRepository
-                .findByUserIdAndPriorityAndStatus(
-                        user.getId(), priority, CommonStatus.NORMAL)
-                .orElse(null);
-
-        if (avatar != null) {
-            user.getAvatars().remove(avatar);
-            avatar.setStatus(DELETED);
-        }
-
-        if (Objects.isNull(image.getContentType())) {
-            return;
-        }
-
-        String src = amazonS3Connector.uploadProfileImage(image, user.getId());
-
-        Avatar newAvatar = Avatar.builder()
-                .user(user)
-                .src(src)
-                .priority(priority)
-                .status(CommonStatus.NORMAL)
-                .build();
-        profileImageRepository.save(newAvatar);
-        user.getAvatars().add(newAvatar);
-    }
-
-    private void validatePriority(int priority) {
-        if (priority < 1 && priority > 3)
-            throw new BlindCafeException(INVALID_PROFILE_IMAGE_PRIORITY);
-    }
 
     @Transactional
     public DeleteUserDto.Response deleteUser(Long userId, Long reasonNum) {
@@ -281,4 +248,6 @@ public class UserService {
                 .orElseThrow(() -> new BlindCafeException(NO_USER));
         return new UserProfileResponse(user);
     }
+
+
 }

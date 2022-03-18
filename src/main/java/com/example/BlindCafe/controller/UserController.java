@@ -2,6 +2,7 @@ package com.example.BlindCafe.controller;
 
 import com.example.BlindCafe.dto.*;
 import com.example.BlindCafe.dto.request.AddUserInfoRequest;
+import com.example.BlindCafe.dto.request.UploadAvatarRequest;
 import com.example.BlindCafe.dto.request.EditInterestRequest;
 import com.example.BlindCafe.dto.request.EditProfileRequest;
 import com.example.BlindCafe.dto.response.AvatarListResponse;
@@ -67,7 +68,7 @@ public class UserController {
     public ResponseEntity<Void> editInterest(
             @RequestHeader(value = UID) String uid,
             @Valid @RequestBody EditInterestRequest request
-            ) {
+    ) {
         log.info("PUT /api/user/interest");
         userService.editInterest(Long.parseLong(uid), request);
         return ResponseEntity.ok().build();
@@ -83,6 +84,34 @@ public class UserController {
     }
 
     /**
+     * 프로필 이미지 업로드/수정
+     */
+    @PostMapping("/avatar")
+    public ResponseEntity<Void> uploadAvatar(
+            @RequestHeader(value = UID) String uid,
+            @RequestParam UploadAvatarRequest request
+    ) {
+        log.info("POST /api/user/avatar");
+        userService.uploadAvatar(Long.parseLong(uid), request);
+        return ResponseEntity.ok().build();
+    }
+
+    /**
+     * 프로필 이미지 삭제
+     */
+    @DeleteMapping("/avatar")
+    public ResponseEntity<Void> deleteAvatar(
+            @RequestHeader(value = UID) String uid,
+            @RequestParam(name = "seq") int sequence
+    ) {
+        log.info("DELETE /api/user/avatar");
+        userService.deleteAvatar(Long.parseLong(uid), sequence);
+        return ResponseEntity.ok().build();
+    }
+
+
+
+    /**
      * 밝은 채팅방 프로필 조회
      */
     @GetMapping("{userId}/profile")
@@ -94,17 +123,6 @@ public class UserController {
         return ResponseEntity.ok(userService.getProfile(userId));
     }
 
-
-    /**
-     * 프로필 사진 수정 화면
-     */
-    @GetMapping("/image")
-    public ResponseEntity<ProfileImageListDto> getProfileImagesForEdit(
-            Authentication authentication
-    ) {
-        log.info("GET /api/user/image");
-        return ResponseEntity.ok(userService.getProfileImagesForEdit(getUserId(authentication)));
-    }
     /**
      * 유저 프로필 이미지 수정
      */

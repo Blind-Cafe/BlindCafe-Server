@@ -3,7 +3,6 @@ package com.example.BlindCafe.util;
 import com.example.BlindCafe.domain.*;
 import com.example.BlindCafe.firebase.FirebaseCloudMessageService;
 import com.example.BlindCafe.repository.MatchingRepository;
-import com.example.BlindCafe.repository.ProfileImageRepository;
 import com.example.BlindCafe.repository.UserMatchingRepository;
 import com.example.BlindCafe.domain.type.FcmMessage;
 import com.example.BlindCafe.domain.type.status.CommonStatus;

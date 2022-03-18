@@ -10,10 +10,7 @@ import com.example.BlindCafe.domain.type.status.UserStatus;
 import lombok.*;
 
 import javax.persistence.*;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Entity
@@ -151,6 +148,23 @@ public class User extends BaseTimeEntity {
         String[] currentAvatars = new String[3];
         avatars.forEach(a -> currentAvatars[a.getSequence()-1] = a.getSrc());
         return Arrays.asList(currentAvatars);
+    }
+
+    // 프로필 이미지 업로드/수정하기
+    public void updateAvatar(String src, int sequence) {
+        this.deleteAvatar(sequence);
+        Avatar avatar = Avatar.create(this, src, sequence);
+        this.avatars.add(avatar);
+    }
+
+    // 프로필 이미지 삭제하기
+    public void deleteAvatar(int sequence) {
+        Optional<Avatar> deleteAvatar = this.getAvatars().stream()
+                .filter(a -> a.getSequence() == sequence)
+                .findAny();
+        if (deleteAvatar.isPresent()) {
+            deleteAvatar.get().remove();
+        }
     }
 
     // 사용자 메인 관심사 가져오기
