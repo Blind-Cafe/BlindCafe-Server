@@ -17,7 +17,7 @@ import com.example.BlindCafe.domain.type.status.CommonStatus;
 import com.example.BlindCafe.domain.type.status.MatchingStatus;
 import com.example.BlindCafe.domain.type.status.TopicStatus;
 import com.example.BlindCafe.domain.type.status.UserStatus;
-import com.example.BlindCafe.util.TopicServeService;
+import com.example.BlindCafe.utils.TopicServeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

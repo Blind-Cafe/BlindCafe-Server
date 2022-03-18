@@ -1,4 +1,4 @@
-package com.example.BlindCafe.util;
+package com.example.BlindCafe.utils;
 
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.PutObjectRequest;

@@ -8,7 +8,6 @@ import com.example.BlindCafe.domain.notice.PersonalNotice;
 import com.example.BlindCafe.dto.request.CreateNoticeRequest;
 import com.example.BlindCafe.dto.response.CreateGroupNoticeResponse;
 import com.example.BlindCafe.dto.response.CreatePersonalNoticeResponse;
-import com.example.BlindCafe.dto.response.NoticeListResponse;
 import com.example.BlindCafe.exception.BlindCafeException;
 import com.example.BlindCafe.repository.NoticeLogRepository;
 import com.example.BlindCafe.repository.NoticeRepository;

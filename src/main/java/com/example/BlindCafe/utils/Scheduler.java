@@ -1,4 +1,4 @@
-package com.example.BlindCafe.util;
+package com.example.BlindCafe.utils;
 
 import com.example.BlindCafe.domain.*;
 import com.example.BlindCafe.firebase.FirebaseCloudMessageService;
