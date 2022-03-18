@@ -1,6 +1,6 @@
 package com.example.BlindCafe.config.jwt;
 
-import com.example.BlindCafe.entity.User;
+import com.example.BlindCafe.domain.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwsHeader;
 import io.jsonwebtoken.Jwts;

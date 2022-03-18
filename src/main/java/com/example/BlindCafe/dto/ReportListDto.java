@@ -1,6 +1,6 @@
 package com.example.BlindCafe.dto;
 
-import com.example.BlindCafe.entity.Report;
+import com.example.BlindCafe.domain.Report;
 import lombok.*;
 
 import java.time.format.DateTimeFormatter;

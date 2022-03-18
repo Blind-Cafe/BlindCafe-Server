@@ -1,14 +1,14 @@
 package com.example.BlindCafe.util;
 
 import com.example.BlindCafe.dto.FirestoreDto;
-import com.example.BlindCafe.entity.*;
-import com.example.BlindCafe.entity.topic.Subject;
+import com.example.BlindCafe.domain.*;
+import com.example.BlindCafe.domain.topic.Subject;
 import com.example.BlindCafe.exception.BlindCafeException;
 import com.example.BlindCafe.firebase.FirebaseService;
 import com.example.BlindCafe.repository.*;
-import com.example.BlindCafe.entity.type.MessageType;
-import com.example.BlindCafe.entity.type.status.MatchingStatus;
-import com.example.BlindCafe.entity.type.status.TopicStatus;
+import com.example.BlindCafe.domain.type.MessageType;
+import com.example.BlindCafe.domain.type.status.MatchingStatus;
+import com.example.BlindCafe.domain.type.status.TopicStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;

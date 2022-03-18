@@ -1,13 +1,13 @@
 package com.example.BlindCafe.util;
 
-import com.example.BlindCafe.entity.*;
+import com.example.BlindCafe.domain.*;
 import com.example.BlindCafe.firebase.FirebaseCloudMessageService;
 import com.example.BlindCafe.repository.MatchingRepository;
 import com.example.BlindCafe.repository.ProfileImageRepository;
 import com.example.BlindCafe.repository.UserMatchingRepository;
-import com.example.BlindCafe.entity.type.FcmMessage;
-import com.example.BlindCafe.entity.type.status.CommonStatus;
-import com.example.BlindCafe.entity.type.status.MatchingStatus;
+import com.example.BlindCafe.domain.type.FcmMessage;
+import com.example.BlindCafe.domain.type.status.CommonStatus;
+import com.example.BlindCafe.domain.type.status.MatchingStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;

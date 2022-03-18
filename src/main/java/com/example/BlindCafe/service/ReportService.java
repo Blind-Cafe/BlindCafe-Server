@@ -2,13 +2,13 @@ package com.example.BlindCafe.service;
 
 import com.example.BlindCafe.dto.CreateReportDto;
 import com.example.BlindCafe.dto.ReportListDto;
-import com.example.BlindCafe.entity.*;
+import com.example.BlindCafe.domain.*;
 import com.example.BlindCafe.exception.BlindCafeException;
 import com.example.BlindCafe.repository.*;
-import com.example.BlindCafe.entity.type.ReasonType;
-import com.example.BlindCafe.entity.type.status.MatchingStatus;
-import com.example.BlindCafe.entity.type.status.ReportStatus;
-import com.example.BlindCafe.entity.type.status.UserStatus;
+import com.example.BlindCafe.domain.type.ReasonType;
+import com.example.BlindCafe.domain.type.status.MatchingStatus;
+import com.example.BlindCafe.domain.type.status.ReportStatus;
+import com.example.BlindCafe.domain.type.status.UserStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,8 +17,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static com.example.BlindCafe.exception.CodeAndMessage.*;
-import static com.example.BlindCafe.entity.type.status.UserStatus.NORMAL;
-import static com.example.BlindCafe.entity.type.status.UserStatus.NOT_REQUIRED_INFO;
+import static com.example.BlindCafe.domain.type.status.UserStatus.NORMAL;
+import static com.example.BlindCafe.domain.type.status.UserStatus.NOT_REQUIRED_INFO;
 
 @Service
 @Transactional(readOnly = true)

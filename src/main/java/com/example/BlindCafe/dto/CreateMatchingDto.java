@@ -1,6 +1,6 @@
 package com.example.BlindCafe.dto;
 
-import com.example.BlindCafe.entity.type.status.MatchingStatus;
+import com.example.BlindCafe.domain.type.status.MatchingStatus;
 import lombok.*;
 
 public class CreateMatchingDto {

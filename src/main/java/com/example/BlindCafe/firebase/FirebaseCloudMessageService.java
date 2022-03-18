@@ -2,7 +2,7 @@ package com.example.BlindCafe.firebase;
 
 import com.example.BlindCafe.dto.FcmMessageDto;
 import com.example.BlindCafe.exception.BlindCafeException;
-import com.example.BlindCafe.entity.type.Platform;
+import com.example.BlindCafe.domain.type.Platform;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.auth.oauth2.GoogleCredentials;

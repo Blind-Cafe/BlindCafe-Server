@@ -2,8 +2,8 @@ package com.example.BlindCafe.dto;
 
 import com.example.BlindCafe.dto.response.ApiResponse;
 import com.example.BlindCafe.exception.CodeAndMessage;
-import com.example.BlindCafe.entity.type.Platform;
-import com.example.BlindCafe.entity.type.Social;
+import com.example.BlindCafe.domain.type.Platform;
+import com.example.BlindCafe.domain.type.Social;
 import lombok.*;
 
 import javax.validation.constraints.NotNull;

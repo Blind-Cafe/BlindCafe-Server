@@ -1,7 +1,7 @@
 package com.example.BlindCafe.config;
 
 import com.example.BlindCafe.config.jwt.JwtAuthorizationFilter;
-import com.example.BlindCafe.entity.User;
+import com.example.BlindCafe.domain.User;
 import com.example.BlindCafe.exception.ExceptionHandlerFilter;
 import com.example.BlindCafe.repository.UserRepository;
 import lombok.RequiredArgsConstructor;

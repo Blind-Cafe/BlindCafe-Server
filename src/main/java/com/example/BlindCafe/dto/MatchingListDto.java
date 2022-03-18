@@ -1,14 +1,14 @@
 package com.example.BlindCafe.dto;
 
-import com.example.BlindCafe.entity.Avatar;
-import com.example.BlindCafe.entity.User;
+import com.example.BlindCafe.domain.Avatar;
+import com.example.BlindCafe.domain.User;
 import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 
-import static com.example.BlindCafe.entity.type.status.CommonStatus.NORMAL;
+import static com.example.BlindCafe.domain.type.status.CommonStatus.NORMAL;
 
 @Getter
 @AllArgsConstructor

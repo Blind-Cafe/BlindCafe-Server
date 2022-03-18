@@ -1,10 +1,10 @@
 package com.example.BlindCafe.dto;
 
-import com.example.BlindCafe.entity.Interest;
-import com.example.BlindCafe.entity.InterestOrder;
-import com.example.BlindCafe.entity.Avatar;
-import com.example.BlindCafe.entity.User;
-import com.example.BlindCafe.entity.type.status.CommonStatus;
+import com.example.BlindCafe.domain.Interest;
+import com.example.BlindCafe.domain.InterestOrder;
+import com.example.BlindCafe.domain.Avatar;
+import com.example.BlindCafe.domain.User;
+import com.example.BlindCafe.domain.type.status.CommonStatus;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 

@@ -1,6 +1,6 @@
 package com.example.BlindCafe.repository;
 
-import com.example.BlindCafe.entity.UserDrink;
+import com.example.BlindCafe.domain.UserDrink;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

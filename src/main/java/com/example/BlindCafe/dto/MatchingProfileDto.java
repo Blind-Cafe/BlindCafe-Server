@@ -1,6 +1,6 @@
 package com.example.BlindCafe.dto;
 
-import com.example.BlindCafe.entity.type.Gender;
+import com.example.BlindCafe.domain.type.Gender;
 import lombok.*;
 
 import javax.persistence.Enumerated;

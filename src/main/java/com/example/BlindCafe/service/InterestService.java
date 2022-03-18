@@ -1,7 +1,7 @@
 package com.example.BlindCafe.service;
 
 import com.example.BlindCafe.dto.InterestDto;
-import com.example.BlindCafe.entity.Interest;
+import com.example.BlindCafe.domain.Interest;
 import com.example.BlindCafe.exception.BlindCafeException;
 import com.example.BlindCafe.exception.CodeAndMessage;
 import com.example.BlindCafe.repository.InterestRepository;
