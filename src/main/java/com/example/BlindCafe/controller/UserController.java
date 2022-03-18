@@ -2,7 +2,8 @@ package com.example.BlindCafe.controller;
 
 import com.example.BlindCafe.dto.*;
 import com.example.BlindCafe.dto.request.AddUserInfoRequest;
-import com.example.BlindCafe.dto.response.MyPageResponse;
+import com.example.BlindCafe.dto.request.EditProfileRequest;
+import com.example.BlindCafe.dto.response.UserDetailResponse;
 import com.example.BlindCafe.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,25 +41,24 @@ public class UserController {
      * 마이페이지 (유저 정보 조회)
      */
     @GetMapping
-    public ResponseEntity<MyPageResponse> getMyPage(@RequestHeader(value = UID) String uid) {
+    public ResponseEntity<UserDetailResponse> getUser(@RequestHeader(value = UID) String uid) {
         log.info("GET /api/user");
-        return ResponseEntity.ok(userService.getMyPage(Long.parseLong(uid)));
+        return ResponseEntity.ok(userService.getUser(Long.parseLong(uid)));
     }
 
     /**
-     * 프로필 수정하기
+     * 사용자 프로필 수정하기
      */
     @PutMapping
-    public ResponseEntity<EditUserProfileDto.Response> editProfile(
-            Authentication authentication,
-            @Valid @RequestBody EditUserProfileDto.Request request
+    public ResponseEntity<UserDetailResponse> editProfile(
+            @RequestHeader(value = UID) String uid,
+            @Valid @RequestBody EditProfileRequest request
     ) {
         log.info("PUT /api/user");
-        return ResponseEntity.ok(
-                userService.editProfile(
-                        getUserId(authentication), request)
-        );
+        return ResponseEntity.ok(userService.editProfile(Long.parseLong(uid), request));
     }
+
+
 
     /**
      * 프로필 이미지 리스트 조회

@@ -4,7 +4,8 @@ import com.example.BlindCafe.dto.*;
 import com.example.BlindCafe.dto.request.AddUserInfoRequest;
 import com.example.BlindCafe.domain.*;
 import com.example.BlindCafe.domain.type.status.UserStatus;
-import com.example.BlindCafe.dto.response.MyPageResponse;
+import com.example.BlindCafe.dto.request.EditProfileRequest;
+import com.example.BlindCafe.dto.response.UserDetailResponse;
 import com.example.BlindCafe.exception.BlindCafeException;
 import com.example.BlindCafe.repository.*;
 import com.example.BlindCafe.domain.type.status.CommonStatus;
@@ -30,19 +31,16 @@ import static com.example.BlindCafe.domain.type.status.CommonStatus.*;
 public class UserService {
 
     private final UserRepository userRepository;
-    private final RetiredUserRepository retiredUserRepository;
     private final InterestRepository interestRepository;
-    private final UserInterestRepository userInterestRepository;
-    private final InterestOrderRepository interestOrderRepository;
-    private final ProfileImageRepository profileImageRepository;
     private final ReasonRepository reasonRepository;
+
     private final AmazonS3Connector amazonS3Connector;
 
     private final static int USER_INTEREST_LENGTH = 3;
-    private static int[][] interestOrderArr = new int[USER_INTEREST_LENGTH][2];
-    private static int index;
-    private static int editIndex;
 
+    /**
+     * 사용자 추가 정보 입력
+     */
     @Transactional
     public void addUserInfo(Long userId, AddUserInfoRequest request) {
         validateAddUserInfo(request);
@@ -65,6 +63,7 @@ public class UserService {
         user.updateInterest(interests);
     }
 
+    // 사용자 추가 정보 입력 요청값 유효성 검사
     private void validateAddUserInfo(AddUserInfoRequest request) {
         if (request.getMyGender().equals(N))
             throw new BlindCafeException(BAD_REQUEST);
@@ -81,10 +80,24 @@ public class UserService {
     /**
      * 마이페이지 (사용자 정보 조회)
      */
-    public MyPageResponse getMyPage(Long userId) {
+    public UserDetailResponse getUser(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BlindCafeException(EMPTY_USER));
-        return MyPageResponse.fromEntity(user);
+        return UserDetailResponse.fromEntity(user);
+    }
+
+    /**
+     * 사용자 프로필 수정하기
+     */
+    @Transactional
+    public UserDetailResponse editProfile(Long userId, EditProfileRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BlindCafeException(EMPTY_USER));
+        user.updateProfile(
+                new Address(request.getState(), request.getRegion()),
+                request.getPartnerGender(),
+                request.getMbti());
+        return UserDetailResponse.fromEntity(user);
     }
 
     /**
@@ -258,20 +271,6 @@ public class UserService {
         User user = userRepository.findById(userId)
                 .filter(u -> u.getStatus().equals(NORMAL) || u.getStatus().equals(NOT_REQUIRED_INFO))
                 .orElseThrow(() -> new BlindCafeException(NO_USER));
-        return EditUserProfileDto.Response.fromEntity(user);
-    }
-
-    @Transactional
-    public EditUserProfileDto.Response editProfile(Long userId, EditUserProfileDto.Request request) {
-        User user = userRepository.findById(userId)
-                .filter(u -> u.getStatus().equals(NORMAL) || u.getStatus().equals(NOT_REQUIRED_INFO))
-                .orElseThrow(() -> new BlindCafeException(NO_USER));
-        // 닉네임 수정
-        user.setNickname(request.getNickname());
-        // 매칭 상대방 수정
-        user.setPartnerGender(request.getPartnerGender());
-        // 지역 수정
-        user.setAddress(new Address(request.getState(), request.getRegion()));
         return EditUserProfileDto.Response.fromEntity(user);
     }
 

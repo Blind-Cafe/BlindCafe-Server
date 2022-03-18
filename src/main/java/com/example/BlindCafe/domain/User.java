@@ -178,4 +178,15 @@ public class User extends BaseTimeEntity {
             this.getInterests().add(userInterest);
         });
     }
+
+    // 사용자 프로필 수정하기
+    public void updateProfile(
+            Address address,
+            Gender partnerGender,
+            Mbti mbti
+    ) {
+        this.setAddress(address);
+        this.setPartnerGender(partnerGender);
+        this.setMbti(mbti);
+    }
 }

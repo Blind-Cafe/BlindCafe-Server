@@ -17,7 +17,7 @@ import static javax.persistence.EnumType.STRING;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class MyPageResponse {
+public class UserDetailResponse {
 
     private String avatar;
     private String nickname;
@@ -27,21 +27,21 @@ public class MyPageResponse {
     @Enumerated(STRING)
     private Gender partnerGender;
     private int age;
-    private String region;
+    private String address;
     @Enumerated(STRING)
     private Mbti mbti;
     private List<Long> interests;
     private List<Long> drinks;
 
-    public static MyPageResponse fromEntity(User user) {
-        return MyPageResponse.builder()
+    public static UserDetailResponse fromEntity(User user) {
+        return UserDetailResponse.builder()
                 .avatar(user.getMainAvatar())
                 .nickname(user.getNickname())
                 .phone(user.getPhone())
                 .myGender(user.getMyGender())
                 .partnerGender(user.getPartnerGender())
                 .age(user.getAge())
-                .region(user.getAddress())
+                .address(user.getAddress())
                 .mbti(user.getMbti())
                 .interests(
                         user.getInterests().stream()
