@@ -1,6 +1,6 @@
 package com.example.BlindCafe.domain;
 
-import com.example.BlindCafe.domain.notice.PersonalNotice;
+import com.example.BlindCafe.domain.type.Mbti;
 import com.example.BlindCafe.domain.type.Platform;
 import com.example.BlindCafe.domain.type.Gender;
 import com.example.BlindCafe.domain.type.Social;
@@ -9,10 +9,7 @@ import com.example.BlindCafe.domain.type.status.UserStatus;
 import lombok.*;
 
 import javax.persistence.*;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Entity
@@ -80,6 +77,12 @@ public class User extends BaseTimeEntity {
     private Platform platform;
 
     @Enumerated(EnumType.STRING)
+    private Mbti mbti;
+
+    @Column(columnDefinition = "TEXT")
+    private String voice;
+
+    @Enumerated(EnumType.STRING)
     private UserStatus status;
 
     public List<Avatar> getAvatars() {
@@ -93,6 +96,10 @@ public class User extends BaseTimeEntity {
         return this.interests.stream()
                 .filter(UserInterest::isActive)
                 .collect(Collectors.toList());
+    }
+
+    public String getAddress() {
+        return this.address != null ? this.address.toString() : null;
     }
 
     public static User create(
@@ -145,6 +152,23 @@ public class User extends BaseTimeEntity {
         return Arrays.asList(currentAvatars);
     }
 
+    // 프로필 이미지 업로드/수정하기
+    public void updateAvatar(String src, int sequence) {
+        this.deleteAvatar(sequence);
+        Avatar avatar = Avatar.create(this, src, sequence);
+        this.avatars.add(avatar);
+    }
+
+    // 프로필 이미지 삭제하기
+    public void deleteAvatar(int sequence) {
+        Optional<Avatar> deleteAvatar = this.getAvatars().stream()
+                .filter(a -> a.getSequence() == sequence)
+                .findAny();
+        if (deleteAvatar.isPresent()) {
+            deleteAvatar.get().remove();
+        }
+    }
+
     // 사용자 메인 관심사 가져오기
     public List<Interest> getMainInterests() {
         return this.getInterests().stream()
@@ -169,5 +193,22 @@ public class User extends BaseTimeEntity {
             UserInterest userInterest = UserInterest.create(this, interest);
             this.getInterests().add(userInterest);
         });
+    }
+
+    // 사용자 프로필 수정하기
+    public void updateProfile(Address address, Gender partnerGender, Mbti mbti) {
+        this.setAddress(address);
+        this.setPartnerGender(partnerGender);
+        this.setMbti(mbti);
+    }
+    
+    // 사용자 목소리 설정하기
+    public void updateVoice(String voice) {
+        this.setVoice(voice);
+    }
+
+    // 사용자 목소리 삭제하기
+    public void deleteVoice() {
+        this.setVoice(null);
     }
 }

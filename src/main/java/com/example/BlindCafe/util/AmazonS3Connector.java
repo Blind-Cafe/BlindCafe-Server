@@ -15,6 +15,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Objects;
 import java.util.UUID;
 import java.io.File;
 
@@ -42,7 +43,7 @@ public class AmazonS3Connector {
         DEFAULT_IMAGE = value + "users/profiles/0/profile_default.png";
     }
 
-    public String uploadProfileImage(MultipartFile multipartFile, Long userId) {
+    public String uploadAvatar(MultipartFile multipartFile, Long userId) {
         File file = convertToFile(multipartFile);
         String fileName = PROFILE_IMAGE_DIR + userId + "/" + UUID.randomUUID() + extension(multipartFile);
         amazonS3Client.putObject(new PutObjectRequest(bucket, fileName, file));
@@ -51,6 +52,9 @@ public class AmazonS3Connector {
     }
 
     private File convertToFile(MultipartFile multipartFile) {
+        if (Objects.isNull(multipartFile.getContentType()))
+            throw new BlindCafeException(FILE_CONVERT_ERROR);
+
         File convertedFile = new File(multipartFile.getOriginalFilename());
         try (FileOutputStream fos = new FileOutputStream(convertedFile)) {
             fos.write(multipartFile.getBytes());

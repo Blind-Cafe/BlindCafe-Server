@@ -21,6 +21,7 @@ public class Reason {
     private Long id;
 
     private Long num;
+
     private String text;
 
     @Enumerated(STRING)

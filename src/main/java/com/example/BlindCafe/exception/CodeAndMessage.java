@@ -44,7 +44,7 @@ public enum CodeAndMessage {
     FILE_CONVERT_ERROR("1080", "파일 변환에 실패했습니다."),
     FILE_EXTENSION_ERROR("1081", "파일 확장자 인식에 실패했습니다."),
 
-    INVALID_PROFILE_IMAGE_PRIORITY("1090", "유효하지 않은 우선순위입니다."),
+    INVALID_PROFILE_IMAGE_SEQUENCE("1090", "유효하지 않은 우선순위입니다."),
 
     EMPTY_REQUEST_MATCHING("1100", "현재 요청하고 있는 매칭이 없습니다."),
 

@@ -32,11 +32,6 @@ public class Avatar extends BaseTimeEntity {
     @Enumerated(STRING)
     private CommonStatus status;
 
-    private void setUser(User user) {
-        this.user = user;
-        user.getAvatars().add(this);
-    }
-
     public static Avatar create(
             User user,
             String src,
@@ -48,5 +43,10 @@ public class Avatar extends BaseTimeEntity {
         avatar.setStatus(CommonStatus.NORMAL);
         avatar.setSequence(sequence);
         return avatar;
+    }
+
+    public void remove() {
+        this.getUser().getAvatars().remove(this);
+        this.setStatus(CommonStatus.DELETED);
     }
 }
