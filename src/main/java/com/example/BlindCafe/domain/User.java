@@ -1,6 +1,7 @@
 package com.example.BlindCafe.domain;
 
 import com.example.BlindCafe.domain.notice.PersonalNotice;
+import com.example.BlindCafe.domain.type.Mbti;
 import com.example.BlindCafe.domain.type.Platform;
 import com.example.BlindCafe.domain.type.Gender;
 import com.example.BlindCafe.domain.type.Social;
@@ -78,6 +79,9 @@ public class User extends BaseTimeEntity {
 
     @Enumerated(EnumType.STRING)
     private Platform platform;
+
+    @Enumerated(EnumType.STRING)
+    private Mbti mbti;
 
     @Enumerated(EnumType.STRING)
     private UserStatus status;
