@@ -1,22 +1,22 @@
 package com.example.BlindCafe.service;
 
 import com.example.BlindCafe.dto.*;
-import com.example.BlindCafe.entity.*;
-import com.example.BlindCafe.entity.topic.Audio;
-import com.example.BlindCafe.entity.topic.Image;
-import com.example.BlindCafe.entity.topic.Subject;
-import com.example.BlindCafe.entity.topic.Topic;
+import com.example.BlindCafe.domain.*;
+import com.example.BlindCafe.domain.topic.Audio;
+import com.example.BlindCafe.domain.topic.Image;
+import com.example.BlindCafe.domain.topic.Subject;
+import com.example.BlindCafe.domain.topic.Topic;
 import com.example.BlindCafe.exception.BlindCafeException;
 import com.example.BlindCafe.firebase.FirebaseCloudMessageService;
 import com.example.BlindCafe.firebase.FirebaseService;
 import com.example.BlindCafe.repository.*;
-import com.example.BlindCafe.entity.type.FcmMessage;
-import com.example.BlindCafe.entity.type.Gender;
-import com.example.BlindCafe.entity.type.MessageType;
-import com.example.BlindCafe.entity.type.status.CommonStatus;
-import com.example.BlindCafe.entity.type.status.MatchingStatus;
-import com.example.BlindCafe.entity.type.status.TopicStatus;
-import com.example.BlindCafe.entity.type.status.UserStatus;
+import com.example.BlindCafe.domain.type.FcmMessage;
+import com.example.BlindCafe.domain.type.Gender;
+import com.example.BlindCafe.domain.type.MessageType;
+import com.example.BlindCafe.domain.type.status.CommonStatus;
+import com.example.BlindCafe.domain.type.status.MatchingStatus;
+import com.example.BlindCafe.domain.type.status.TopicStatus;
+import com.example.BlindCafe.domain.type.status.UserStatus;
 import com.example.BlindCafe.util.TopicServeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -31,12 +31,12 @@ import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 import static com.example.BlindCafe.exception.CodeAndMessage.*;
-import static com.example.BlindCafe.entity.type.Gender.N;
-import static com.example.BlindCafe.entity.type.ReasonType.FOR_LEAVE_ROOM;
-import static com.example.BlindCafe.entity.type.ReasonType.FOR_WONT_EXCHANGE_PROFILE;
-import static com.example.BlindCafe.entity.type.status.CommonStatus.DELETED;
-import static com.example.BlindCafe.entity.type.status.CommonStatus.NORMAL;
-import static com.example.BlindCafe.entity.type.status.MatchingStatus.*;
+import static com.example.BlindCafe.domain.type.Gender.N;
+import static com.example.BlindCafe.domain.type.ReasonType.FOR_LEAVE_ROOM;
+import static com.example.BlindCafe.domain.type.ReasonType.FOR_WONT_EXCHANGE_PROFILE;
+import static com.example.BlindCafe.domain.type.status.CommonStatus.DELETED;
+import static com.example.BlindCafe.domain.type.status.CommonStatus.NORMAL;
+import static com.example.BlindCafe.domain.type.status.MatchingStatus.*;
 import static java.util.Comparator.comparing;
 
 @Service
@@ -57,6 +57,7 @@ public class MatchingService {
     private final TopicRepository topicRepository;
     private final RoomLogRepository roomLogRepository;
     private final MessageRepository messageRepository;
+    private final TicketRepository ticketRepository;
 
     private final static Long MAX_WAIT_TIME = 24L;
     private final static int BASIC_CHAT_DAYS = 3;
@@ -68,6 +69,34 @@ public class MatchingService {
     private final static String DEFAULT_PROFILE_IMAGE = "https://dpb9ox8h2ie20.cloudfront.net/users/profiles/0/profile_default.png";
 
     ExecutorService executor = Executors.newFixedThreadPool(30);
+
+    /**
+     * 매칭권 생성
+     */
+    @Transactional
+    public void createTickets(Long userId) {
+        Ticket newTicket = Ticket.create(userId);
+        ticketRepository.save(newTicket);
+    }
+
+    /**
+     * 현재 가지고 있는 매칭권 수 조회
+     */
+    public int getTicketCount(Long userId) {
+        Ticket ticket = ticketRepository.findByUserId(userId)
+                .orElseThrow(() -> new BlindCafeException(EMPTY_USER));
+        return ticket.getCount();
+    }
+
+    /**
+     * 현재 요청 중인 매칭이 있는지 조회
+     */
+    public boolean isMatchingRequest(Long userId) {
+        Optional<UserMatching> matchingRequest =
+                userMatchingRepository.findMatchingRequestByUserId(userId);
+        if (Objects.isNull(matchingRequest)) return false;
+        else return true;
+    }
 
     /**
      * 내 테이블 조회 - 프로필 교환을 완료한 상대방 목록 조회

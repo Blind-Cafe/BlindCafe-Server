@@ -17,7 +17,8 @@ public enum CodeAndMessage {
     EMPTY_USER("1008", "해당되는 유저가 없습니다."),
     RETIRED_USER("1009", "탈퇴한 유저입니다."),
     ALREADY_REQUIRED_INFO("1010", "이미 추가 정보를 입력받았습니다."),
-    DUPLICATED_NICKNAME("1013", "닉네임이 중복됩니다."),
+    DUPLICATED_PHONE_NUMBER("1013", "전화번호가 중복됩니다."),
+    INVALID_PHONE_NUMBER("1014", "전화번호 형식이 올바르지 않습니다."),
 
     INVALID_MAIN_INTEREST("1011", "메인 관심사가 유효하지 않습니다."),
     INVALID_SUB_INTEREST("1012", "세부 관심사가 유효하지 않습니다."),

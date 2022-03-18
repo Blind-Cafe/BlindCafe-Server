@@ -6,12 +6,12 @@ import com.example.BlindCafe.dto.request.LoginRequest;
 import com.example.BlindCafe.dto.request.RefreshTokenRequest;
 import com.example.BlindCafe.dto.response.LoginResponse;
 import com.example.BlindCafe.dto.response.RefreshTokenResponse;
-import com.example.BlindCafe.entity.User;
-import com.example.BlindCafe.entity.type.status.UserStatus;
+import com.example.BlindCafe.domain.User;
+import com.example.BlindCafe.domain.type.status.UserStatus;
 import com.example.BlindCafe.exception.BlindCafeException;
 import com.example.BlindCafe.repository.UserRepository;
-import com.example.BlindCafe.entity.type.Platform;
-import com.example.BlindCafe.entity.type.Social;
+import com.example.BlindCafe.domain.type.Platform;
+import com.example.BlindCafe.domain.type.Social;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.MalformedJwtException;
 import lombok.RequiredArgsConstructor;
@@ -41,10 +41,10 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import static com.example.BlindCafe.config.jwt.JwtUtils.*;
-import static com.example.BlindCafe.entity.type.status.UserStatus.*;
+import static com.example.BlindCafe.domain.type.status.UserStatus.*;
 import static com.example.BlindCafe.exception.CodeAndMessage.*;
-import static com.example.BlindCafe.entity.type.Social.APPLE;
-import static com.example.BlindCafe.entity.type.Social.KAKAO;
+import static com.example.BlindCafe.domain.type.Social.APPLE;
+import static com.example.BlindCafe.domain.type.Social.KAKAO;
 
 @Service
 @Transactional(readOnly = true)
@@ -53,6 +53,8 @@ public class AuthService {
 
     private final RedisTemplate redisTemplate;
     private final UserRepository userRepository;
+
+    private final MatchingService matchingService;
 
     private final String KAKAO_AUTH = "https://kapi.kakao.com/v2/user/me";
     private final String APPLE_AUTH = "https://appleid.apple.com/auth/keys";
@@ -72,6 +74,10 @@ public class AuthService {
             User newUser = User.create(request.getSocial(), socialId, platform, deviceToken);
             userRepository.save(newUser);
             Pair<String, String> tokens = getTokens(newUser);
+
+            // 티켓(매칭권) 생성
+            matchingService.createTickets(newUser.getId());
+
             return Pair.of(
                     HttpStatus.CREATED,
                     new LoginResponse(newUser.getId(), tokens.getFirst(), tokens.getSecond())
