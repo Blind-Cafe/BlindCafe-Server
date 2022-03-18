@@ -99,6 +99,10 @@ public class User extends BaseTimeEntity {
                 .collect(Collectors.toList());
     }
 
+    public String getAddress() {
+        return this.address != null ? this.address.toString() : null;
+    }
+
     public static User create(
             Social socialType,
             String socialId,

@@ -4,6 +4,7 @@ import com.example.BlindCafe.dto.*;
 import com.example.BlindCafe.dto.request.AddUserInfoRequest;
 import com.example.BlindCafe.domain.*;
 import com.example.BlindCafe.domain.type.status.UserStatus;
+import com.example.BlindCafe.dto.response.MyPageResponse;
 import com.example.BlindCafe.exception.BlindCafeException;
 import com.example.BlindCafe.repository.*;
 import com.example.BlindCafe.domain.type.status.CommonStatus;
@@ -77,10 +78,13 @@ public class UserService {
                 .ifPresent(u -> { throw new BlindCafeException(DUPLICATED_PHONE_NUMBER); });
     }
 
-    public UserDetailDto getUserDetail(Long userId) {
-        return userRepository.findById(userId)
-                .map(UserDetailDto::fromEntity)
-                .orElseThrow(() -> new BlindCafeException(NO_USER));
+    /**
+     * 마이페이지 (사용자 정보 조회)
+     */
+    public MyPageResponse getMyPage(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BlindCafeException(EMPTY_USER));
+        return MyPageResponse.fromEntity(user);
     }
 
     /**

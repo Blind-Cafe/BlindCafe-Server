@@ -2,6 +2,7 @@ package com.example.BlindCafe.controller;
 
 import com.example.BlindCafe.dto.*;
 import com.example.BlindCafe.dto.request.AddUserInfoRequest;
+import com.example.BlindCafe.dto.response.MyPageResponse;
 import com.example.BlindCafe.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,11 +40,9 @@ public class UserController {
      * 마이페이지 (유저 정보 조회)
      */
     @GetMapping
-    public ResponseEntity<UserDetailDto> getUserDetail(
-            Authentication authentication
-    ) {
+    public ResponseEntity<MyPageResponse> getMyPage(@RequestHeader(value = UID) String uid) {
         log.info("GET /api/user");
-        return ResponseEntity.ok(userService.getUserDetail(Long.parseLong(uid)));
+        return ResponseEntity.ok(userService.getMyPage(Long.parseLong(uid)));
     }
 
     /**
