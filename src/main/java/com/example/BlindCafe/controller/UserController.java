@@ -144,9 +144,7 @@ public class UserController {
      * 채팅방 프로필(상대방) 조회
      */
     @GetMapping("/{userId}/profile")
-    public ResponseEntity<UserProfileResponse> getProfile(
-            @PathVariable Long userId
-    ) {
+    public ResponseEntity<UserProfileResponse> getProfile(@PathVariable Long userId) {
         log.info("GET /api/user/{}/profile", userId);
         return ResponseEntity.ok(userService.getProfile(userId));
     }

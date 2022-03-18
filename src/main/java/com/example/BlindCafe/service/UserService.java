@@ -1,5 +1,6 @@
 package com.example.BlindCafe.service;
 
+import com.example.BlindCafe.dto.UserProfileResponse;
 import com.example.BlindCafe.dto.request.*;
 import com.example.BlindCafe.domain.*;
 import com.example.BlindCafe.domain.type.status.UserStatus;
@@ -187,5 +188,14 @@ public class UserService {
         retiredUserRepository.save(retiredUser);
         userRepository.delete(user);
         return DeleteUserResponse.fromEntity(retiredUser);
+    }
+
+    /**
+     * 사용자 프로필 조회
+     */
+    public UserProfileResponse getProfile(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BlindCafeException(EMPTY_USER));
+        return UserProfileResponse.fromEntity(user);
     }
 }
