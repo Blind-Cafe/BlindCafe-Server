@@ -35,5 +35,5 @@ public class AddUserInfoRequest {
 
     @NotNull
     @Size(min = 3, max = 3, message = "interest length 3")
-    private ArrayList<EditInterestRequest> interests;
+    private ArrayList<Long> interests;
 }

@@ -57,34 +57,11 @@ public class UserService {
         // 사용자 추가 정보 저장
         user.addRequiredInfo(request.getAge(), request.getMyGender(), request.getPhone(), request.getNickname(), request.getPartnerGender());
 
-        // 관심사 조회
-        Map<Long, List<String>> interestMap = new HashMap<>();
-        // HashMap의 keySet()사용할 경우 main interest의 순서가 변경되기 때문에 별도의 list 활용
-        List<Long> mainInterestIds = new ArrayList<>();
-        request.getInterests().forEach(i -> {
-            interestMap.put(i.getMain(), i.getSub());
-            mainInterestIds.add(i.getMain());
-        });
-
-        List<Interest> mainInterests = interestRepository.findByIdIn(mainInterestIds);
-        if (mainInterests.size() != USER_INTEREST_LENGTH)
-            throw new BlindCafeException(INVALID_MAIN_INTEREST);
-
         // 관심사 저장
-        List<Interest> userInterest = new ArrayList<>();
-        mainInterests.forEach(mainInterest -> {
-            // 메인관심사
-            userInterest.add(mainInterest);
-            // 세부관심사 저장
-            interestMap.get(mainInterest).forEach(sub -> {
-                Interest subInterest = mainInterest.getChild()
-                        .stream()
-                        .filter(si -> si.getName().equals(sub))
-                        .findAny().orElseThrow(() -> new BlindCafeException(INVALID_SUB_INTEREST));
-                userInterest.add(subInterest);
-            });
-        });
-        user.updateInterest(userInterest);
+        List<Interest> interests = interestRepository.findByIdIn(request.getInterests());
+        if (interests.size() != USER_INTEREST_LENGTH)
+            throw new BlindCafeException(INVALID_MAIN_INTEREST);
+        user.updateInterest(interests);
     }
 
     private void validateAddUserInfo(AddUserInfoRequest request) {

@@ -165,6 +165,9 @@ public class User extends BaseTimeEntity {
     // 사용자 관심사 수정하기
     public void updateInterest(List<Interest> interests) {
         this.getInterests().forEach(userInterest -> userInterest.remove());
-        interests.forEach(interest -> UserInterest.create(this, interest));
+        interests.forEach(interest -> {
+            UserInterest userInterest = UserInterest.create(this, interest);
+            this.getInterests().add(userInterest);
+        });
     }
 }
