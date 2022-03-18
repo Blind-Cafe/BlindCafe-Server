@@ -1,10 +1,7 @@
 package com.example.BlindCafe.controller;
 
 import com.example.BlindCafe.dto.*;
-import com.example.BlindCafe.dto.request.AddUserInfoRequest;
-import com.example.BlindCafe.dto.request.UploadAvatarRequest;
-import com.example.BlindCafe.dto.request.EditInterestRequest;
-import com.example.BlindCafe.dto.request.EditProfileRequest;
+import com.example.BlindCafe.dto.request.*;
 import com.example.BlindCafe.dto.response.AvatarListResponse;
 import com.example.BlindCafe.dto.response.DeleteUserResponse;
 import com.example.BlindCafe.dto.response.UserDetailResponse;
@@ -54,7 +51,7 @@ public class UserController {
     @PutMapping
     public ResponseEntity<UserDetailResponse> editProfile(
             @RequestHeader(value = UID) String uid,
-            @Valid @RequestBody EditProfileRequest request
+            @Valid @RequestBody UpdateProfileRequest request
     ) {
         log.info("PUT /api/user");
         return ResponseEntity.ok(userService.editProfile(Long.parseLong(uid), request));
@@ -66,7 +63,7 @@ public class UserController {
     @PutMapping("/interest")
     public ResponseEntity<Void> editInterest(
             @RequestHeader(value = UID) String uid,
-            @Valid @RequestBody EditInterestRequest request
+            @Valid @RequestBody UpdateInterestRequest request
     ) {
         log.info("PUT /api/user/interest");
         userService.editInterest(Long.parseLong(uid), request);
@@ -88,10 +85,10 @@ public class UserController {
     @PostMapping("/avatar")
     public ResponseEntity<Void> uploadAvatar(
             @RequestHeader(value = UID) String uid,
-            @RequestParam UploadAvatarRequest request
+            @RequestParam UpdateAvatarRequest request
     ) {
         log.info("POST /api/user/avatar");
-        userService.uploadAvatar(Long.parseLong(uid), request);
+        userService.updateAvatar(Long.parseLong(uid), request);
         return ResponseEntity.ok().build();
     }
 
@@ -105,6 +102,29 @@ public class UserController {
     ) {
         log.info("DELETE /api/user/avatar");
         userService.deleteAvatar(Long.parseLong(uid), sequence);
+        return ResponseEntity.ok().build();
+    }
+
+    /**
+     * 사용자 목소리 설정하기
+     */
+    @PostMapping("/voice")
+    public ResponseEntity<Void> updateVoice(
+            @RequestHeader(value = UID) String uid,
+            @Valid @RequestBody UpdateVoiceRequest request
+    ) {
+        log.info("POST /api/user/voice");
+        userService.updateVoice(Long.parseLong(uid), request);
+        return ResponseEntity.ok().build();
+    }
+
+    /**
+     * 사용자 목소리 삭제하기
+     */
+    @DeleteMapping("/voice")
+    public ResponseEntity<Void> deleteVoice(@RequestHeader(value = UID) String uid) {
+        log.info("DELETE /api/user/voice");
+        userService.deleteVoice(Long.parseLong(uid));
         return ResponseEntity.ok().build();
     }
 

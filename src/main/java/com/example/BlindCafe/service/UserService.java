@@ -1,12 +1,8 @@
 package com.example.BlindCafe.service;
 
-import com.example.BlindCafe.dto.*;
-import com.example.BlindCafe.dto.request.AddUserInfoRequest;
+import com.example.BlindCafe.dto.request.*;
 import com.example.BlindCafe.domain.*;
 import com.example.BlindCafe.domain.type.status.UserStatus;
-import com.example.BlindCafe.dto.request.EditInterestRequest;
-import com.example.BlindCafe.dto.request.EditProfileRequest;
-import com.example.BlindCafe.dto.request.UploadAvatarRequest;
 import com.example.BlindCafe.dto.response.AvatarListResponse;
 import com.example.BlindCafe.dto.response.DeleteUserResponse;
 import com.example.BlindCafe.dto.response.UserDetailResponse;
@@ -89,7 +85,7 @@ public class UserService {
      * 사용자 프로필 수정
      */
     @Transactional
-    public UserDetailResponse editProfile(Long userId, EditProfileRequest request) {
+    public UserDetailResponse editProfile(Long userId, UpdateProfileRequest request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BlindCafeException(EMPTY_USER));
         user.updateProfile(
@@ -103,7 +99,7 @@ public class UserService {
      * 사용자 관심사 수정
      */
     @Transactional
-    public void editInterest(Long userId, EditInterestRequest request) {
+    public void editInterest(Long userId, UpdateInterestRequest request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BlindCafeException(EMPTY_USER));
         updateInterest(user, request.getInterests());
@@ -130,7 +126,7 @@ public class UserService {
      * 프로필 이미지 업로드/수정
      */
     @Transactional
-    public void uploadAvatar(Long userId, UploadAvatarRequest request) {
+    public void updateAvatar(Long userId, UpdateAvatarRequest request) {
         int sequence = request.getSequence();
         validateAvatarSequence(sequence);
         User user = userRepository.findById(userId)
@@ -156,6 +152,29 @@ public class UserService {
             throw new BlindCafeException(INVALID_PROFILE_IMAGE_SEQUENCE);
     }
 
+    /**
+     * 사용자 목소리 설정하기
+     */
+    @Transactional
+    public void updateVoice(Long userId, UpdateVoiceRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BlindCafeException(EMPTY_USER));
+        user.updateVoice(request.getVoice());
+    }
+
+    /**
+     * 사용자 목소리 삭제하기
+     */
+    @Transactional
+    public void deleteVoice(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BlindCafeException(EMPTY_USER));
+        user.deleteVoice();
+    }
+
+    /**
+     * 사용자 탈퇴하기
+     */
     @Transactional
     public DeleteUserResponse deleteUser(Long userId, Long reasonId) {
         User user = userRepository.findById(userId)
@@ -168,11 +187,5 @@ public class UserService {
         retiredUserRepository.save(retiredUser);
         userRepository.delete(user);
         return DeleteUserResponse.fromEntity(retiredUser);
-    }
-
-    public UserProfileResponse getProfile(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new BlindCafeException(NO_USER));
-        return new UserProfileResponse(user);
     }
 }

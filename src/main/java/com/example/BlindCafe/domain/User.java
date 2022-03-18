@@ -79,6 +79,9 @@ public class User extends BaseTimeEntity {
     @Enumerated(EnumType.STRING)
     private Mbti mbti;
 
+    @Column(columnDefinition = "TEXT")
+    private String voice;
+
     @Enumerated(EnumType.STRING)
     private UserStatus status;
 
@@ -193,13 +196,19 @@ public class User extends BaseTimeEntity {
     }
 
     // 사용자 프로필 수정하기
-    public void updateProfile(
-            Address address,
-            Gender partnerGender,
-            Mbti mbti
-    ) {
+    public void updateProfile(Address address, Gender partnerGender, Mbti mbti) {
         this.setAddress(address);
         this.setPartnerGender(partnerGender);
         this.setMbti(mbti);
+    }
+    
+    // 사용자 목소리 설정하기
+    public void updateVoice(String voice) {
+        this.setVoice(voice);
+    }
+
+    // 사용자 목소리 삭제하기
+    public void deleteVoice() {
+        this.setVoice(null);
     }
 }

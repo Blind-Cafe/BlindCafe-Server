@@ -30,6 +30,7 @@ public class UserDetailResponse {
     private String address;
     @Enumerated(STRING)
     private Mbti mbti;
+    private String voice;
     private List<Long> interests;
     private List<Long> drinks;
 
@@ -43,6 +44,7 @@ public class UserDetailResponse {
                 .age(user.getAge())
                 .address(user.getAddress())
                 .mbti(user.getMbti())
+                .voice(user.getVoice())
                 .interests(
                         user.getInterests().stream()
                                 .map(UserInterest::getInterest)
