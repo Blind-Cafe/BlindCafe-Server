@@ -4,6 +4,7 @@ import com.example.BlindCafe.dto.*;
 import com.example.BlindCafe.dto.request.AddUserInfoRequest;
 import com.example.BlindCafe.domain.*;
 import com.example.BlindCafe.domain.type.status.UserStatus;
+import com.example.BlindCafe.dto.request.EditInterestRequest;
 import com.example.BlindCafe.dto.request.EditProfileRequest;
 import com.example.BlindCafe.dto.response.UserDetailResponse;
 import com.example.BlindCafe.exception.BlindCafeException;
@@ -57,10 +58,7 @@ public class UserService {
         user.addRequiredInfo(request.getAge(), request.getMyGender(), request.getPhone(), request.getNickname(), request.getPartnerGender());
 
         // 관심사 저장
-        List<Interest> interests = interestRepository.findByIdIn(request.getInterests());
-        if (interests.size() != USER_INTEREST_LENGTH)
-            throw new BlindCafeException(INVALID_MAIN_INTEREST);
-        user.updateInterest(interests);
+        updateInterest(user, request.getInterests());
     }
 
     // 사용자 추가 정보 입력 요청값 유효성 검사
@@ -87,7 +85,7 @@ public class UserService {
     }
 
     /**
-     * 사용자 프로필 수정하기
+     * 사용자 프로필 수정
      */
     @Transactional
     public UserDetailResponse editProfile(Long userId, EditProfileRequest request) {
@@ -101,66 +99,21 @@ public class UserService {
     }
 
     /**
-     * Todo
-     * 지금은 예전 관심사 그냥 삭제하는데
-     * 나중에는 예전 관심사 보관하기
-     * + 유저 엔티티에서 연관관계 메소드로 현재 관심사만 가져오기
+     * 사용자 관심사 수정
      */
     @Transactional
-    public EditInterestDto.Response editInterest(Long userId, EditInterestDto.Request request) {
+    public void editInterest(Long userId, EditInterestRequest request) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new BlindCafeException(NO_USER));
+                .orElseThrow(() -> new BlindCafeException(EMPTY_USER));
+        updateInterest(user, request.getInterests());
+    }
 
-        userInterestRepository.deleteAllByUser(user);
-        interestOrderRepository.deleteAllByUser(user);
-
-        // 관심사 저장
-        editIndex = 0;
-        request.getInterests().forEach(interest -> {
-            // 메인
-            Interest mainInterest = interestRepository.findById(interest.getMain())
-                    .orElseThrow(()-> new BlindCafeException(INVALID_MAIN_INTEREST));
-
-            UserInterest userInterest = UserInterest.builder()
-                    .user(user)
-                    .interest(mainInterest)
-                    .build();
-            userInterestRepository.save(userInterest);
-
-            // 세부
-            interest.getSub().forEach(sub -> {
-                UserInterest subInterest = UserInterest.builder()
-                        .user(user)
-                        .interest(mainInterest.getChild()
-                                .stream()
-                                .filter(si -> si.getName().equals(sub))
-                                .findAny().orElseThrow(() -> new BlindCafeException(INVALID_SUB_INTEREST))
-                        )
-                        .build();
-                userInterestRepository.save(subInterest);
-            });
-
-            interestOrderArr[editIndex][0] = interest.getMain().intValue();
-            interestOrderArr[editIndex][1] = interest.getSub().size();
-            editIndex++;
-        });
-
-        // 관심사 순위 저장
-        sortBySubInterestCount();
-        for (int priority=0; priority<USER_INTEREST_LENGTH; priority++) {
-            InterestOrder interestOrder = InterestOrder.builder()
-                    .user(user)
-                    .interest(
-                            interestRepository.findById(
-                                    Long.valueOf(interestOrderArr[priority][0])
-                            ).orElseThrow(()-> new BlindCafeException(INVALID_MAIN_INTEREST)))
-                    .priority(priority+1)
-                    .build();
-            interestOrderRepository.save(interestOrder);
-        }
-
-        return EditInterestDto.Response.builder()
-                .codeAndMessage(SUCCESS).build();
+    // 사용자 관심사 수정
+    private void updateInterest(User user, List<Long> interestIds) {
+        List<Interest> interests = interestRepository.findByIdIn(interestIds);
+        if (interests.size() != USER_INTEREST_LENGTH)
+            throw new BlindCafeException(INVALID_MAIN_INTEREST);
+        user.updateInterest(interests);
     }
 
     @Transactional

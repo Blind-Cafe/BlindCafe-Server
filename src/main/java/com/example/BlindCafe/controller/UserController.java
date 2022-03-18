@@ -2,6 +2,7 @@ package com.example.BlindCafe.controller;
 
 import com.example.BlindCafe.dto.*;
 import com.example.BlindCafe.dto.request.AddUserInfoRequest;
+import com.example.BlindCafe.dto.request.EditInterestRequest;
 import com.example.BlindCafe.dto.request.EditProfileRequest;
 import com.example.BlindCafe.dto.response.UserDetailResponse;
 import com.example.BlindCafe.service.UserService;
@@ -58,6 +59,18 @@ public class UserController {
         return ResponseEntity.ok(userService.editProfile(Long.parseLong(uid), request));
     }
 
+    /**
+     * 사용자 관심사 수정
+     */
+    @PutMapping("/interest")
+    public ResponseEntity<Void> editInterest(
+            @RequestHeader(value = UID) String uid,
+            @Valid @RequestBody EditInterestRequest request
+            ) {
+        log.info("PUT /api/user/interest");
+        userService.editInterest(Long.parseLong(uid), request);
+        return ResponseEntity.ok().build();
+    }
 
 
     /**
@@ -84,17 +97,6 @@ public class UserController {
         return ResponseEntity.ok(userService.getProfile(userId));
     }
 
-    /**
-     * 유저 관심사 수정
-     */
-    @PutMapping("/interest")
-    public ResponseEntity<EditInterestDto.Response> editInterest(
-            Authentication authentication,
-            @Valid @RequestBody EditInterestDto.Request request
-    ) {
-        log.info("PUT /api/user/interest");
-        return ResponseEntity.ok(userService.editInterest(getUserId(authentication), request));
-    }
 
     /**
      * 프로필 사진 수정 화면

@@ -12,6 +12,5 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class EditInterestRequest {
-    private Long main;
-    private List<String> sub;
+    private List<Long> interests;
 }
