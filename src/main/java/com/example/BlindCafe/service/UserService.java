@@ -6,6 +6,7 @@ import com.example.BlindCafe.domain.*;
 import com.example.BlindCafe.domain.type.status.UserStatus;
 import com.example.BlindCafe.dto.request.EditInterestRequest;
 import com.example.BlindCafe.dto.request.EditProfileRequest;
+import com.example.BlindCafe.dto.response.AvatarListResponse;
 import com.example.BlindCafe.dto.response.UserDetailResponse;
 import com.example.BlindCafe.exception.BlindCafeException;
 import com.example.BlindCafe.repository.*;
@@ -115,6 +116,17 @@ public class UserService {
             throw new BlindCafeException(INVALID_MAIN_INTEREST);
         user.updateInterest(interests);
     }
+
+    /**
+     * 프로필 이미지 리스트 조회
+     */
+    public AvatarListResponse getAvatars(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BlindCafeException(EMPTY_USER));
+        return AvatarListResponse.fromEntity(user);
+    }
+
+
 
     @Transactional
     public EditNicknameDto.Response editNickname(Long userId, EditNicknameDto.Request request) {
@@ -227,18 +239,7 @@ public class UserService {
         return EditUserProfileDto.Response.fromEntity(user);
     }
 
-    public ProfileImageListDto getProfileImages(Long userId) {
-        User user = userRepository.findById(userId)
-                .filter(u -> u.getStatus().equals(NORMAL) || u.getStatus().equals(NOT_REQUIRED_INFO))
-                .orElseThrow(() -> new BlindCafeException(NO_USER));
-        return ProfileImageListDto.builder()
-                .images(user.getAvatars().stream()
-                        .filter(profileImage -> profileImage.getStatus().equals(CommonStatus.NORMAL))
-                        .sorted(Comparator.comparing(Avatar::getPriority))
-                        .map(Avatar::getSrc)
-                        .collect(Collectors.toList()))
-                .build();
-    }
+
 
     public ProfileImageListDto getProfileImagesForEdit(Long userId) {
         User user = userRepository.findById(userId)

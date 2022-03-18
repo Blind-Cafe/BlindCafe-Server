@@ -4,6 +4,7 @@ import com.example.BlindCafe.dto.*;
 import com.example.BlindCafe.dto.request.AddUserInfoRequest;
 import com.example.BlindCafe.dto.request.EditInterestRequest;
 import com.example.BlindCafe.dto.request.EditProfileRequest;
+import com.example.BlindCafe.dto.response.AvatarListResponse;
 import com.example.BlindCafe.dto.response.UserDetailResponse;
 import com.example.BlindCafe.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -72,17 +73,13 @@ public class UserController {
         return ResponseEntity.ok().build();
     }
 
-
     /**
      * 프로필 이미지 리스트 조회
      */
-    @GetMapping("{userId}/image")
-    public ResponseEntity<ProfileImageListDto> getProfileImages(
-            Authentication authentication,
-            @PathVariable Long userId
-    ) {
-        log.info("GET /api/user/{}/image", userId);
-        return ResponseEntity.ok(userService.getProfileImages(userId));
+    @GetMapping("/{userId}/avatar")
+    public ResponseEntity<AvatarListResponse> getAvatars(@PathVariable Long userId) {
+        log.info("GET /api/user/{}/avatar", userId);
+        return ResponseEntity.ok(userService.getAvatars(userId));
     }
 
     /**
