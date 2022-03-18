@@ -1,6 +1,5 @@
 package com.example.BlindCafe.domain;
 
-import com.example.BlindCafe.domain.notice.PersonalNotice;
 import com.example.BlindCafe.domain.type.Mbti;
 import com.example.BlindCafe.domain.type.Platform;
 import com.example.BlindCafe.domain.type.Gender;

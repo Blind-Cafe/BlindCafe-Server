@@ -6,14 +6,13 @@ import com.example.BlindCafe.dto.request.UploadAvatarRequest;
 import com.example.BlindCafe.dto.request.EditInterestRequest;
 import com.example.BlindCafe.dto.request.EditProfileRequest;
 import com.example.BlindCafe.dto.response.AvatarListResponse;
+import com.example.BlindCafe.dto.response.DeleteUserResponse;
 import com.example.BlindCafe.dto.response.UserDetailResponse;
 import com.example.BlindCafe.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
 
@@ -109,117 +108,26 @@ public class UserController {
         return ResponseEntity.ok().build();
     }
 
-
-
-    /**
-     * 밝은 채팅방 프로필 조회
-     */
-    @GetMapping("{userId}/profile")
-    public ResponseEntity<UserProfileResponse> getProfile(
-            Authentication authentication,
-            @PathVariable Long userId
-    ) {
-        log.info("GET /api/user/{}/profile", userId);
-        return ResponseEntity.ok(userService.getProfile(userId));
-    }
-
-    /**
-     * 유저 프로필 이미지 수정
-     */
-    @PatchMapping("/image")
-    public ResponseEntity<Void> editProfileImage(
-            Authentication authentication,
-            @RequestParam int priority,
-            @RequestParam MultipartFile image
-    ) {
-        log.info("PATCH /api/user/image");
-        userService.editProfileImage(getUserId(authentication), priority, image);
-        return ResponseEntity.ok().build();
-    }
-
-    /**
-     * 유저 프로필 이미지 삭제
-     */
-    @DeleteMapping("/image")
-    public ResponseEntity<Void> deleteProfileImage(
-            Authentication authentication,
-            @RequestParam int priority
-    ) {
-        log.info("DELETE /api/user/image");
-        userService.deleteProfileImage(getUserId(authentication), priority);
-        return ResponseEntity.ok().build();
-    }
-
-    /**
-     * 유저 닉네임 수정
-     */
-    @PatchMapping("/nickname")
-    public ResponseEntity<EditNicknameDto.Response> editNickname (
-            Authentication authentication,
-            @Valid @RequestBody EditNicknameDto.Request request
-    ) {
-        log.info("PATCH /api/user/nickname");
-        return ResponseEntity.ok(userService.editNickname(getUserId(authentication), request));
-    }
-
-    /**
-     * 유저 주소 수정
-     */
-    @PatchMapping("/address")
-    public ResponseEntity<EditAddressDto.Response> editAddress(
-            Authentication authentication,
-            @Valid @RequestBody EditAddressDto.Request request
-    ) {
-        log.info("PATCH /api/user/address");
-        return ResponseEntity.ok(userService.editAddress(getUserId(authentication), request));
-    }
-
-    /**
-     * 디바이스 토큰 갱신
-     */
-    @PatchMapping("device")
-    public ResponseEntity<Void> updatedDeviceToken(
-            Authentication authentication,
-            @Valid @RequestBody EditDeviceToken request
-    ) {
-        log.info("PATCH /api/user/device");
-        userService.updateDeviceToken(getUserId(authentication), request);
-        return ResponseEntity.ok().build();
-    }
-
-    /**
-     * 매칭 상대방 성별 수정
-     */
-    @PatchMapping("/partner")
-    public ResponseEntity<Void> editPartnerGender(
-            Authentication authentication,
-            @Valid @RequestBody EditPartnerGenderDto request
-    ) {
-        log.info("PATCH /api/user/partner");
-        userService.editPartnerGender(getUserId(authentication), request);
-        return ResponseEntity.ok().build();
-    }
-
-    /**
-     * 프로필 수정 조회 화면
-     */
-    @GetMapping("profile")
-    public ResponseEntity<EditUserProfileDto.Response> getMyProfileForEdit(
-            Authentication authentication
-    ) {
-        log.info("GET /api/user/profile");
-        return ResponseEntity.ok(userService.getMyProfileForEdit(getUserId(authentication)));
-    }
-
     /**
      * 유저 탈퇴
      */
     @DeleteMapping
-    public ResponseEntity<DeleteUserDto.Response> deleteUser(
-            Authentication authentication,
-            @RequestParam(value="reason", defaultValue="1") Long reasonNum
+    public ResponseEntity<DeleteUserResponse> deleteUser(
+            @RequestHeader(value = UID) String uid,
+            @RequestParam(value="reason", defaultValue="1") Long reasonId
     ) {
         log.info("DELETE /api/user");
-        return ResponseEntity.ok(userService.deleteUser(getUserId(authentication), reasonNum));
+        return ResponseEntity.ok(userService.deleteUser(Long.parseLong(uid), reasonId));
+    }
+
+    /**
+     * 채팅방 프로필(상대방) 조회
+     */
+    @GetMapping("/{userId}/profile")
+    public ResponseEntity<UserProfileResponse> getProfile(
+            @PathVariable Long userId
+    ) {
+        log.info("GET /api/user/{}/profile", userId);
+        return ResponseEntity.ok(userService.getProfile(userId));
     }
 }
