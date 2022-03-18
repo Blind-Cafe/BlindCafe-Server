@@ -1,5 +1,6 @@
 package com.example.BlindCafe.domain;
 
+import com.example.BlindCafe.domain.notice.PersonalNotice;
 import com.example.BlindCafe.domain.type.Platform;
 import com.example.BlindCafe.domain.type.Gender;
 import com.example.BlindCafe.domain.type.Social;
@@ -29,7 +30,8 @@ public class User extends BaseTimeEntity {
     @Column(length = 10)
     private String nickname;
 
-    private String email;
+    @Column(unique = true)
+    private String phone;
 
     private int age;
 
@@ -118,13 +120,13 @@ public class User extends BaseTimeEntity {
     public void addRequiredInfo(
             int age,
             Gender myGender,
-            String email,
+            String phone,
             String nickname,
             Gender partnerGender
     ) {
         this.setAge(age);
         this.setMyGender(myGender);
-        this.setEmail(email);
+        this.setPhone(phone);
         this.setNickname(nickname);
         this.setPartnerGender(partnerGender);
         this.setStatus(UserStatus.NORMAL);

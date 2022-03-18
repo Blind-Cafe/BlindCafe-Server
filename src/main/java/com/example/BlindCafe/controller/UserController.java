@@ -1,7 +1,5 @@
 package com.example.BlindCafe.controller;
 
-import com.example.BlindCafe.config.SecurityConfig;
-import com.example.BlindCafe.config.jwt.JwtAuthorizationFilter;
 import com.example.BlindCafe.dto.*;
 import com.example.BlindCafe.dto.request.AddUserInfoRequest;
 import com.example.BlindCafe.service.UserService;
@@ -14,7 +12,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
 
-import static com.example.BlindCafe.config.SecurityConfig.getUser;
 import static com.example.BlindCafe.config.jwt.JwtAuthorizationFilter.UID;
 
 @Slf4j
@@ -86,15 +83,6 @@ public class UserController {
     ) {
         log.info("GET /api/user/{}/profile", userId);
         return ResponseEntity.ok(userService.getProfile(userId));
-    }
-
-    /**
-     * 홈화면 (유저 매칭 상태 확인)
-     */
-    @GetMapping("/home")
-    public ResponseEntity<UserHomeDto.Response> userHome(Authentication authentication) {
-        log.info("GET /api/user/home");
-        return ResponseEntity.ok(userService.userHome(getUserId(authentication)));
     }
 
     /**

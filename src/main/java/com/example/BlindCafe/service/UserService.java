@@ -2,30 +2,26 @@ package com.example.BlindCafe.service;
 
 import com.example.BlindCafe.dto.*;
 import com.example.BlindCafe.dto.request.AddUserInfoRequest;
-import com.example.BlindCafe.dto.request.EditInterestRequest;
-import com.example.BlindCafe.entity.*;
-import com.example.BlindCafe.entity.type.status.UserStatus;
+import com.example.BlindCafe.domain.*;
+import com.example.BlindCafe.domain.type.status.UserStatus;
 import com.example.BlindCafe.exception.BlindCafeException;
 import com.example.BlindCafe.repository.*;
-import com.example.BlindCafe.entity.type.status.CommonStatus;
-import com.example.BlindCafe.entity.type.status.MatchingStatus;
+import com.example.BlindCafe.domain.type.status.CommonStatus;
 import com.example.BlindCafe.util.AmazonS3Connector;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.sql.Timestamp;
-import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static com.example.BlindCafe.exception.CodeAndMessage.*;
-import static com.example.BlindCafe.entity.type.Gender.N;
-import static com.example.BlindCafe.entity.type.ReasonType.FOR_RETIRED;
-import static com.example.BlindCafe.entity.type.status.CommonStatus.*;
-import static com.example.BlindCafe.entity.type.status.MatchingStatus.*;
+import static com.example.BlindCafe.domain.type.Gender.N;
+import static com.example.BlindCafe.domain.type.ReasonType.FOR_RETIRED;
+import static com.example.BlindCafe.domain.type.status.CommonStatus.*;
 
 @Service
 @Transactional(readOnly = true)
@@ -59,7 +55,7 @@ public class UserService {
             throw new BlindCafeException(ALREADY_REQUIRED_INFO);
 
         // 사용자 추가 정보 저장
-        user.addRequiredInfo(request.getAge(), request.getMyGender(), request.getEmail(), request.getNickname(), request.getPartnerGender());
+        user.addRequiredInfo(request.getAge(), request.getMyGender(), request.getPhone(), request.getNickname(), request.getPartnerGender());
 
         // 관심사 조회
         Map<Long, List<String>> interestMap = new HashMap<>();
@@ -95,119 +91,13 @@ public class UserService {
         if (request.getMyGender().equals(N))
             throw new BlindCafeException(BAD_REQUEST);
 
-        // TODO 지금은 닉네임 중복체크, 이후 변경 사항에 따라 수정 예정
+        Pattern pattern = Pattern.compile("^\\d{3}[- .]?\\d{4}[- .]?\\d{4}$");
+        Matcher matcher = pattern.matcher(request.getPhone());
+        if (!matcher.matches())
+            throw new BlindCafeException(INVALID_PHONE_NUMBER);
+
         userRepository.findByNickname(request.getNickname())
-                .ifPresent(u -> { throw new BlindCafeException(DUPLICATED_NICKNAME); });
-    }
-
-    @Transactional
-    public UserHomeDto.Response userHome(Long userId) {
-
-        User user = userRepository.findById(userId)
-                .filter(u -> u.getStatus().equals(NORMAL) || u.getStatus().equals(NOT_REQUIRED_INFO))
-                .orElseThrow(() -> new BlindCafeException(NO_USER));
-
-        // 매칭 상태 확인
-        UserMatching userMatching = user.getUserMatchings().stream()
-                .filter(um -> validMatchingStatus(um))
-                .findAny().orElse(null);
-
-        if (userMatching == null) {
-            // 요청 없음
-            return UserHomeDto.Response.noneMatchingBuilder()
-                    .codeAndMessage(SUCCESS)
-                    .matchingStatus(NONE)
-                    .build();
-        }
-
-        MatchingStatus status = userMatching.getStatus();
-        Matching matching = userMatching.getMatching();
-        updateMatchingStatus(matching);
-
-        if (status.equals(WAIT)) {
-            if (ChronoUnit.HOURS.between(userMatching.getCreatedAt(), LocalDateTime.now()) >= 24L) {
-                // 24시간 초과로 인한 요청 취소
-                userMatching.setStatus(CANCEL_REQUEST_EXPIRED);
-                throw new BlindCafeException(REQUEST_EXPIRED);
-            } else {
-                return UserHomeDto.Response.noneMatchingBuilder()
-                        .codeAndMessage(SUCCESS)
-                        .matchingStatus(WAIT)
-                        .build();
-            }
-        } else {
-            UserMatching partnerMatching = matching.getUserMatchings().stream()
-                    .filter(um -> !um.equals(userMatching))
-                    .findAny().orElse(null);
-
-            if (Objects.isNull(partnerMatching)) {
-                userMatching.setStatus(OUT);
-                throw new BlindCafeException(INVALID_MATCHING);
-            }
-
-
-            if (status.equals(FAILED_LEAVE_ROOM) ||
-                    status.equals(FAILED_REPORT) ||
-                    status.equals(FAILED_WONT_EXCHANGE)) {
-                // 폭파
-                UserHomeDto.Response response = UserHomeDto.Response.outMatchingBuilder()
-                        .codeAndMessage(SUCCESS)
-                        .matchingStatus(userMatching.getStatus())
-                        .partnerNickname(partnerMatching.getUser().getNickname())
-                        .reason(userMatching.getReason().getText())
-                        .build();
-                userMatching.setStatus(OUT);
-                return response;
-            }
-
-            // 정상적인 매칭 상태
-            LocalDateTime ldt = matching.getStartTime();
-            Timestamp timestamp = Timestamp.valueOf(ldt);
-            String startTime = String.valueOf(timestamp.getTime() / 1000);
-
-            if (status.equals(MATCHING_CONTINUE_YET)) {
-                userMatching.setStatus(MATCHING_CONTINUE);
-            }
-
-            return UserHomeDto.Response.matchingBuilder()
-                    .codeAndMessage(SUCCESS)
-                    .matchingStatus(userMatching.getStatus())
-                    .matchingId(matching.getId())
-                    .partnerId(partnerMatching.getUser().getId())
-                    .partnerNickname(partnerMatching.getUser().getNickname())
-                    .startTime(startTime)
-                    .build();
-        }
-    }
-
-    private boolean validMatchingStatus(UserMatching userMatching) {
-        MatchingStatus status = userMatching.getStatus();
-        if (status.equals(WAIT) ||
-            status.equals(FOUND) ||
-            status.equals(MATCHING) ||
-            status.equals(FAILED_LEAVE_ROOM) ||
-            status.equals(FAILED_REPORT) ||
-            status.equals(FAILED_WONT_EXCHANGE) ||
-            status.equals(PROFILE_OPEN) ||
-            status.equals(PROFILE_READY) ||
-            status.equals(PROFILE_ACCEPT) ||
-            status.equals(MATCHING_CONTINUE_YET)
-        ) return true;
-        return false;
-    }
-
-    private void updateMatchingStatus(Matching matching) {
-        if (Objects.isNull(matching))
-            return;
-        if (!matching.getStatus().equals(MATCHING))
-            return;
-        if (matching.getExpiryTime().isAfter(LocalDateTime.now()))
-            return;
-        List<UserMatching> userMatchings = matching.getUserMatchings();
-        for (UserMatching userMatching: userMatchings) {
-            userMatching.setStatus(PROFILE_OPEN);
-        }
-        matching.setStatus(PROFILE_EXCHANGE);
+                .ifPresent(u -> { throw new BlindCafeException(DUPLICATED_PHONE_NUMBER); });
     }
 
     public UserDetailDto getUserDetail(Long userId) {

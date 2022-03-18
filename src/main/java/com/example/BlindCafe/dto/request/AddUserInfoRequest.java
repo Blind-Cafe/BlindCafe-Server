@@ -1,12 +1,11 @@
 package com.example.BlindCafe.dto.request;
 
-import com.example.BlindCafe.entity.type.Gender;
+import com.example.BlindCafe.domain.type.Gender;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import javax.validation.constraints.Email;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -24,9 +23,8 @@ public class AddUserInfoRequest {
     @NotNull
     private Gender myGender;
 
-    @Email
     @NotNull
-    private String email;
+    private String phone;
 
     @NotNull
     @Size(min = 1, max = 10, message = "name min 1 max 10")
