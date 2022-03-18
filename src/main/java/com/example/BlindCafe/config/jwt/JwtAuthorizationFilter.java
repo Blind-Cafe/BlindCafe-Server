@@ -1,10 +1,10 @@
 package com.example.BlindCafe.config.jwt;
 
 
-import com.example.BlindCafe.entity.User;
+import com.example.BlindCafe.domain.User;
 import com.example.BlindCafe.exception.BlindCafeException;
 import com.example.BlindCafe.repository.UserRepository;
-import com.example.BlindCafe.entity.type.status.UserStatus;
+import com.example.BlindCafe.domain.type.status.UserStatus;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.MalformedJwtException;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +21,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 import static com.example.BlindCafe.config.jwt.JwtProperties.HEADER_NAME;
-import static com.example.BlindCafe.entity.type.status.UserStatus.SUSPENDED;
+import static com.example.BlindCafe.domain.type.status.UserStatus.SUSPENDED;
 import static com.example.BlindCafe.exception.CodeAndMessage.*;
 
 /**
@@ -31,6 +31,7 @@ import static com.example.BlindCafe.exception.CodeAndMessage.*;
 @RequiredArgsConstructor
 public class JwtAuthorizationFilter extends OncePerRequestFilter {
 
+    public static final String UID = "UID";
     private final UserRepository userRepository;
 
     @Override
@@ -48,6 +49,8 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
         if (token != null) {
             Authentication authentication = getUsernamePasswordAuthenticationToken(token);
             SecurityContextHolder.getContext().setAuthentication(authentication);
+            User user = (User) authentication.getPrincipal();
+            response.setHeader(UID, user.getId().toString());
         }
         chain.doFilter(request, response);
     }

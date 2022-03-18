@@ -2,13 +2,10 @@ package com.example.BlindCafe.firebase;
 
 import com.example.BlindCafe.dto.FcmMessageDto;
 import com.example.BlindCafe.exception.BlindCafeException;
-import com.example.BlindCafe.exception.CodeAndMessage;
-import com.example.BlindCafe.type.DeviceType;
+import com.example.BlindCafe.domain.type.Platform;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.auth.oauth2.GoogleCredentials;
-import com.google.firebase.FirebaseApp;
-import com.google.firebase.FirebaseOptions;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
@@ -16,8 +13,6 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
-import java.io.FileInputStream;
 import java.util.List;
 
 import static com.example.BlindCafe.exception.CodeAndMessage.FCM_JSON_PARSE_ERROR;
@@ -33,9 +28,9 @@ public class FirebaseCloudMessageService {
 
     private final ObjectMapper objectMapper;
 
-    public void sendMessageTo(String targetToken, String title, String body, String path, String type, Long matchingId, DeviceType deviceType) {
+    public void sendMessageTo(String targetToken, String title, String body, String path, String type, Long matchingId, Platform platform) {
         try {
-            String message = makeMessage(targetToken, title, body, path, type, matchingId, deviceType);
+            String message = makeMessage(targetToken, title, body, path, type, matchingId, platform);
 
             OkHttpClient client = new OkHttpClient();
             RequestBody requestBody = RequestBody.create(message, MediaType.get("application/json; charset=utf-8"));
@@ -52,7 +47,7 @@ public class FirebaseCloudMessageService {
         }
     }
 
-    private String makeMessage(String targetToken, String title, String body, String path, String type, Long matchingId, DeviceType deviceType) {
+    private String makeMessage(String targetToken, String title, String body, String path, String type, Long matchingId, Platform platform) {
         try {
             /**
              * deviceType에 따라서 message 만들기

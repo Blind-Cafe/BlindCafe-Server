@@ -1,22 +1,22 @@
 package com.example.BlindCafe.service;
 
 import com.example.BlindCafe.dto.*;
-import com.example.BlindCafe.entity.*;
-import com.example.BlindCafe.entity.topic.Audio;
-import com.example.BlindCafe.entity.topic.Image;
-import com.example.BlindCafe.entity.topic.Subject;
-import com.example.BlindCafe.entity.topic.Topic;
+import com.example.BlindCafe.domain.*;
+import com.example.BlindCafe.domain.topic.Audio;
+import com.example.BlindCafe.domain.topic.Image;
+import com.example.BlindCafe.domain.topic.Subject;
+import com.example.BlindCafe.domain.topic.Topic;
 import com.example.BlindCafe.exception.BlindCafeException;
 import com.example.BlindCafe.firebase.FirebaseCloudMessageService;
 import com.example.BlindCafe.firebase.FirebaseService;
 import com.example.BlindCafe.repository.*;
-import com.example.BlindCafe.type.FcmMessage;
-import com.example.BlindCafe.type.Gender;
-import com.example.BlindCafe.type.MessageType;
-import com.example.BlindCafe.type.status.CommonStatus;
-import com.example.BlindCafe.type.status.MatchingStatus;
-import com.example.BlindCafe.type.status.TopicStatus;
-import com.example.BlindCafe.type.status.UserStatus;
+import com.example.BlindCafe.domain.type.FcmMessage;
+import com.example.BlindCafe.domain.type.Gender;
+import com.example.BlindCafe.domain.type.MessageType;
+import com.example.BlindCafe.domain.type.status.CommonStatus;
+import com.example.BlindCafe.domain.type.status.MatchingStatus;
+import com.example.BlindCafe.domain.type.status.TopicStatus;
+import com.example.BlindCafe.domain.type.status.UserStatus;
 import com.example.BlindCafe.util.TopicServeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -31,12 +31,12 @@ import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 import static com.example.BlindCafe.exception.CodeAndMessage.*;
-import static com.example.BlindCafe.type.Gender.N;
-import static com.example.BlindCafe.type.ReasonType.FOR_LEAVE_ROOM;
-import static com.example.BlindCafe.type.ReasonType.FOR_WONT_EXCHANGE_PROFILE;
-import static com.example.BlindCafe.type.status.CommonStatus.DELETED;
-import static com.example.BlindCafe.type.status.CommonStatus.NORMAL;
-import static com.example.BlindCafe.type.status.MatchingStatus.*;
+import static com.example.BlindCafe.domain.type.Gender.N;
+import static com.example.BlindCafe.domain.type.ReasonType.FOR_LEAVE_ROOM;
+import static com.example.BlindCafe.domain.type.ReasonType.FOR_WONT_EXCHANGE_PROFILE;
+import static com.example.BlindCafe.domain.type.status.CommonStatus.DELETED;
+import static com.example.BlindCafe.domain.type.status.CommonStatus.NORMAL;
+import static com.example.BlindCafe.domain.type.status.MatchingStatus.*;
 import static java.util.Comparator.comparing;
 
 @Service
@@ -57,6 +57,7 @@ public class MatchingService {
     private final TopicRepository topicRepository;
     private final RoomLogRepository roomLogRepository;
     private final MessageRepository messageRepository;
+    private final TicketRepository ticketRepository;
 
     private final static Long MAX_WAIT_TIME = 24L;
     private final static int BASIC_CHAT_DAYS = 3;
@@ -68,6 +69,34 @@ public class MatchingService {
     private final static String DEFAULT_PROFILE_IMAGE = "https://dpb9ox8h2ie20.cloudfront.net/users/profiles/0/profile_default.png";
 
     ExecutorService executor = Executors.newFixedThreadPool(30);
+
+    /**
+     * 매칭권 생성
+     */
+    @Transactional
+    public void createTickets(Long userId) {
+        Ticket newTicket = Ticket.create(userId);
+        ticketRepository.save(newTicket);
+    }
+
+    /**
+     * 현재 가지고 있는 매칭권 수 조회
+     */
+    public int getTicketCount(Long userId) {
+        Ticket ticket = ticketRepository.findByUserId(userId)
+                .orElseThrow(() -> new BlindCafeException(EMPTY_USER));
+        return ticket.getCount();
+    }
+
+    /**
+     * 현재 요청 중인 매칭이 있는지 조회
+     */
+    public boolean isMatchingRequest(Long userId) {
+        Optional<UserMatching> matchingRequest =
+                userMatchingRepository.findMatchingRequestByUserId(userId);
+        if (Objects.isNull(matchingRequest)) return false;
+        else return true;
+    }
 
     /**
      * 내 테이블 조회 - 프로필 교환을 완료한 상대방 목록 조회
@@ -192,23 +221,23 @@ public class MatchingService {
 
         if (partner.getStatus().equals(UserStatus.RETIRED)) {
             partner.setNickname("(알 수 없음)");
-            partner.getProfileImages().forEach(profileImage -> profileImage.setStatus(DELETED));
-            ProfileImage newProfileImage = ProfileImage.builder()
+            partner.getAvatars().forEach(profileImage -> profileImage.setStatus(DELETED));
+            Avatar newAvatar = Avatar.builder()
                     .user(partner)
                     .src(DEFAULT_PROFILE_IMAGE)
                     .priority(1)
                     .status(CommonStatus.NORMAL)
                     .build();
-            profileImageRepository.save(newProfileImage);
-            partner.getProfileImages().add(newProfileImage);
+            profileImageRepository.save(newAvatar);
+            partner.getAvatars().add(newAvatar);
         }
 
-        ProfileImage profileImage = partner.getProfileImages()
-                .stream().sorted(Comparator.comparing(ProfileImage::getPriority))
+        Avatar avatar = partner.getAvatars()
+                .stream().sorted(Comparator.comparing(Avatar::getPriority))
                 .filter(pi -> pi.getStatus().equals(NORMAL))
                 .findFirst()
                 .orElse(null);
-        String src = profileImage != null ? profileImage.getSrc() : null;
+        String src = avatar != null ? avatar.getSrc() : null;
 
         Drink drink = matching.getUserMatchings().stream()
                 .filter(um -> um.getUser().equals(partner))
@@ -867,13 +896,13 @@ public class MatchingService {
     }
 
     private MatchingProfileDto makeProfile(User user, User partner) {
-        ProfileImage profileImage = user.getProfileImages()
-                .stream().sorted(Comparator.comparing(ProfileImage::getPriority))
+        Avatar avatar = user.getAvatars()
+                .stream().sorted(Comparator.comparing(Avatar::getPriority))
                 .filter(pi -> pi.getStatus().equals(NORMAL))
                 .findFirst()
                 .orElse(null);
 
-        String src = Objects.isNull(profileImage) ? null : profileImage.getSrc();
+        String src = Objects.isNull(avatar) ? null : avatar.getSrc();
         String region = Objects.isNull(user.getAddress()) ? null : user.getAddress().toString();
 
         List<String> interests = user.getInterestOrders().stream()

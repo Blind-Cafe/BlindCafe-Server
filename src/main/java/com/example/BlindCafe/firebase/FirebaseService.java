@@ -4,7 +4,7 @@ import com.example.BlindCafe.dto.FcmMessageDto;
 import com.example.BlindCafe.dto.FirestoreDto;
 import com.example.BlindCafe.exception.BlindCafeException;
 import com.example.BlindCafe.exception.CodeAndMessage;
-import com.example.BlindCafe.type.FcmMessage;
+import com.example.BlindCafe.domain.type.FcmMessage;
 import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.Firestore;
 import com.google.cloud.firestore.WriteResult;

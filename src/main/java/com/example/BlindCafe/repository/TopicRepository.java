@@ -1,9 +1,9 @@
 package com.example.BlindCafe.repository;
 
-import com.example.BlindCafe.entity.topic.Audio;
-import com.example.BlindCafe.entity.topic.Image;
-import com.example.BlindCafe.entity.topic.Subject;
-import com.example.BlindCafe.entity.topic.Topic;
+import com.example.BlindCafe.domain.topic.Audio;
+import com.example.BlindCafe.domain.topic.Image;
+import com.example.BlindCafe.domain.topic.Subject;
+import com.example.BlindCafe.domain.topic.Topic;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

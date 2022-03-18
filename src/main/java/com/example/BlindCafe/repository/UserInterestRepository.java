@@ -1,7 +1,7 @@
 package com.example.BlindCafe.repository;
 
-import com.example.BlindCafe.entity.User;
-import com.example.BlindCafe.entity.UserInterest;
+import com.example.BlindCafe.domain.User;
+import com.example.BlindCafe.domain.UserInterest;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

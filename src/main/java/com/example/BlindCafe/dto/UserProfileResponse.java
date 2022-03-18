@@ -1,10 +1,10 @@
 package com.example.BlindCafe.dto;
 
-import com.example.BlindCafe.entity.Interest;
-import com.example.BlindCafe.entity.InterestOrder;
-import com.example.BlindCafe.entity.ProfileImage;
-import com.example.BlindCafe.entity.User;
-import com.example.BlindCafe.entity.type.status.CommonStatus;
+import com.example.BlindCafe.domain.Interest;
+import com.example.BlindCafe.domain.InterestOrder;
+import com.example.BlindCafe.domain.Avatar;
+import com.example.BlindCafe.domain.User;
+import com.example.BlindCafe.domain.type.status.CommonStatus;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -22,10 +22,10 @@ public class UserProfileResponse {
     private List<String> interests;
 
     public UserProfileResponse(User user) {
-        this.images = user.getProfileImages().stream()
+        this.images = user.getAvatars().stream()
                 .filter(profileImage -> profileImage.getStatus().equals(CommonStatus.NORMAL))
-                .sorted(Comparator.comparing(ProfileImage::getPriority))
-                .map(ProfileImage::getSrc)
+                .sorted(Comparator.comparing(Avatar::getPriority))
+                .map(Avatar::getSrc)
                 .collect(Collectors.toList());
         this.nickname = user.getNickname();
         this.age = user.getAge();

@@ -26,20 +26,21 @@ import static com.example.BlindCafe.exception.CodeAndMessage.FILE_EXTENSION_ERRO
 @Component
 public class AmazonS3Connector {
 
-    /**
-     * Todo
-     * AES256
-     */
+    public static String DEFAULT_IMAGE;
 
     private final AmazonS3Client amazonS3Client;
     private final Tika tika = new Tika();
-    private final static String PROFILE_IMAGE_DIR = "users/profiles/";
+    private final String PROFILE_IMAGE_DIR = "users/profiles/";
+    private static String cloudfrontUrl;
 
     @Value("${cloud.aws.s3.bucket}")
     public String bucket;
 
     @Value("${cloud.aws.cloudfront.url}")
-    public String cloudfrontUrl;
+    public void setCloudfrontUrl(String value) {
+        cloudfrontUrl = value;
+        DEFAULT_IMAGE = value + "users/profiles/0/profile_default.png";
+    }
 
     public String uploadProfileImage(MultipartFile multipartFile, Long userId) {
         File file = convertToFile(multipartFile);
@@ -73,5 +74,9 @@ public class AmazonS3Connector {
         } catch (MimeTypeException | IOException e) {
             throw new BlindCafeException(FILE_EXTENSION_ERROR);
         }
+    }
+
+    public static String getDefaultImage() {
+        return cloudfrontUrl + DEFAULT_IMAGE;
     }
 }
