@@ -9,7 +9,7 @@ import com.example.BlindCafe.dto.response.DeleteUserResponse;
 import com.example.BlindCafe.dto.response.UserDetailResponse;
 import com.example.BlindCafe.exception.BlindCafeException;
 import com.example.BlindCafe.repository.*;
-import com.example.BlindCafe.util.AmazonS3Connector;
+import com.example.BlindCafe.utils.AmazonS3Connector;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,6 +31,7 @@ public class UserService {
     private final RetiredUserRepository retiredUserRepository;
     private final InterestRepository interestRepository;
     private final ReasonRepository reasonRepository;
+    private final SuggestionRepository suggestionRepository;
 
     private final AmazonS3Connector amazonS3Connector;
 
@@ -197,5 +198,22 @@ public class UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BlindCafeException(EMPTY_USER));
         return UserProfileResponse.fromEntity(user);
+    }
+
+    /**
+     * 건의사항 접수하기
+     */
+    @Transactional
+    public void suggest(Long userId, SuggestionRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BlindCafeException(EMPTY_USER));
+        
+        // 건의사항 저장하기
+        Suggestion suggestion = Suggestion.create(user, request.getContent());
+        suggestionRepository.save(suggestion);
+        String image = amazonS3Connector.uploadSuggestion(request.getImages(), suggestion.getId());
+        suggestion.updateImage(image);
+        
+        // 건의사항 이메일로 전송하기
     }
 }

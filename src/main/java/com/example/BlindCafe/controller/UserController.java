@@ -148,4 +148,14 @@ public class UserController {
         log.info("GET /api/user/{}/profile", userId);
         return ResponseEntity.ok(userService.getProfile(userId));
     }
+
+    /**
+     * 건의사항 작성하기
+     */
+    @PostMapping("/suggestion")
+    public ResponseEntity<Void> suggest(@RequestHeader(value = UID) String uid, SuggestionRequest request) {
+        log.info("POST /api/user/suggestion");
+        userService.suggest(Long.parseLong(uid), request);
+        return ResponseEntity.ok().build();
+    }
 }
