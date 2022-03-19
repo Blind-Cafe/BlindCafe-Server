@@ -15,9 +15,11 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 import java.io.File;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.example.BlindCafe.exception.CodeAndMessage.FILE_CONVERT_ERROR;
 import static com.example.BlindCafe.exception.CodeAndMessage.FILE_EXTENSION_ERROR;
@@ -32,6 +34,7 @@ public class AmazonS3Connector {
     private final AmazonS3Client amazonS3Client;
     private final Tika tika = new Tika();
     private final String PROFILE_IMAGE_DIR = "users/profiles/";
+    public final String SUGGESTION_IMAGE_DIR = "suggestion/";
     private static String cloudfrontUrl;
 
     @Value("${cloud.aws.s3.bucket}")
@@ -49,6 +52,21 @@ public class AmazonS3Connector {
         amazonS3Client.putObject(new PutObjectRequest(bucket, fileName, file));
         file.delete();
         return cloudfrontUrl + fileName;
+    }
+
+    public String uploadSuggestion(List<MultipartFile> multipartFiles, Long suggestionId) {
+        StringBuilder sb = new StringBuilder();
+        AtomicInteger index = new AtomicInteger(1);
+        multipartFiles.forEach(multipartFile -> {
+            File file = convertToFile(multipartFile);
+            String fileName = SUGGESTION_IMAGE_DIR + suggestionId + "/" + index + extension(multipartFile);
+            amazonS3Client.putObject(new PutObjectRequest(bucket, fileName, file));
+            sb.append(fileName + ",");
+            file.delete();
+            index.getAndIncrement();
+        });
+        sb.deleteCharAt(sb.length() - 1);
+        return sb.toString();
     }
 
     private File convertToFile(MultipartFile multipartFile) {
