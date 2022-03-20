@@ -1,8 +1,10 @@
 package com.example.BlindCafe.controller;
 
 import com.example.BlindCafe.dto.request.LoginRequest;
+import com.example.BlindCafe.dto.request.PhoneCheckRequest;
 import com.example.BlindCafe.dto.request.RefreshTokenRequest;
 import com.example.BlindCafe.dto.response.LoginResponse;
+import com.example.BlindCafe.dto.response.PhoneCheckResponse;
 import com.example.BlindCafe.dto.response.RefreshTokenResponse;
 import com.example.BlindCafe.service.AuthService;
 import lombok.RequiredArgsConstructor;
@@ -38,6 +40,16 @@ public class AuthController {
         HttpStatus status = result.getFirst();
         LoginResponse response = result.getSecond();
         return ResponseEntity.status(status).body(response);
+    }
+
+    /**
+     * 전화번호 중복 확인
+     */
+    @PostMapping("/phone-check")
+    public ResponseEntity<PhoneCheckResponse> isDuplicatedPhoneNumber(@Valid @RequestBody PhoneCheckRequest request) {
+        log.info("POST /api/auth/phone-check");
+        boolean status = authService.isDuplicatedPhoneNumber(request.getPhone());
+        return ResponseEntity.ok(new PhoneCheckResponse(status));
     }
 
     /**

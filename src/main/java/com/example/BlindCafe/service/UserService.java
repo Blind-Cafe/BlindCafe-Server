@@ -72,7 +72,7 @@ public class UserService {
         if (!matcher.matches())
             throw new BlindCafeException(INVALID_PHONE_NUMBER);
 
-        userRepository.findByNickname(request.getNickname())
+        userRepository.findByPhone(request.getPhone())
                 .ifPresent(u -> { throw new BlindCafeException(DUPLICATED_PHONE_NUMBER); });
     }
 
