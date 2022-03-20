@@ -67,6 +67,8 @@ public enum CodeAndMessage {
 
     DUPLICATED_MATCHING_REQUEST("1180", "이미 매칭 요청 중입니다."),
 
+    EMAIL_SEND_ERROR("1200", "이메일 전송 중 에러가 발생했습니다."),
+
     BAD_REQUEST("4000", "잘못된 요청입니다."),
     FAILED_AUTHORIZATION("4001", "검증에 실패했습니다."),
     EXPIRED_TOKEN("4002", "토큰의 기한이 만료되었습니다."),

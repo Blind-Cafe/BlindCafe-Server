@@ -10,6 +10,7 @@ import com.example.BlindCafe.dto.response.UserDetailResponse;
 import com.example.BlindCafe.exception.BlindCafeException;
 import com.example.BlindCafe.repository.*;
 import com.example.BlindCafe.utils.AmazonS3Connector;
+import com.example.BlindCafe.utils.MailUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,6 +35,7 @@ public class UserService {
     private final SuggestionRepository suggestionRepository;
 
     private final AmazonS3Connector amazonS3Connector;
+    private final MailUtil mailUtil;
 
     private static final int USER_INTEREST_LENGTH = 3;
     private static final int USER_AVATAR_MAX_LENGTH = 3;
@@ -209,11 +211,13 @@ public class UserService {
                 .orElseThrow(() -> new BlindCafeException(EMPTY_USER));
         
         // 건의사항 저장하기
-        Suggestion suggestion = Suggestion.create(user, request.getContent());
+        String content = request.getContent();
+        Suggestion suggestion = Suggestion.create(user, content);
         suggestionRepository.save(suggestion);
-        String image = amazonS3Connector.uploadSuggestion(request.getImages(), suggestion.getId());
-        suggestion.updateImage(image);
+        String images = amazonS3Connector.uploadSuggestion(request.getImages(), suggestion.getId());
+        suggestion.updateImage(images);
         
         // 건의사항 이메일로 전송하기
+        mailUtil.sendMail(user.getNickname(), user.getPhone(), content, images);
     }
 }
