@@ -32,6 +32,7 @@ import static com.example.BlindCafe.exception.CodeAndMessage.*;
 public class JwtAuthorizationFilter extends OncePerRequestFilter {
 
     public static final String UID = "UID";
+    public static final String ADMIN = "ADMIN";
     private final UserRepository userRepository;
 
     @Override
@@ -51,6 +52,8 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
             SecurityContextHolder.getContext().setAuthentication(authentication);
             User user = (User) authentication.getPrincipal();
             response.setHeader(UID, user.getId().toString());
+            if (user.isAdmin())
+                response.setHeader(ADMIN, "admin");
         }
         chain.doFilter(request, response);
     }
@@ -64,7 +67,7 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
                 if (user.getStatus().equals(SUSPENDED))
                     throw new BlindCafeException(SUSPENDED_USER, user.getNickname());
                 if (user.getStatus().equals(UserStatus.RETIRED))
-                    throw new BlindCafeException(NO_USER);
+                    throw new BlindCafeException(RETIRED_USER);
                 if (user != null) {
                     return new UsernamePasswordAuthenticationToken(user, null);
                 }
