@@ -7,8 +7,7 @@ import javax.persistence.Embeddable;
 @Embeddable
 @Getter
 @Setter
-@AllArgsConstructor
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Address {
 
     private String state;
@@ -20,5 +19,12 @@ public class Address {
             return state + " " + region;
         else
             return null;
+    }
+
+    public static Address create(String state, String region) {
+        Address address = new Address();
+        address.setState(state);
+        address.setRegion(region);
+        return address;
     }
 }

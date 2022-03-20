@@ -10,6 +10,7 @@ import com.example.BlindCafe.dto.response.UserDetailResponse;
 import com.example.BlindCafe.exception.BlindCafeException;
 import com.example.BlindCafe.repository.*;
 import com.example.BlindCafe.utils.AmazonS3Connector;
+import com.example.BlindCafe.utils.MailUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,6 +35,7 @@ public class UserService {
     private final SuggestionRepository suggestionRepository;
 
     private final AmazonS3Connector amazonS3Connector;
+    private final MailUtil mailUtil;
 
     private static final int USER_INTEREST_LENGTH = 3;
     private static final int USER_AVATAR_MAX_LENGTH = 3;
@@ -90,8 +92,10 @@ public class UserService {
     public UserDetailResponse editProfile(Long userId, UpdateProfileRequest request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BlindCafeException(EMPTY_USER));
+
+        // 사용자 프로필 수정(주소, 상대방 성별, MBTI)
         user.updateProfile(
-                new Address(request.getState(), request.getRegion()),
+                Address.create(request.getState(), request.getRegion()),
                 request.getPartnerGender(),
                 request.getMbti());
         return UserDetailResponse.fromEntity(user);
@@ -107,7 +111,7 @@ public class UserService {
         updateInterest(user, request.getInterests());
     }
 
-    // 사용자 관심사 수정
+    // 사용자 관심사 수정 - 중복코드 제거를 위해 함수 생성(addUserInfo(), editInterest())
     private void updateInterest(User user, List<Long> interestIds) {
         List<Interest> interests = interestRepository.findByIdIn(interestIds);
         if (interests.size() != USER_INTEREST_LENGTH)
@@ -133,8 +137,11 @@ public class UserService {
         validateAvatarSequence(sequence);
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BlindCafeException(EMPTY_USER));
+        
         // S3에 이미지 업로드
         String src = amazonS3Connector.uploadAvatar(request.getImage(), userId);
+        
+        // 프로필 이미지 수정
         user.updateAvatar(src, sequence);
     }
 
@@ -146,9 +153,12 @@ public class UserService {
         validateAvatarSequence(sequence);
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BlindCafeException(EMPTY_USER));
+        
+        // 프로필 이미지 삭제
         user.deleteAvatar(sequence);
     }
 
+    // 프로필 이미지 순서 유효성 검사
     private void validateAvatarSequence(int sequence) {
         if (sequence < 1 || sequence > USER_AVATAR_MAX_LENGTH)
             throw new BlindCafeException(INVALID_PROFILE_IMAGE_SEQUENCE);
@@ -181,12 +191,15 @@ public class UserService {
     public DeleteUserResponse deleteUser(Long userId, Long reasonId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BlindCafeException(EMPTY_USER));
-
+        
+        // 탈퇴 사유 조회
         Reason reason = reasonRepository.findByReasonTypeAndNum(FOR_RETIRED, reasonId)
                 .orElseThrow(() -> new BlindCafeException(EMPTY_REASON));
 
+        // 탈퇴한 사용자 생성
         RetiredUser retiredUser = RetiredUser.create(user, reason.getText());
         retiredUserRepository.save(retiredUser);
+        // 기존 사용자 삭제
         userRepository.delete(user);
         return DeleteUserResponse.fromEntity(retiredUser);
     }
@@ -209,11 +222,14 @@ public class UserService {
                 .orElseThrow(() -> new BlindCafeException(EMPTY_USER));
         
         // 건의사항 저장하기
-        Suggestion suggestion = Suggestion.create(user, request.getContent());
+        String content = request.getContent();
+        Suggestion suggestion = Suggestion.create(user, content);
         suggestionRepository.save(suggestion);
-        String image = amazonS3Connector.uploadSuggestion(request.getImages(), suggestion.getId());
-        suggestion.updateImage(image);
+        // 건의사항 첨부 이미지 저장
+        String images = amazonS3Connector.uploadSuggestion(request.getImages(), suggestion.getId());
+        suggestion.updateImage(images);
         
-        // 건의사항 이메일로 전송하기
+        // 관리자에게 건의사항 이메일로 전송하기
+        mailUtil.sendMail(user.getNickname(), user.getPhone(), content, images);
     }
 }

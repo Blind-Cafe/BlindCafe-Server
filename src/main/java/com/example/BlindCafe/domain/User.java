@@ -82,6 +82,8 @@ public class User extends BaseTimeEntity {
     @Column(columnDefinition = "TEXT")
     private String voice;
 
+    private boolean admin;
+
     @Enumerated(EnumType.STRING)
     private UserStatus status;
 
@@ -113,6 +115,7 @@ public class User extends BaseTimeEntity {
         user.setSocialId(socialId);
         user.setPlatform(platform);
         user.setDeviceToken(deviceToken);
+        user.setAdmin(false);
         user.setStatus(UserStatus.NOT_YET);
         return user;
     }
