@@ -5,7 +5,6 @@ import com.example.BlindCafe.domain.*;
 import com.example.BlindCafe.domain.topic.Audio;
 import com.example.BlindCafe.domain.topic.Image;
 import com.example.BlindCafe.domain.topic.Subject;
-import com.example.BlindCafe.domain.topic.Topic;
 import com.example.BlindCafe.exception.BlindCafeException;
 import com.example.BlindCafe.firebase.FirebaseCloudMessageService;
 import com.example.BlindCafe.firebase.FirebaseService;
@@ -26,9 +25,6 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import static com.example.BlindCafe.exception.CodeAndMessage.*;
@@ -38,6 +34,7 @@ import static com.example.BlindCafe.domain.type.ReasonType.FOR_WONT_EXCHANGE_PRO
 import static com.example.BlindCafe.domain.type.status.CommonStatus.DELETED;
 import static com.example.BlindCafe.domain.type.status.CommonStatus.NORMAL;
 import static com.example.BlindCafe.domain.type.status.MatchingStatus.*;
+import static com.example.BlindCafe.service.TopicService.PUBLIC_INTEREST_ID;
 import static java.util.Comparator.comparing;
 
 @Service
@@ -45,18 +42,11 @@ import static java.util.Comparator.comparing;
 @RequiredArgsConstructor
 public class MatchingService {
 
+    private final TopicService topicService;
+
     private final MatchingRepository matchingRepository;
     private final UserMatchingRepository userMatchingRepository;
     private final MatchingHistoryRepository matchingHistoryRepository;
-
-    private static final int TOPIC_COMMON_QUANTITY = 10;
-    private static final int TOPIC_OTHER_QUANTITY = 2;
-    private static final int TOPIC_DIFF_QUANTITY = 6;
-    private static final int TOPIC_IMAGE_QUANTITY = 5;
-    private static final int TOPIC_AUDIO_QUANTITY = 4;
-
-    private static final Long PUBLIC_INTEREST_ID = 0L;
-
 
 
     private final FirebaseService firebaseService;
@@ -68,7 +58,7 @@ public class MatchingService {
 
     private final DrinkRepository drinkRepository;
     private final ReasonRepository reasonRepository;
-    private final TopicRepository topicRepository;
+
     private final RoomLogRepository roomLogRepository;
     private final MessageRepository messageRepository;
     private final TicketRepository ticketRepository;
@@ -77,16 +67,12 @@ public class MatchingService {
     private final static int BASIC_CHAT_DAYS = 3;
     private final static int EXTEND_CHAT_DAYS = 7;
 
-    private final static Long MAX_INTEREST_ID = 9L;
     public final static Long SUBJECT_LIMIT = 1000L;
     public final static Long AUDIO_LIMIT = 2000L;
-
-    ExecutorService executor = Executors.newFixedThreadPool(30);
 
     /**
      * 매칭 요청
      */
-    // 매칭 요청하기
     @Transactional
     public void createMatching(Long userId) {
         
@@ -141,11 +127,11 @@ public class MatchingService {
         MatchingTopic topic;
         if (similarInterest != null) {
             // 공통 관심사가 있는 경우
-            topic = makeTopic(similarInterest.getId());
+            topic = topicService.makeTopicBySimilarInterest(similarInterest.getId());
         } else {
             // 관심사가 다른 경우
             Long partnerFirstInterestId = Long.parseLong(partnerInterest.split(",")[0]);
-            topic = makeTopic(interests.get(0), partnerFirstInterestId);
+            topic = topicService.makeTopicByDifferentInterest(interests.get(0), partnerFirstInterestId);
         }
 
         // 매칭 생성
@@ -158,98 +144,21 @@ public class MatchingService {
     // 관심사가 일치하는 요청있는지 확인
     private Long isContainInterest(List<Long> myInterest, String partnerInterest) {
         String[] split = partnerInterest.split(",");
-        for (Long interestId : myInterest) {
+        for (Long interestId : myInterest)
             for (String s : split)
                 if (interestId.toString().equals(s)) return interestId;
-        }
-        return 0L;
+        return PUBLIC_INTEREST_ID;
     }
 
     /**
-     * 토픽 생성
+     * 매칭 취소하기
      */
-    // 관심사 기반으로 토픽 생성 - 공통 관심사
-    // 일상 질문 10개, 공통관심사 10개, 그 외 관심사 각 2개, 이미지 5개, 오디오 4개
-    private MatchingTopic makeTopic(Long interestId) {
-        List<Topic> topics = new ArrayList<>();
-        // 일상 질문
-        topics.addAll(getTopicByInterest(PUBLIC_INTEREST_ID, TOPIC_COMMON_QUANTITY));
-        // 공통 관심사
-        topics.addAll(getTopicByInterest(interestId, TOPIC_COMMON_QUANTITY));
-        // 그 외 관심사
-        List<Long> ids = new ArrayList<>();
-        ids.add(interestId);
-        topics.addAll(getTopicByInterestNotIn(ids, TOPIC_OTHER_QUANTITY));
-        // 이미지
-        topics.addAll(getImageTopic(TOPIC_IMAGE_QUANTITY));
-        // 오디오
-        topics.addAll(getAudioTopic(TOPIC_AUDIO_QUANTITY));
-        return MatchingTopic.create(topics);
+    @Transactional
+    public void cancelMatching(Long userId) {
+        UserMatching userMatching = userMatchingRepository.findMatchingRequestByUserId(userId)
+                .orElseThrow(() -> new BlindCafeException(EMPTY_MATCHING_REQUEST));
+        userMatching.cancel();
     }
-
-    // 관심사 기반으로 토픽 생성 - 관심사가 다른 경우
-    // 일상 질문 10개, 각자 관심사 6개, 그 외 관심사 각 2개, 이미지 5개, 오디오 4개
-    private MatchingTopic makeTopic(Long interestId1, Long interestId2) {
-        List<Topic> topics = new ArrayList<>();
-        // 일상 질문
-        topics.addAll(getTopicByInterest(PUBLIC_INTEREST_ID, TOPIC_COMMON_QUANTITY));
-        // 각자 관심사
-        topics.addAll(getTopicByInterest(interestId1, TOPIC_DIFF_QUANTITY));
-        topics.addAll(getTopicByInterest(interestId2, TOPIC_DIFF_QUANTITY));
-        // 그 외 관심사
-        List<Long> ids = new ArrayList<>();
-        ids.add(interestId1);
-        ids.add(interestId2);
-        topics.addAll(getTopicByInterestNotIn(ids, TOPIC_OTHER_QUANTITY));
-        // 이미지
-        topics.addAll(getImageTopic(TOPIC_IMAGE_QUANTITY));
-        // 오디오
-        topics.addAll(getAudioTopic(TOPIC_AUDIO_QUANTITY));
-        return MatchingTopic.create(topics);
-    }
-
-    // 토픽 가져온 후 섞어서 뽑기
-    private List<Topic> getTopicByInterest(Long interestId, int quantity) {
-        return getTopicsWithShuffle(topicRepository.findSubjectByInterestId(interestId), quantity);
-    }
-
-    // 나머지 관심사에서 섞어서 뽑기
-    private List<Topic> getTopicByInterestNotIn(List<Long> ids, int quantity) {
-        List<Topic> topics = new ArrayList<>();
-        Map<Long, List<Topic>> topicMap = new HashMap<>();
-
-        List<Topic> findTopics = topicRepository.findSubjectByInterestIdNotIN(ids);
-        // 관심사 id 기준으로 map에 저장
-        findTopics.forEach(ft -> {
-            List<Topic> tempTopicList = topicMap.getOrDefault(ft.getId(), new ArrayList<>());
-            tempTopicList.add(ft);
-            topicMap.put(ft.getId(), tempTopicList);
-        });
-
-        // 관심사 id 기준으로 섞어서 입력받은 수만큼 추출
-        topicMap.keySet().forEach(key -> {
-            topics.addAll(getTopicsWithShuffle(topicMap.get(key), quantity));
-        });
-
-        return topics;
-    }
-
-    // 이미지 토픽 가져오기
-    private List<Topic> getImageTopic(int quantity) {
-        return getTopicsWithShuffle(topicRepository.findImages(), quantity);
-    }
-
-    // 오디오 토픽 가져오기
-    private List<Topic> getAudioTopic(int quantity) {
-        return getTopicsWithShuffle(topicRepository.findAudios(), quantity);
-    }
-
-    // 셔플 후 원하는 수량만큼 뽑기
-    private List<Topic> getTopicsWithShuffle(List<Topic> topics, int quantity) {
-        Collections.shuffle(topics);
-        return topics.subList(0, quantity);
-    }
-
 
     /**
      * 채팅방 관리
@@ -720,22 +629,6 @@ public class MatchingService {
         return DeleteMatchingDto.builder()
                 .codeAndMessage(SUCCESS)
                 .build();
-    }
-
-    /**
-     * 매칭 취소하기
-     */
-    @Transactional
-    public void cancelMatching(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new BlindCafeException(NO_USER));
-
-        UserMatching userMatching = user.getUserMatchings().stream()
-                .filter(um -> um.getStatus().equals(WAIT))
-                .findFirst()
-                .orElseThrow(() -> new BlindCafeException(NO_REQUEST_MATCHING));
-
-        userMatching.setStatus(CANCEL_REQUEST);
     }
 
     /**

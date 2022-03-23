@@ -26,6 +26,16 @@ public class MatchingController {
         return ResponseEntity.ok().build();
     }
 
+    /**
+     * 매칭 취소하기
+     */
+    @PostMapping("/cancel")
+    public ResponseEntity<Void> cancelMatching(@RequestHeader(value = UID) String uid) {
+        log.info("POST /api/matching/cancel");
+        matchingService.cancelMatching(Long.parseLong(uid));
+        return ResponseEntity.ok().build();
+    }
+
 
 
 
@@ -169,18 +179,6 @@ public class MatchingController {
     ) {
         log.info("POST /api/matching/{}/log", matchingId);
         matchingService.createRoomLog(getUserId(authentication), matchingId);
-        return ResponseEntity.ok().build();
-    }
-
-    /**
-     * 매칭 취소하기
-     * Todo
-     * matching이랑 room 분리하기 uri에 행위(cancel) 들어가는 건 별로
-     */
-    @PostMapping("cancel")
-    public ResponseEntity<Void> cancelMatching(Authentication authentication) {
-        log.info("POST /api/matching/cancel");
-        matchingService.cancelMatching(getUserId(authentication));
         return ResponseEntity.ok().build();
     }
 }

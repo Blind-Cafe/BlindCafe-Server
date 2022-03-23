@@ -33,6 +33,7 @@ public enum CodeAndMessage {
     REQUEST_EXPIRED("1033", "요청 대기 시간 초과로 인해 요청이 취소되었습니다."),
     ALREADY_MATCHING_REQUEST("1034", "이미 매칭 요청 중입니다."),
     LACK_OF_TICKET("1035", "매칭권이 부족합니다."),
+    EMPTY_MATCHING_REQUEST("1100", "현재 요청하고 있는 매칭이 없습니다."),
 
     INVALID_ADDRESS("1040", "유효한 주소가 아닙니다."),
 
@@ -48,7 +49,7 @@ public enum CodeAndMessage {
 
     INVALID_PROFILE_IMAGE_SEQUENCE("1090", "유효하지 않은 우선순위입니다."),
 
-    EMPTY_REQUEST_MATCHING("1100", "현재 요청하고 있는 매칭이 없습니다."),
+
 
     NOT_YET_EXCHANGE_PROFILE("1110", "프로필 교환을 할 수 있는 매칭이 아닙니다."),
 

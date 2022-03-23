@@ -218,6 +218,11 @@ public class User extends BaseTimeEntity {
         this.ticket.consume();
     }
 
+    // 티켓 복구
+    public void restoreTicket() {
+        this.ticket.restore();
+    }
+
     // 매칭 히스토리 업데이트
     public void updateMatchingHistory(Long partnerId) {
         this.matchingHistory.update(partnerId);

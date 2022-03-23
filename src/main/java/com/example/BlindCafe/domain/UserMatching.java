@@ -51,4 +51,9 @@ public class UserMatching extends BaseTimeEntity {
         userMatching.setStatus(MatchingStatus.WAIT);
         return userMatching;
     }
+
+    public void cancel() {
+        this.status = MatchingStatus.CANCEL_REQUEST;
+        this.user.restoreTicket();
+    }
 }

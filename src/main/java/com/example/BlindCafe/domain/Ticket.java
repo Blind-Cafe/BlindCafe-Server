@@ -49,4 +49,9 @@ public class Ticket {
             throw new BlindCafeException(LACK_OF_TICKET);
         this.count -= 1;
     }
+
+    public void restore() {
+        if (this.count < 3)
+            this.count += 1;
+    }
 }
