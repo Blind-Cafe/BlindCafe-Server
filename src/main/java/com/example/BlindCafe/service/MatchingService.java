@@ -28,6 +28,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import static com.example.BlindCafe.exception.CodeAndMessage.*;
@@ -44,14 +45,27 @@ import static java.util.Comparator.comparing;
 @RequiredArgsConstructor
 public class MatchingService {
 
+    private final MatchingRepository matchingRepository;
+    private final UserMatchingRepository userMatchingRepository;
+    private final MatchingHistoryRepository matchingHistoryRepository;
+
+    private static final int TOPIC_COMMON_QUANTITY = 10;
+    private static final int TOPIC_OTHER_QUANTITY = 2;
+    private static final int TOPIC_DIFF_QUANTITY = 6;
+    private static final int TOPIC_IMAGE_QUANTITY = 5;
+    private static final int TOPIC_AUDIO_QUANTITY = 4;
+
+    private static final Long PUBLIC_INTEREST_ID = 0L;
+
+
+
     private final FirebaseService firebaseService;
     private final FirebaseCloudMessageService fcmService;
     private final TopicServeService topicServeService;
 
     private final UserRepository userRepository;
-    private final ProfileImageRepository profileImageRepository;
-    private final UserMatchingRepository userMatchingRepository;
-    private final MatchingRepository matchingRepository;
+
+
     private final DrinkRepository drinkRepository;
     private final ReasonRepository reasonRepository;
     private final TopicRepository topicRepository;
@@ -62,41 +76,225 @@ public class MatchingService {
     private final static Long MAX_WAIT_TIME = 24L;
     private final static int BASIC_CHAT_DAYS = 3;
     private final static int EXTEND_CHAT_DAYS = 7;
-    private final static Long PUBLIC_INTEREST_ID = 0L;
+
     private final static Long MAX_INTEREST_ID = 9L;
     public final static Long SUBJECT_LIMIT = 1000L;
     public final static Long AUDIO_LIMIT = 2000L;
-    private final static String DEFAULT_PROFILE_IMAGE = "https://dpb9ox8h2ie20.cloudfront.net/users/profiles/0/profile_default.png";
 
     ExecutorService executor = Executors.newFixedThreadPool(30);
 
     /**
-     * 매칭권 생성
+     * 매칭 요청
      */
+    // 매칭 요청하기
     @Transactional
-    public void createTickets(Long userId) {
-        Ticket newTicket = Ticket.create(userId);
-        ticketRepository.save(newTicket);
+    public void createMatching(Long userId) {
+        
+        // 매칭 요청 중인 경우 핸들링
+        if (isMatchingRequest(userId))
+            throw new BlindCafeException(ALREADY_MATCHING_REQUEST);
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BlindCafeException(EMPTY_USER));
+
+        // 사용자 관심사 조회
+        List<Long> interests = user.getMainInterests().stream()
+                .map(Interest::getId)
+                .collect(Collectors.toList());
+
+        // 매칭 요청 만들기
+        UserMatching myMatching = UserMatching.create(user, interests);
+
+        // 사용자 매칭 히스토리 조회
+        List<Long> partners = matchingHistoryRepository.findByUserId(userId).getMatchingPartners();
+
+        // 매칭 풀에서 매칭 전적이 없는 사용자들의 매칭 요청 조회
+        List<UserMatching> ableMatchingRequests = userMatchingRepository.findAbleMatchingRequests(partners);
+
+        // 매칭 요청 풀에 매칭 가능한 요청이 없는 경우 매칭 요청 풀에 저장
+        if (ableMatchingRequests.size() == 0) {
+            userMatchingRepository.save(myMatching);
+            return;
+        }
+
+        // 관심사가 일치하는 요청있는지 확인
+        UserMatching matchingCandidate = ableMatchingRequests.stream()
+                .filter(um -> isContainInterest(interests, um.getInterests()) != 0L)
+                .findFirst().orElse(null);
+
+        // 관심사가 일치하는 요청이 없는 경우 매칭 요청 풀에서 랜덤으로 배정
+        if (Objects.isNull(matchingCandidate)) {
+            Random random = new Random();
+            matchingCandidate = ableMatchingRequests.get(random.nextInt(ableMatchingRequests.size()));
+        }
+
+        List<UserMatching> userMatchings = new ArrayList<>();
+        userMatchings.add(myMatching);
+        userMatchings.add(matchingCandidate);
+
+        String partnerInterest = matchingCandidate.getInterests();
+        Interest similarInterest = user.getMainInterests().stream()
+                .filter(i -> i.getId().equals(isContainInterest(interests, partnerInterest)))
+                .findAny().orElse(null);
+
+        // 토픽 생성
+        MatchingTopic topic;
+        if (similarInterest != null) {
+            // 공통 관심사가 있는 경우
+            topic = makeTopic(similarInterest.getId());
+        } else {
+            // 관심사가 다른 경우
+            Long partnerFirstInterestId = Long.parseLong(partnerInterest.split(",")[0]);
+            topic = makeTopic(interests.get(0), partnerFirstInterestId);
+        }
+
+        // 매칭 생성
+        Matching matching = Matching.create(userMatchings, similarInterest, topic);
+        matchingRepository.save(matching);
+
+        // TODO 접속 유무에 따라 메시지 퍼블리싱 또는 FCM 전송
+    }
+
+    // 관심사가 일치하는 요청있는지 확인
+    private Long isContainInterest(List<Long> myInterest, String partnerInterest) {
+        String[] split = partnerInterest.split(",");
+        for (Long interestId : myInterest) {
+            for (String s : split)
+                if (interestId.toString().equals(s)) return interestId;
+        }
+        return 0L;
     }
 
     /**
-     * 현재 가지고 있는 매칭권 수 조회
+     * 토픽 생성
      */
+    // 관심사 기반으로 토픽 생성 - 공통 관심사
+    // 일상 질문 10개, 공통관심사 10개, 그 외 관심사 각 2개, 이미지 5개, 오디오 4개
+    private MatchingTopic makeTopic(Long interestId) {
+        List<Topic> topics = new ArrayList<>();
+        // 일상 질문
+        topics.addAll(getTopicByInterest(PUBLIC_INTEREST_ID, TOPIC_COMMON_QUANTITY));
+        // 공통 관심사
+        topics.addAll(getTopicByInterest(interestId, TOPIC_COMMON_QUANTITY));
+        // 그 외 관심사
+        List<Long> ids = new ArrayList<>();
+        ids.add(interestId);
+        topics.addAll(getTopicByInterestNotIn(ids, TOPIC_OTHER_QUANTITY));
+        // 이미지
+        topics.addAll(getImageTopic(TOPIC_IMAGE_QUANTITY));
+        // 오디오
+        topics.addAll(getAudioTopic(TOPIC_AUDIO_QUANTITY));
+        return MatchingTopic.create(topics);
+    }
+
+    // 관심사 기반으로 토픽 생성 - 관심사가 다른 경우
+    // 일상 질문 10개, 각자 관심사 6개, 그 외 관심사 각 2개, 이미지 5개, 오디오 4개
+    private MatchingTopic makeTopic(Long interestId1, Long interestId2) {
+        List<Topic> topics = new ArrayList<>();
+        // 일상 질문
+        topics.addAll(getTopicByInterest(PUBLIC_INTEREST_ID, TOPIC_COMMON_QUANTITY));
+        // 각자 관심사
+        topics.addAll(getTopicByInterest(interestId1, TOPIC_DIFF_QUANTITY));
+        topics.addAll(getTopicByInterest(interestId2, TOPIC_DIFF_QUANTITY));
+        // 그 외 관심사
+        List<Long> ids = new ArrayList<>();
+        ids.add(interestId1);
+        ids.add(interestId2);
+        topics.addAll(getTopicByInterestNotIn(ids, TOPIC_OTHER_QUANTITY));
+        // 이미지
+        topics.addAll(getImageTopic(TOPIC_IMAGE_QUANTITY));
+        // 오디오
+        topics.addAll(getAudioTopic(TOPIC_AUDIO_QUANTITY));
+        return MatchingTopic.create(topics);
+    }
+
+    // 토픽 가져온 후 섞어서 뽑기
+    private List<Topic> getTopicByInterest(Long interestId, int quantity) {
+        return getTopicsWithShuffle(topicRepository.findSubjectByInterestId(interestId), quantity);
+    }
+
+    // 나머지 관심사에서 섞어서 뽑기
+    private List<Topic> getTopicByInterestNotIn(List<Long> ids, int quantity) {
+        List<Topic> topics = new ArrayList<>();
+        Map<Long, List<Topic>> topicMap = new HashMap<>();
+
+        List<Topic> findTopics = topicRepository.findSubjectByInterestIdNotIN(ids);
+        // 관심사 id 기준으로 map에 저장
+        findTopics.forEach(ft -> {
+            List<Topic> tempTopicList = topicMap.getOrDefault(ft.getId(), new ArrayList<>());
+            tempTopicList.add(ft);
+            topicMap.put(ft.getId(), tempTopicList);
+        });
+
+        // 관심사 id 기준으로 섞어서 입력받은 수만큼 추출
+        topicMap.keySet().forEach(key -> {
+            topics.addAll(getTopicsWithShuffle(topicMap.get(key), quantity));
+        });
+
+        return topics;
+    }
+
+    // 이미지 토픽 가져오기
+    private List<Topic> getImageTopic(int quantity) {
+        return getTopicsWithShuffle(topicRepository.findImages(), quantity);
+    }
+
+    // 오디오 토픽 가져오기
+    private List<Topic> getAudioTopic(int quantity) {
+        return getTopicsWithShuffle(topicRepository.findAudios(), quantity);
+    }
+
+    // 셔플 후 원하는 수량만큼 뽑기
+    private List<Topic> getTopicsWithShuffle(List<Topic> topics, int quantity) {
+        Collections.shuffle(topics);
+        return topics.subList(0, quantity);
+    }
+
+
+    /**
+     * 채팅방 관리
+     */
+
+    /**
+     * 채팅방 내 기능 관련
+     */
+
+
+    /**
+     * 매칭권 관련
+     */
+    // 매칭권 생성
+    @Transactional
+    public void createTickets(User user) {
+        Ticket newTicket = Ticket.create(user);
+        ticketRepository.save(newTicket);
+    }
+
+    // 현재 가지고 있는 매칭권 수 조회
     public int getTicketCount(Long userId) {
         Ticket ticket = ticketRepository.findByUserId(userId)
                 .orElseThrow(() -> new BlindCafeException(EMPTY_USER));
         return ticket.getCount();
     }
 
-    /**
-     * 현재 요청 중인 매칭이 있는지 조회
-     */
+    // 현재 요청 중인 매칭이 있는지 조회
     public boolean isMatchingRequest(Long userId) {
         Optional<UserMatching> matchingRequest =
                 userMatchingRepository.findMatchingRequestByUserId(userId);
         if (Objects.isNull(matchingRequest)) return false;
         else return true;
     }
+
+    // 매칭 히스토리 테이블 만들기
+    public void createMatchingHistory(User user) {
+        MatchingHistory matchingHistory = MatchingHistory.create(user);
+        matchingHistoryRepository.save(matchingHistory);
+    }
+
+
+
+
+
 
     /**
      * 내 테이블 조회 - 프로필 교환을 완료한 상대방 목록 조회
@@ -273,170 +471,7 @@ public class MatchingService {
         matching.setStatus(PROFILE_EXCHANGE);
     }
 
-    /**
-     * 매칭 요청
-     */
-    @Transactional
-    public CreateMatchingDto.Response createMatching(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new BlindCafeException(NO_USER));
 
-        if (user.getStatus().equals(UserStatus.NOT_REQUIRED_INFO))
-            throw new BlindCafeException(NOT_REQUIRED_INFO_FOR_MATCHING);
-
-        List<UserMatching> userMatchings = user.getUserMatchings().stream()
-                .filter(userMatching -> userMatching.getStatus().equals(WAIT) || userMatching.getStatus().equals(FOUND))
-                .collect(Collectors.toList());
-
-        if (userMatchings.size() > 0) {
-            throw new BlindCafeException(DUPLICATED_MATCHING_REQUEST);
-        }
-
-        UserMatching partnerMatching = searchAbleMatching(user);
-
-        UserMatching userMatching = UserMatching.builder()
-                .user(user)
-                .status(WAIT)
-                .build();
-
-        if (partnerMatching != null) {
-
-            User partner = partnerMatching.getUser();
-
-            // 매칭 상대를 찾은 경우
-            userMatching.setStatus(FOUND);
-            partnerMatching.setStatus(FOUND);
-
-            Interest commonInterest = getCommonInterest(
-                    partnerMatching,
-                    getUserInterestSortedByPriority(user)
-            );
-
-            Push push = new Push();
-
-            Matching matching = Matching.builder()
-                    .interest(commonInterest)
-                    .isContinuous(false)
-                    .startTime(LocalDateTime.now())
-                    .push(push)
-                    .status(MATCHING_NOT_START)
-                    .build();
-
-            // 토픽 생성, 확실하게 결정 나면 수정
-            // subject 36개, image 5개, audio 4개
-            List<MatchingTopic> matchingTopics = makeMatchingTopics(matching);
-
-            matching.setTopics(matchingTopics);
-
-            matching = matchingRepository.save(matching);
-
-            userMatching.setMatching(matching);
-            partnerMatching.setMatching(matching);
-            userMatchingRepository.save(userMatching);
-
-            // FCM
-            fcmService.sendMessageTo(
-                    user.getDeviceId(),
-                    FcmMessage.MATCHING.getTitle(),
-                    FcmMessage.MATCHING.getBody(),
-                    FcmMessage.MATCHING.getPath(),
-                    FcmMessage.MATCHING.getType(),
-                    0L,
-                    null
-            );
-            fcmService.sendMessageTo(
-                    partner.getDeviceId(),
-                    FcmMessage.MATCHING.getTitle(),
-                    FcmMessage.MATCHING.getBody(),
-                    FcmMessage.MATCHING.getPath(),
-                    FcmMessage.MATCHING.getType(),
-                    0L,
-                    null
-            );
-
-            matching.getPush().setPush_matching(true);
-
-            // 메세지 db에 저장
-            User admin = userRepository.findById(0L).orElseThrow(() -> new BlindCafeException(NO_USER));
-            Message message = new Message();
-            message.setMatching(matching);
-            message.setUser(admin);
-            message.setContents(getFirstDescription(user, partner, matching.getInterest()));
-            message.setType(MessageType.DESCRIPTION);
-            Message savedMessage = messageRepository.save(message);
-
-            // 메세지 firestore 저장
-            LocalDateTime ldt = savedMessage.getCreatedAt();
-            Timestamp timestamp = Timestamp.valueOf(ldt);
-
-            FirestoreDto firestoreDto = FirestoreDto.builder()
-                    .roomId(matching.getId())
-                    .targetToken(partner.getDeviceId())
-                    .message(new FirestoreDto.FirestoreMessage(
-                            Long.toString(savedMessage.getId()),
-                            Long.toString(admin.getId()),
-                            admin.getNickname(),
-                            savedMessage.getContents(),
-                            MessageType.DESCRIPTION.getFirestoreType(),
-                            timestamp
-                    ))
-                    .build();
-            firebaseService.insertMessage(firestoreDto);
-
-            return CreateMatchingDto.Response.matchingBuilder()
-                    .matchingStatus(userMatching.getStatus())
-                    .matchingId(matching.getId())
-                    .partnerId(partner.getId())
-                    .partnerNickname(partner.getNickname())
-                    .build();
-        } else {
-            userMatchingRepository.save(userMatching);
-            return CreateMatchingDto.Response.noneMatchingBuilder()
-                    .matchingStatus(userMatching.getStatus())
-                    .build();
-        }
-    }
-
-    private List<MatchingTopic> makeMatchingTopics(Matching matching) {
-        Long interestId = matching.getInterest().getId();
-        List<Topic> topics = new ArrayList<>();
-        List<MatchingTopic> matchingTopics = new ArrayList<>();
-
-        // 공통 질문
-        topics.addAll(getTopicsWithShuffle(
-                topicRepository.findByInterestId(PUBLIC_INTEREST_ID), 10));
-        // 공통 관심사 질문
-        topics.addAll(getTopicsWithShuffle(
-                topicRepository.findByInterestId(interestId), 10));
-        // 그 외 관심사 질문
-        for (Long i = 1L; i<=MAX_INTEREST_ID; i++) {
-            if (i != interestId)
-                topics.addAll(getTopicsWithShuffle(
-                        topicRepository.findByInterestId(i), 2));
-        }
-        // 이미지 5개
-        topics.addAll(getTopicsWithShuffle(
-                topicRepository.findImages(), 5));
-        // 오디오 4개
-        topics.addAll(getTopicsWithShuffle(
-                topicRepository.findAudios(), 4));
-        Collections.shuffle(topics);
-
-        for (int index=0; index<topics.size(); index++) {
-            matchingTopics.add(MatchingTopic.builder()
-                    .matching(matching)
-                    .topic(topics.get(index))
-                    .sequence(index)
-                    .status(TopicStatus.WAIT)
-                    .build());
-        }
-        return matchingTopics;
-    }
-
-    private List<Topic> getTopicsWithShuffle(List<Topic> topics, int count) {
-        Collections.shuffle(topics);
-        return topics.subList(0, count);
-    }
 
     private String getFirstDescription(User user, User partner, Interest interest) {
         return user.getNickname() + "님과 " + partner.getNickname() + "님이 선택한 <" + interest.getName() + "> 테이블입니다.";

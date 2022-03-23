@@ -31,6 +31,8 @@ public enum CodeAndMessage {
     EMPTY_AUTHORIZATION_MATCHING("1031", "권한이 없는 매칭입니다."),
     INVALID_MATCHING("1032", "매칭 상태가 유효하지 않습니다."),
     REQUEST_EXPIRED("1033", "요청 대기 시간 초과로 인해 요청이 취소되었습니다."),
+    ALREADY_MATCHING_REQUEST("1034", "이미 매칭 요청 중입니다."),
+    LACK_OF_TICKET("1035", "매칭권이 부족합니다."),
 
     INVALID_ADDRESS("1040", "유효한 주소가 아닙니다."),
 

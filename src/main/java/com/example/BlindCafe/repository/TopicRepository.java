@@ -11,13 +11,12 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Todo
- * subject 지금 관심사 별로 가져오고 있는데 동적 쿼리로 수정하기
- */
 public interface TopicRepository extends JpaRepository<Topic, Long> {
-    @Query("select s from Subject s where s.interestId=:interestId")
-    List<Topic> findByInterestId(@Param("interestId") Long interestId);
+    @Query("SELECT s FROM Subject s WHERE s.interestId=:interestId")
+    List<Topic> findSubjectByInterestId(@Param("interestId") Long interestId);
+
+    @Query("SELECT s FROM Subject s WHERE s.interestId NOT IN ?1")
+    List<Topic> findSubjectByInterestIdNotIN(List<Long> ids);
 
     @Query(value = "SELECT * FROM topic WHERE dtype = 'I'", nativeQuery = true)
     List<Topic> findImages();

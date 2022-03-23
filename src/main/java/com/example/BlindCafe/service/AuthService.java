@@ -79,7 +79,9 @@ public class AuthService {
             Pair<String, String> tokens = getTokens(newUser);
 
             // 티켓(매칭권) 생성
-            matchingService.createTickets(newUser.getId());
+            matchingService.createTickets(newUser);
+            // 매칭 히스토리 테이블 생성
+            matchingService.createMatchingHistory(newUser);
 
             return Pair.of(
                     HttpStatus.CREATED,

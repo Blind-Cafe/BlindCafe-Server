@@ -1,17 +1,12 @@
 package com.example.BlindCafe.controller;
 
-import com.example.BlindCafe.dto.*;
-import com.example.BlindCafe.service.ChatService;
 import com.example.BlindCafe.service.MatchingService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import javax.validation.Valid;
-
-import static com.example.BlindCafe.config.SecurityConfig.getUserId;
+import static com.example.BlindCafe.config.jwt.JwtAuthorizationFilter.UID;
 
 @Slf4j
 @RestController
@@ -20,6 +15,23 @@ import static com.example.BlindCafe.config.SecurityConfig.getUserId;
 public class MatchingController {
 
     private final MatchingService matchingService;
+
+    /**
+     * 매칭 요청하기
+     */
+    @PostMapping
+    public ResponseEntity<Void> createMatching(@RequestHeader(value = UID) String uid) {
+        log.info("POST /api/matching");
+        matchingService.createMatching(Long.parseLong(uid));
+        return ResponseEntity.ok().build();
+    }
+
+
+
+
+
+
+
 
     /**
      * 내 테이블 조회 - 프로필 교환을 완료한 상대방 목록 조회
@@ -42,14 +54,7 @@ public class MatchingController {
         return ResponseEntity.ok(matchingService.getMatching(getUserId(authentication), matchingId));
     }
 
-    /**
-     * 매칭 요청하기
-     */
-    @PostMapping
-    public ResponseEntity<CreateMatchingDto.Response> createMatching(Authentication authentication) {
-        log.info("POST /api/matching");
-        return ResponseEntity.ok(matchingService.createMatching(getUserId(authentication)));
-    }
+
 
     /**
      * 채팅방 나가기

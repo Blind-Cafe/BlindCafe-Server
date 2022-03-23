@@ -6,6 +6,7 @@ import com.example.BlindCafe.domain.type.Gender;
 import com.example.BlindCafe.domain.type.Social;
 import com.example.BlindCafe.domain.type.status.CommonStatus;
 import com.example.BlindCafe.domain.type.status.UserStatus;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 
 import javax.persistence.*;
@@ -67,6 +68,14 @@ public class User extends BaseTimeEntity {
 
     @OneToMany(mappedBy = "reported", cascade = CascadeType.ALL)
     private List<Report> reported = new ArrayList<>();
+
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JoinColumn(name = "ticket_id")
+    private Ticket ticket;
+
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JoinColumn(name = "matching_history_id")
+    private MatchingHistory matchingHistory;
 
     @Embedded
     private Address address;
@@ -144,7 +153,7 @@ public class User extends BaseTimeEntity {
 
     // 메인 프로필 이미지 1장 가져오기
     public String getMainAvatar() {
-        return this.getAvatars().stream().findFirst().orElse(null).getSrc();
+        return Objects.requireNonNull(this.getAvatars().stream().findFirst().orElse(null)).getSrc();
     }
 
     // 모든 프로필 이미지 가져오기
@@ -167,9 +176,7 @@ public class User extends BaseTimeEntity {
         Optional<Avatar> deleteAvatar = this.getAvatars().stream()
                 .filter(a -> a.getSequence() == sequence)
                 .findAny();
-        if (deleteAvatar.isPresent()) {
-            deleteAvatar.get().remove();
-        }
+        deleteAvatar.ifPresent(Avatar::remove);
     }
 
     // 사용자 메인 관심사 가져오기
@@ -179,19 +186,10 @@ public class User extends BaseTimeEntity {
                 .filter(Interest::getIsMain)
                 .collect(Collectors.toList());
     }
-    
-    // 사용자 세부 관심사 가져오기
-    public List<Interest> getSubInterests(Long mainInterestId) {
-        return this.getInterests().stream()
-                .map(UserInterest::getInterest)
-                .filter(i -> !i.getIsMain())
-                .filter(i -> i.getMain().getId().equals(mainInterestId))
-                .collect(Collectors.toList());
-    }
 
     // 사용자 관심사 수정하기
     public void updateInterest(List<Interest> interests) {
-        this.getInterests().forEach(userInterest -> userInterest.remove());
+        this.getInterests().forEach(UserInterest::remove);
         interests.forEach(interest -> {
             UserInterest userInterest = UserInterest.create(this, interest);
             this.getInterests().add(userInterest);
@@ -213,5 +211,15 @@ public class User extends BaseTimeEntity {
     // 사용자 목소리 삭제하기
     public void deleteVoice() {
         this.setVoice(null);
+    }
+    
+    // 티켓 소비
+    public void consumeTicket() {
+        this.ticket.consume();
+    }
+
+    // 매칭 히스토리 업데이트
+    public void updateMatchingHistory(Long partnerId) {
+        this.matchingHistory.update(partnerId);
     }
 }

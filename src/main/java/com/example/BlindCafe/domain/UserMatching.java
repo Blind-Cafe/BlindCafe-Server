@@ -4,40 +4,51 @@ import com.example.BlindCafe.domain.type.status.MatchingStatus;
 import lombok.*;
 
 import javax.persistence.*;
-
-import static javax.persistence.EnumType.STRING;
-import static javax.persistence.FetchType.LAZY;
+import java.util.List;
 
 @Entity
+@Table(name = "user_matching")
 @Getter
 @Setter
-@Builder
-@AllArgsConstructor
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class UserMatching extends BaseTimeEntity {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_matching_id")
     private Long id;
 
-    @ManyToOne(fetch = LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
 
-    @ManyToOne(fetch = LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "matching_id")
     private Matching matching;
 
-    @ManyToOne(fetch = LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "drink_id")
     private Drink drink;
 
-    @OneToOne(fetch = LAZY)
-    @JoinColumn(name = "reason_id")
-    private Reason reason;
+    private String interests;
 
-    @Enumerated(STRING)
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private MatchingStatus status;
+
+    public static UserMatching create(User user, List<Long> interest) {
+        UserMatching userMatching = new UserMatching();
+        // 티켓 소비
+        user.consumeTicket();
+        userMatching.setUser(user);
+        StringBuilder sb = new StringBuilder();
+        for (int i=0; i<interest.size(); i++) {
+            sb.append(interest.get(i));
+            if (i != interest.size()-1)
+                sb.append(",");
+        }
+        userMatching.setInterests(sb.toString());
+        userMatching.setStatus(MatchingStatus.WAIT);
+        return userMatching;
+    }
 }
