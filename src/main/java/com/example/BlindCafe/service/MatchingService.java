@@ -5,6 +5,7 @@ import com.example.BlindCafe.domain.*;
 import com.example.BlindCafe.domain.topic.Audio;
 import com.example.BlindCafe.domain.topic.Image;
 import com.example.BlindCafe.domain.topic.Subject;
+import com.example.BlindCafe.dto.response.MatchingDetailResponse;
 import com.example.BlindCafe.dto.response.MatchingListResponse;
 import com.example.BlindCafe.exception.BlindCafeException;
 import com.example.BlindCafe.firebase.FirebaseCloudMessageService;
@@ -13,7 +14,6 @@ import com.example.BlindCafe.repository.*;
 import com.example.BlindCafe.domain.type.FcmMessage;
 import com.example.BlindCafe.domain.type.Gender;
 import com.example.BlindCafe.domain.type.MessageType;
-import com.example.BlindCafe.domain.type.status.CommonStatus;
 import com.example.BlindCafe.domain.type.status.MatchingStatus;
 import com.example.BlindCafe.domain.type.status.TopicStatus;
 import com.example.BlindCafe.domain.type.status.UserStatus;
@@ -32,7 +32,6 @@ import static com.example.BlindCafe.exception.CodeAndMessage.*;
 import static com.example.BlindCafe.domain.type.Gender.N;
 import static com.example.BlindCafe.domain.type.ReasonType.FOR_LEAVE_ROOM;
 import static com.example.BlindCafe.domain.type.ReasonType.FOR_WONT_EXCHANGE_PROFILE;
-import static com.example.BlindCafe.domain.type.status.CommonStatus.DELETED;
 import static com.example.BlindCafe.domain.type.status.CommonStatus.NORMAL;
 import static com.example.BlindCafe.domain.type.status.MatchingStatus.*;
 import static com.example.BlindCafe.service.TopicService.PUBLIC_INTEREST_ID;
@@ -220,80 +219,21 @@ public class MatchingService {
         return new MatchingListResponse(request, blind, bright);
     }
 
+    /**
+     * 채팅방 정보 조회
+     */
+    @Transactional
+    public MatchingDetailResponse getMatching(Long userId, Long matchingId) {
 
+        Matching matching = matchingRepository.findById(matchingId)
+                .orElseThrow(() -> new BlindCafeException(EMPTY_MATCHING));
 
-    private MatchingListDto.MatchingDto makeMatchingDto(Matching matching, User user, LocalDateTime now) {
-        Long restDay = ChronoUnit.DAYS.between(now, matching.getExpiryTime()) >= 0L ?
-                ChronoUnit.DAYS.between(now, matching.getExpiryTime()) : -1L;
-
-        String expiryTime = "";
-        if (matching.getStatus().equals(FAILED_EXPIRED)) {
-            expiryTime = "만료";
-        } else {
-            if (restDay > 0L) {
-                expiryTime = restDay + "일 남음";
-            } else if (restDay == 0L) {
-                Long restTime = ChronoUnit.HOURS.between(now, matching.getExpiryTime());
-                if (restTime < 0)
-                    expiryTime = "만료";
-                else
-                    expiryTime = restTime + "시간 남음";
-            } else {
-                expiryTime = "만료";
-            }
-        }
-
-        User partner = matching.getUserMatchings().stream()
-                .filter(userMatching -> !userMatching.getUser().equals(user))
-                .findAny()
-                .map(partnerMatching -> partnerMatching.getUser()).orElse(null);
-
-        RoomLog roomLog = roomLogRepository.findByUserAndMatching(user, matching).stream()
-                .sorted(Comparator.comparing(RoomLog::getLatestTime).reversed())
-                .findFirst().orElse(null);
-
-        Message latestMessage = messageRepository.findAllByMatching(matching).stream()
-                .filter(message -> message.getCreatedAt().isBefore(LocalDateTime.now()))
-                .filter(message -> isValidMessageType(message))
-                .sorted(Comparator.comparing(Message::getCreatedAt).reversed())
-                .findFirst().orElse(null);
-
-        if (Objects.isNull(partner))
-            return null;
-
-        if (!Objects.isNull(latestMessage)) {
-            boolean received = true;
-            if (Objects.isNull(roomLog) || latestMessage.getCreatedAt().isAfter(roomLog.getLatestTime()))
-                received = false;
-            String contents = "";
-            if (latestMessage.getType().equals(MessageType.TEXT)) {
-                contents = latestMessage.getContents();
-            } else if (latestMessage.getType().equals(MessageType.IMAGE)) {
-                contents = "사진이 전송되었습니다.";
-            } else if (latestMessage.getType().equals(MessageType.AUDIO)) {
-                contents = "음성메시지가 전송되었습니다.";
-            } else {
-                contents = "토픽이 전송되었습니다.";
-            }
-            return MatchingListDto.MatchingDto.builder()
-                    .matchingId(matching.getId())
-                    .partner(new MatchingListDto.Partner(partner))
-                    .latestMessage(contents)
-                    .received(received)
-                    .expiryTime(expiryTime)
-                    .time(latestMessage.getCreatedAt())
-                    .build();
-        } else {
-            return MatchingListDto.MatchingDto.builder()
-                    .matchingId(matching.getId())
-                    .partner(new MatchingListDto.Partner(partner))
-                    .latestMessage("")
-                    .received(true)
-                    .expiryTime(expiryTime)
-                    .time(LocalDateTime.MIN)
-                    .build();
-        }
+        return MatchingDetailResponse.fromEntity(matching, userId);
     }
+
+
+
+
 
     private boolean isValidMessageType(Message message) {
         MessageType messageType = message.getType();
@@ -343,125 +283,10 @@ public class MatchingService {
     }
 
 
-
-
-
-
-
-
-    /**
-     * 채팅방 정보 조회
-     */
-    @Transactional
-    public MatchingDetailDto getMatching(Long userId, Long matchingId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new BlindCafeException(NO_USER));
-
-        Matching matching = matchingRepository.findById(matchingId)
-                .orElseThrow(() -> new BlindCafeException(NO_MATCHING));
-        updateMatchingStatus(matching);
-
-        User partner = matching.getUserMatchings().stream()
-                .filter(um -> !um.getUser().equals(user))
-                .map(um -> um.getUser())
-                .findAny().orElseThrow(() -> new BlindCafeException(INVALID_MATCHING));
-
-        if (partner.getStatus().equals(UserStatus.RETIRED)) {
-            partner.setNickname("(알 수 없음)");
-            partner.getAvatars().forEach(profileImage -> profileImage.setStatus(DELETED));
-            Avatar newAvatar = Avatar.builder()
-                    .user(partner)
-                    .src(DEFAULT_PROFILE_IMAGE)
-                    .priority(1)
-                    .status(CommonStatus.NORMAL)
-                    .build();
-            profileImageRepository.save(newAvatar);
-            partner.getAvatars().add(newAvatar);
-        }
-
-        Avatar avatar = partner.getAvatars()
-                .stream().sorted(Comparator.comparing(Avatar::getPriority))
-                .filter(pi -> pi.getStatus().equals(NORMAL))
-                .findFirst()
-                .orElse(null);
-        String src = avatar != null ? avatar.getSrc() : null;
-
-        Drink drink = matching.getUserMatchings().stream()
-                .filter(um -> um.getUser().equals(partner))
-                .filter(um -> !Objects.isNull(um.getDrink()))
-                .map(UserMatching::getDrink)
-                .findAny()
-                .orElse(null);
-
-        LocalDateTime ldt = matching.getStartTime();
-        Timestamp timestamp = Timestamp.valueOf(ldt);
-        String startTime = String.valueOf(timestamp.getTime() / 1000);
-
-        return MatchingDetailDto.builder()
-                .matchingId(matching.getId())
-                .profileImage(src)
-                .nickname(partner.getNickname())
-                .drink(drink == null ? "미입력" : drink.getName())
-                .startTime(startTime)
-                .interest(matching.getInterest().getName())
-                .isContinuous(matching.getIsContinuous())
-                .build();
-    }
-
-    private void updateMatchingStatus(Matching matching) {
-        if (!matching.getStatus().equals(MATCHING))
-            return;
-        if (matching.getExpiryTime().isAfter(LocalDateTime.now()))
-            return;
-        List<UserMatching> userMatchings = matching.getUserMatchings();
-        for (UserMatching userMatching: userMatchings) {
-            userMatching.setStatus(PROFILE_OPEN);
-        }
-        matching.setStatus(PROFILE_EXCHANGE);
-    }
-
-
-
     private String getFirstDescription(User user, User partner, Interest interest) {
         return user.getNickname() + "님과 " + partner.getNickname() + "님이 선택한 <" + interest.getName() + "> 테이블입니다.";
     }
 
-    /**
-     * 매칭이 가능한 상대방이 있는지 확인
-     */
-    private UserMatching searchAbleMatching(User user) {
-        // 유저 관심사 확인
-        List<Interest> userInterests = getUserInterestSortedByPriority(user);
-
-        // 유저 관심사 설정이 잘못된 경우
-        if (userInterests.size() < 3)
-            throw new BlindCafeException(INVALID_INTEREST_SET);
-
-        // 이전 대화 상대 찾기
-        List<User> pastPartners = user.getUserMatchings().stream()
-                .filter(userMatching -> !Objects.isNull(userMatching.getMatching()))
-                .filter(userMatching ->
-                        !userMatching.getStatus().equals(WAIT) &&
-                        !userMatching.getStatus().equals(FOUND))
-                .map(UserMatching::getMatching)
-                .map(matching ->
-                        matching.getUserMatchings().stream()
-                                .filter(userMatching -> !userMatching.getUser().equals(user))
-                                .map(UserMatching::getUser)
-                                .findFirst()
-                                .orElse(null))
-                .collect(Collectors.toList());
-
-        LocalDateTime now = LocalDateTime.now();
-
-        return userMatchingRepository.findByStatus(WAIT)
-                .stream().sorted(comparing(UserMatching::getCreatedAt))
-                .filter(otherMatching -> isValidRequestTime(otherMatching, now))
-                .filter(otherMatching -> isValidGender(otherMatching, user))
-                .filter(otherMatching -> isContainInterest(otherMatching, userInterests))
-                .filter(otherMatching -> !isMatched(otherMatching, pastPartners))
-                .findFirst().orElse(null);
-    }
 
     /**
      * 유저의 관심사를 우선순위 순으로 정렬
@@ -1007,7 +832,7 @@ public class MatchingService {
     }
 
     @Transactional
-    public void rejectExchangeProfile(Long userId, Long matchingId, Long reasonNum) {
+    public void rejectExc`hangeProfile(Long userId, Long matchingId, Long reasonNum) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BlindCafeException(NO_USER));
 

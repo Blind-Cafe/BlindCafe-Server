@@ -46,6 +46,7 @@ public class MatchingListResponse {
                 info.setPartner(Partner.fromEntity(partner));
                 info.setBlind(!matching.getIsContinuous());
                 info.setExpiredDt(matching.getExpiredTime());
+                return info;
             }
             return null;
         }
@@ -53,22 +54,6 @@ public class MatchingListResponse {
         public void updateHistory(RoomHistory history) {
             this.latestMessage = history.getLatestMessage();
             this.received = history.isReceived();
-        }
-    }
-
-    @Setter
-    @NoArgsConstructor
-    public static class Partner {
-        private Long userId;
-        private String nickname;
-        private String avatar;
-
-        public static Partner fromEntity(User user) {
-            Partner partner = new Partner();
-            partner.setUserId(user.getId());
-            partner.setNickname(user.getNickname());
-            partner.setAvatar(user.getMainAvatar());
-            return partner;
         }
     }
 

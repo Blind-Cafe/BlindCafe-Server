@@ -1,5 +1,6 @@
 package com.example.BlindCafe.controller;
 
+import com.example.BlindCafe.dto.response.MatchingDetailResponse;
 import com.example.BlindCafe.dto.response.MatchingListResponse;
 import com.example.BlindCafe.service.MatchingService;
 import lombok.RequiredArgsConstructor;
@@ -46,25 +47,16 @@ public class MatchingController {
         return ResponseEntity.ok(matchingService.getMatchings(Long.parseLong(uid)));
     }
 
-
-
-
-
-
-
-
-
-
     /**
      * 채팅방 정보 조회
      */
-    @GetMapping("{matchingId}")
-    public ResponseEntity<MatchingDetailDto> getMatching(
-            Authentication authentication,
+    @GetMapping("/{matchingId}")
+    public ResponseEntity<MatchingDetailResponse> getMatching(
+            @RequestHeader(value = UID) String uid,
             @PathVariable Long matchingId
     )  {
         log.info("GET /api/matching/{}", matchingId);
-        return ResponseEntity.ok(matchingService.getMatching(getUserId(authentication), matchingId));
+        return ResponseEntity.ok(matchingService.getMatching(Long.parseLong(uid), matchingId));
     }
 
 

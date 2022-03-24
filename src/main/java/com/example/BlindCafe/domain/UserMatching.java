@@ -47,6 +47,7 @@ public class UserMatching extends BaseTimeEntity {
             if (i != interest.size()-1)
                 sb.append(",");
         }
+        userMatching.setDrink(null);
         userMatching.setInterests(sb.toString());
         userMatching.setStatus(MatchingStatus.WAIT);
         return userMatching;
