@@ -1,6 +1,6 @@
 package com.example.BlindCafe.service;
 
-import com.example.BlindCafe.dto.UserProfileResponse;
+import com.example.BlindCafe.dto.response.UserProfileResponse;
 import com.example.BlindCafe.dto.request.*;
 import com.example.BlindCafe.domain.*;
 import com.example.BlindCafe.domain.type.status.UserStatus;
@@ -32,6 +32,7 @@ public class UserService {
     private final RetiredUserRepository retiredUserRepository;
     private final InterestRepository interestRepository;
     private final ReasonRepository reasonRepository;
+    private final CustomReasonRepository customReasonRepository;
     private final SuggestionRepository suggestionRepository;
 
     private final AmazonS3Connector amazonS3Connector;
@@ -199,8 +200,14 @@ public class UserService {
         // 탈퇴한 사용자 생성
         RetiredUser retiredUser = RetiredUser.create(user, reason.getText());
         retiredUserRepository.save(retiredUser);
+
+        // 탈퇴 사유 저장
+        CustomReason customReason = CustomReason.create(user, reason);
+        customReasonRepository.save(customReason);
+        
         // 기존 사용자 삭제
         userRepository.delete(user);
+        
         return DeleteUserResponse.fromEntity(retiredUser);
     }
 
@@ -225,29 +232,12 @@ public class UserService {
         String content = request.getContent();
         Suggestion suggestion = Suggestion.create(user, content);
         suggestionRepository.save(suggestion);
+
         // 건의사항 첨부 이미지 저장
         String images = amazonS3Connector.uploadSuggestion(request.getImages(), suggestion.getId());
         suggestion.updateImage(images);
         
         // 관리자에게 건의사항 이메일로 전송하기
         mailUtil.sendMail(user.getNickname(), user.getPhone(), content, images);
-    }
-
-    /**
-     * 사용자 프로필 작성 여부 확인
-     */
-    public boolean isValidProfile(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new BlindCafeException(EMPTY_USER));
-
-        if (user.getMainAvatar() == null)
-            return false;
-        if (user.getAddress() == null)
-            return false;
-        if (user.getVoice() == null)
-            return false;
-        if (user.getMbti() == null)
-            return false;
-        return true;
     }
 }

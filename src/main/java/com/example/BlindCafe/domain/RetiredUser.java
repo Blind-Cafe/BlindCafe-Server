@@ -16,7 +16,6 @@ import javax.persistence.*;
 public class RetiredUser extends BaseTimeEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "retired_user_id")
     private Long id;
 
@@ -51,6 +50,7 @@ public class RetiredUser extends BaseTimeEntity {
 
     public static RetiredUser create(User user, String reason) {
         RetiredUser retiredUser = new RetiredUser();
+        retiredUser.setId(user.getId());
         retiredUser.setNickname(user.getNickname());
         retiredUser.setPhone(user.getPhone());
         retiredUser.setAge(user.getAge());

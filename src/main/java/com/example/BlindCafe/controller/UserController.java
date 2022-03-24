@@ -1,10 +1,10 @@
 package com.example.BlindCafe.controller;
 
-import com.example.BlindCafe.dto.*;
 import com.example.BlindCafe.dto.request.*;
 import com.example.BlindCafe.dto.response.AvatarListResponse;
 import com.example.BlindCafe.dto.response.DeleteUserResponse;
 import com.example.BlindCafe.dto.response.UserDetailResponse;
+import com.example.BlindCafe.dto.response.UserProfileResponse;
 import com.example.BlindCafe.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
