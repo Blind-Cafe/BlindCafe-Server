@@ -63,4 +63,9 @@ public class UserMatching extends BaseTimeEntity {
         this.status = MatchingStatus.CANCEL_REQUEST;
         this.user.restoreTicket();
     }
+
+    // 음료수 선택
+    public void selectDrink(Drink drink) {
+        this.drink = drink;
+    }
 }

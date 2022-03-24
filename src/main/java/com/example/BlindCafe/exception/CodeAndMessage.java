@@ -24,11 +24,12 @@ public enum CodeAndMessage {
     INVALID_SUB_INTEREST("1012", "세부 관심사가 유효하지 않습니다."),
 
     EMPTY_DRINK("1020", "해당되는 음료가 없습니다."),
+    ALREADY_SELECT_DRINK("1023", "이미 음료를 선택했습니다."),
     INVALID_INTEREST_SET("1021", "관심사 설정이 부족합니다."),
     PAST_PARTNER_SEARCH_ERROR("1022", "이전 대화 상대 조회 중 오류가 발생했습니다."),
 
     EMPTY_MATCHING("1030", "해당되는 매칭이 없습니다."),
-    EMPTY_AUTHORIZATION_MATCHING("1031", "권한이 없는 매칭입니다."),
+    NON_AUTHORIZATION_MATCHING("1031", "권한이 없는 매칭입니다."),
     INVALID_MATCHING("1032", "매칭 상태가 유효하지 않습니다."),
     REQUEST_EXPIRED("1033", "요청 대기 시간 초과로 인해 요청이 취소되었습니다."),
     ALREADY_MATCHING_REQUEST("1034", "이미 매칭 요청 중입니다."),

@@ -1,5 +1,6 @@
 package com.example.BlindCafe.controller;
 
+import com.example.BlindCafe.dto.request.SelectDrinkRequest;
 import com.example.BlindCafe.dto.response.MatchingDetailResponse;
 import com.example.BlindCafe.dto.response.MatchingListResponse;
 import com.example.BlindCafe.service.MatchingService;
@@ -7,6 +8,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import javax.validation.Valid;
 
 import static com.example.BlindCafe.config.jwt.JwtAuthorizationFilter.UID;
 
@@ -59,6 +62,22 @@ public class MatchingController {
         return ResponseEntity.ok(matchingService.getMatching(Long.parseLong(uid), matchingId));
     }
 
+    /**
+     * 음료수 선택하기
+     */
+    @PostMapping("/drink")
+    public ResponseEntity<Void> selectDrink(
+            @RequestHeader(value = UID) String uid,
+            @Valid @RequestBody SelectDrinkRequest request
+    ) {
+        log.info("POST /api/matching/drink");
+        matchingService.selectDrink(Long.parseLong(uid), request);
+        return ResponseEntity.ok().build();
+    }
+
+
+
+
 
 
     /**
@@ -72,19 +91,6 @@ public class MatchingController {
     ) {
         log.info("DELETE /api/matching/{}", matchingId);
         return ResponseEntity.ok(matchingService.deleteMatching(getUserId(authentication), matchingId, reasonNum));
-    }
-
-    /**
-     * 음료수 설정하기
-     */
-    @PostMapping("{matchingId}/drink")
-    public ResponseEntity<DrinkDto.Response> setDrink(
-            Authentication authentication,
-            @PathVariable Long matchingId,
-            @Valid @RequestBody DrinkDto.Request request
-    ) {
-        log.info("POST /api/matching/{}/drink", matchingId);
-        return ResponseEntity.ok(matchingService.setDrink(getUserId(authentication), matchingId, request));
     }
 
     /**

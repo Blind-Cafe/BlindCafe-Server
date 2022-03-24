@@ -5,6 +5,7 @@ import com.example.BlindCafe.domain.*;
 import com.example.BlindCafe.domain.topic.Audio;
 import com.example.BlindCafe.domain.topic.Image;
 import com.example.BlindCafe.domain.topic.Subject;
+import com.example.BlindCafe.dto.request.SelectDrinkRequest;
 import com.example.BlindCafe.dto.response.MatchingDetailResponse;
 import com.example.BlindCafe.dto.response.MatchingListResponse;
 import com.example.BlindCafe.exception.BlindCafeException;
@@ -48,6 +49,7 @@ public class MatchingService {
     private final UserMatchingRepository userMatchingRepository;
     private final MatchingHistoryRepository matchingHistoryRepository;
     private final TicketRepository ticketRepository;
+    private final DrinkRepository drinkRepository;
 
     private final MessageRepository messageRepository;
     private final RoomLogRepository roomLogRepository;
@@ -63,7 +65,7 @@ public class MatchingService {
     private final UserRepository userRepository;
 
 
-    private final DrinkRepository drinkRepository;
+
     private final ReasonRepository reasonRepository;
 
 
@@ -231,24 +233,32 @@ public class MatchingService {
         return MatchingDetailResponse.fromEntity(matching, userId);
     }
 
+    /**
+     * 음료수 선택하기
+     */
+    @Transactional
+    public void selectDrink(Long userId, SelectDrinkRequest request) {
 
+        Matching matching = matchingRepository.findById(request.getMatchingId())
+                .orElseThrow(() -> new BlindCafeException(EMPTY_MATCHING));
 
+        UserMatching userMatching = matching.getUserMatchings().stream()
+                .filter(um -> um.getUser().getId().equals(userId))
+                .findAny().orElseThrow(() -> new BlindCafeException(NON_AUTHORIZATION_MATCHING));
 
+        // 음료를 이미 선택한 경우
+        if (userMatching.getDrink() != null)
+            throw new BlindCafeException(ALREADY_SELECT_DRINK);
 
-    private boolean isValidMessageType(Message message) {
-        MessageType messageType = message.getType();
-        if (messageType.equals(MessageType.DESCRIPTION) ||
-                messageType.equals(MessageType.DRINK)) {
-            return false;
-        }
-        else
-            return true;
+        Drink drink = drinkRepository.findById(request.getDrink())
+                .orElseThrow(() -> new BlindCafeException(EMPTY_DRINK));
+
+        // 음료 선택
+        userMatching.selectDrink(drink);
+
+        // TODO 음료 선택 메시지 publish
     }
 
-
-    /**
-     * 채팅방 내 기능 관련
-     */
 
 
     /**
@@ -365,96 +375,6 @@ public class MatchingService {
 
     private boolean isMatched(UserMatching userMatching, List<User> pastPartners) {
         return pastPartners.contains(userMatching.getUser());
-    }
-
-
-    /**
-     * 매칭에 대한 음료수 선택하기
-     */
-    @Transactional
-    public DrinkDto.Response setDrink(Long userId, Long matchingId, DrinkDto.Request request) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new BlindCafeException(NO_USER));
-
-        Drink drink = drinkRepository.findById(request.getDrink())
-                .orElseThrow(() -> new BlindCafeException(NO_DRINK));
-
-        Matching matching = matchingRepository.findById(matchingId)
-                .orElseThrow(() -> new BlindCafeException(NO_MATCHING));
-
-        User partner = matching.getUserMatchings().stream()
-                .filter(um -> !um.getUser().equals(user))
-                .map(um -> um.getUser() )
-                .findAny()
-                .orElseThrow(() -> new BlindCafeException(INVALID_MATCHING));
-
-        UserMatching userMatching = matching.getUserMatchings()
-                .stream()
-                .filter(m -> m.getUser().getId().equals(user.getId()))
-                .findAny()
-                .orElseThrow(() -> new BlindCafeException(NO_AUTHORIZATION_MATCHING));
-
-        userMatching.setDrink(drink);
-        userMatching.setStatus(MATCHING);
-
-        // 메세지 db에 저장
-        User admin = userRepository.findById(0L).orElseThrow(() -> new BlindCafeException(NO_USER));
-        Message message = new Message();
-        message.setMatching(matching);
-        message.setUser(admin);
-        message.setContents(getDrinkDescription(user, drink));
-        message.setType(MessageType.DESCRIPTION);
-        Message savedMessage = messageRepository.save(message);
-
-        // 메세지 firestore 저장
-        LocalDateTime ldt = savedMessage.getCreatedAt();
-        Timestamp timestamp = Timestamp.valueOf(ldt);
-
-        FirestoreDto firestoreDto = FirestoreDto.builder()
-                .roomId(matching.getId())
-                .targetToken(partner.getDeviceId())
-                .message(new FirestoreDto.FirestoreMessage(
-                        Long.toString(savedMessage.getId()),
-                        Long.toString(admin.getId()),
-                        admin.getNickname(),
-                        savedMessage.getContents(),
-                        MessageType.DESCRIPTION.getFirestoreType(),
-                        timestamp
-                ))
-                .build();
-        firebaseService.insertMessage(firestoreDto);
-
-        if (!matching.getStatus().equals(MATCHING)) {
-            LocalDateTime now = LocalDateTime.now();
-            matching.setStatus(MATCHING);
-            matching.setStartTime(now);
-            matching.setExpiryTime(now.plusDays(BASIC_CHAT_DAYS));
-
-            // fcm
-            fcmService.sendMessageTo(
-                    partner.getDeviceId(),
-                    FcmMessage.MATCHING_OPEN.getTitle(),
-                    FcmMessage.MATCHING_OPEN.getBody(),
-                    FcmMessage.MATCHING_OPEN.getPath(),
-                    FcmMessage.MATCHING_OPEN.getType(),
-                    matchingId,
-                    null
-            );
-            matching.getPush().setPush_matching_open(true);
-        }
-
-        // 첫 번째 토픽
-        topicServeService.serveFirstTopic(matchingId);
-
-        // userMatchingRepository.save(userMatching);
-        // matchingRepository.save(matching);
-
-        String startTime = String.valueOf(timestamp.getTime() / 1000);
-
-        return DrinkDto.Response.builder()
-                .codeAndMessage(SUCCESS)
-                .startTime(startTime)
-                .build();
     }
 
     private String getDrinkDescription(User user, Drink drink) {
