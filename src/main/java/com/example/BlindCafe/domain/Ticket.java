@@ -2,29 +2,39 @@ package com.example.BlindCafe.domain;
 
 import com.example.BlindCafe.exception.BlindCafeException;
 import com.example.BlindCafe.exception.CodeAndMessage;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 
 import javax.persistence.*;
+
+import static com.example.BlindCafe.exception.CodeAndMessage.LACK_OF_TICKET;
 
 @Entity
 @Table(name = "ticket")
 @Getter
 @Setter
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Ticket {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "ticket_id")
     private Long id;
 
-    private Long userId;
+    @JsonIgnore
+    @OneToOne(mappedBy = "ticket", fetch = FetchType.LAZY)
+    private User user;
 
     private int count;
 
-    public static Ticket create(Long userId) {
+    public void setUser(User user) {
+        this.user = user;
+        user.setTicket(this);
+    }
+
+    public static Ticket create(User user) {
         Ticket ticket = new Ticket();
-        ticket.setUserId(userId);
+        ticket.setUser(user);
         ticket.setCount(0);
         ticket.init();
         return ticket;
@@ -34,10 +44,14 @@ public class Ticket {
         this.setCount(3);
     }
 
-    // TODO 에러 타입 정하기
-    public void match() {
+    public void consume() {
         if (this.count == 0)
-            throw new BlindCafeException(CodeAndMessage.INTERNAL_SERVER_ERROR);
+            throw new BlindCafeException(LACK_OF_TICKET);
         this.count -= 1;
+    }
+
+    public void restore() {
+        if (this.count < 3)
+            this.count += 1;
     }
 }

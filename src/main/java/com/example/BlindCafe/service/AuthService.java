@@ -59,6 +59,9 @@ public class AuthService {
     private final String KAKAO_AUTH = "https://kapi.kakao.com/v2/user/me";
     private final String APPLE_AUTH = "https://appleid.apple.com/auth/keys";
 
+    /**
+     * 로그인
+     */
     @Transactional
     public Pair<HttpStatus, LoginResponse> login(LoginRequest request) {
 
@@ -76,7 +79,9 @@ public class AuthService {
             Pair<String, String> tokens = getTokens(newUser);
 
             // 티켓(매칭권) 생성
-            matchingService.createTickets(newUser.getId());
+            matchingService.createTickets(newUser);
+            // 매칭 히스토리 테이블 생성
+            matchingService.createMatchingHistory(newUser);
 
             return Pair.of(
                     HttpStatus.CREATED,
@@ -200,7 +205,19 @@ public class AuthService {
         return Pair.of(accessToken, refreshToken);
     }
 
-    // 토큰 갱신
+    /**
+     * 전화번호 중복 검사
+     */
+    public Boolean isDuplicatedPhoneNumber(String phone) {
+        Optional<User> userOptional = userRepository.findByPhone(phone);
+        if (userOptional.isPresent())
+            return true;
+        return false;
+    }
+
+    /**
+     * 토큰 갱신
+     */
     public RefreshTokenResponse refresh(RefreshTokenRequest request) {
         String uid;
         try {
@@ -216,7 +233,7 @@ public class AuthService {
         }
 
         User user = userRepository.findById(Long.parseLong(uid))
-                .orElseThrow(() -> new BlindCafeException(NO_USER));
+                .orElseThrow(() -> new BlindCafeException(EMPTY_USER));
         validateUser(user);
 
         return new RefreshTokenResponse(createAccessToken(user));

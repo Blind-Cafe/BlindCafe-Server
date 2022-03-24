@@ -1,12 +1,10 @@
 package com.example.BlindCafe.service;
 
-import com.example.BlindCafe.dto.UserProfileResponse;
+import com.example.BlindCafe.domain.type.ReasonType;
+import com.example.BlindCafe.dto.response.*;
 import com.example.BlindCafe.dto.request.*;
 import com.example.BlindCafe.domain.*;
 import com.example.BlindCafe.domain.type.status.UserStatus;
-import com.example.BlindCafe.dto.response.AvatarListResponse;
-import com.example.BlindCafe.dto.response.DeleteUserResponse;
-import com.example.BlindCafe.dto.response.UserDetailResponse;
 import com.example.BlindCafe.exception.BlindCafeException;
 import com.example.BlindCafe.repository.*;
 import com.example.BlindCafe.utils.AmazonS3Connector;
@@ -18,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static com.example.BlindCafe.exception.CodeAndMessage.*;
 import static com.example.BlindCafe.domain.type.Gender.N;
@@ -32,7 +31,9 @@ public class UserService {
     private final RetiredUserRepository retiredUserRepository;
     private final InterestRepository interestRepository;
     private final ReasonRepository reasonRepository;
+    private final CustomReasonRepository customReasonRepository;
     private final SuggestionRepository suggestionRepository;
+    private final ReportRepository reportRepository;
 
     private final AmazonS3Connector amazonS3Connector;
     private final MailUtil mailUtil;
@@ -72,7 +73,7 @@ public class UserService {
         if (!matcher.matches())
             throw new BlindCafeException(INVALID_PHONE_NUMBER);
 
-        userRepository.findByNickname(request.getNickname())
+        userRepository.findByPhone(request.getPhone())
                 .ifPresent(u -> { throw new BlindCafeException(DUPLICATED_PHONE_NUMBER); });
     }
 
@@ -199,8 +200,14 @@ public class UserService {
         // 탈퇴한 사용자 생성
         RetiredUser retiredUser = RetiredUser.create(user, reason.getText());
         retiredUserRepository.save(retiredUser);
+
+        // 탈퇴 사유 저장
+        CustomReason customReason = CustomReason.create(user, reason);
+        customReasonRepository.save(customReason);
+        
         // 기존 사용자 삭제
         userRepository.delete(user);
+        
         return DeleteUserResponse.fromEntity(retiredUser);
     }
 
@@ -225,11 +232,52 @@ public class UserService {
         String content = request.getContent();
         Suggestion suggestion = Suggestion.create(user, content);
         suggestionRepository.save(suggestion);
+
         // 건의사항 첨부 이미지 저장
         String images = amazonS3Connector.uploadSuggestion(request.getImages(), suggestion.getId());
         suggestion.updateImage(images);
         
         // 관리자에게 건의사항 이메일로 전송하기
         mailUtil.sendMail(user.getNickname(), user.getPhone(), content, images);
+    }
+
+    /**
+     * 신고하기
+     */
+    @Transactional
+    public void report(Long userId, ReportRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BlindCafeException(EMPTY_USER));
+
+        Matching matching = user.getMatchings().stream()
+                .map(UserMatching::getMatching)
+                .filter(m -> m.getId().equals(request.getMatchingId()))
+                .findAny().orElseThrow(() -> new BlindCafeException(NON_AUTHORIZATION_MATCHING));
+
+        User partner = matching.getUserMatchings().stream()
+                .map(UserMatching::getUser)
+                .filter(u -> !u.equals(user))
+                .findAny().orElseThrow(() -> new BlindCafeException(EMPTY_PARTNER_INFO));
+
+        Reason reason = reasonRepository.findByReasonTypeAndNum(ReasonType.FOR_REPORT, request.getReason())
+                .orElseThrow(() -> new BlindCafeException(EMPTY_REASON));
+
+        // 신고하기
+        Report report = Report.create(user, partner, matching.getId(), reason);
+        reportRepository.save(report);
+    }
+
+    /**
+     * 신고 내역 조회하기
+     */
+    public ReportListResponse getReports(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BlindCafeException(EMPTY_USER));
+
+        return new ReportListResponse(
+                user.getMyReport().stream()
+                    .sorted(Comparator.comparing(Report::getCreatedAt).reversed())
+                    .map(ReportListResponse.ReportDto::fromEntity)
+                    .collect(Collectors.toList()));
     }
 }

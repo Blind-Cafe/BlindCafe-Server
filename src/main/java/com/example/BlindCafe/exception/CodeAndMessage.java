@@ -24,13 +24,18 @@ public enum CodeAndMessage {
     INVALID_SUB_INTEREST("1012", "세부 관심사가 유효하지 않습니다."),
 
     EMPTY_DRINK("1020", "해당되는 음료가 없습니다."),
+    ALREADY_SELECT_DRINK("1023", "이미 음료를 선택했습니다."),
     INVALID_INTEREST_SET("1021", "관심사 설정이 부족합니다."),
     PAST_PARTNER_SEARCH_ERROR("1022", "이전 대화 상대 조회 중 오류가 발생했습니다."),
 
     EMPTY_MATCHING("1030", "해당되는 매칭이 없습니다."),
-    EMPTY_AUTHORIZATION_MATCHING("1031", "권한이 없는 매칭입니다."),
+    NON_AUTHORIZATION_MATCHING("1031", "권한이 없는 매칭입니다."),
     INVALID_MATCHING("1032", "매칭 상태가 유효하지 않습니다."),
     REQUEST_EXPIRED("1033", "요청 대기 시간 초과로 인해 요청이 취소되었습니다."),
+    ALREADY_MATCHING_REQUEST("1034", "이미 매칭 요청 중입니다."),
+    LACK_OF_TICKET("1035", "매칭권이 부족합니다."),
+    EMPTY_MATCHING_REQUEST("1100", "현재 요청하고 있는 매칭이 없습니다."),
+    EMPTY_PARTNER_INFO("1101", "상대방을 조회하는 도중 에러가 발생했습니다."),
 
     INVALID_ADDRESS("1040", "유효한 주소가 아닙니다."),
 
@@ -40,18 +45,22 @@ public enum CodeAndMessage {
     NOT_REQUIRED_INFO_FOR_MATCHING("1060", "매칭을 요청하기에 충분한 정보가 입력되어 있지 않습니다."),
 
     EMPTY_REASON("1070", "유효하지 않은 이유입니다."),
+    REQUIRED_REASON("1071", "사유를 입력해야 합니다."),
 
     FILE_CONVERT_ERROR("1080", "파일 변환에 실패했습니다."),
     FILE_EXTENSION_ERROR("1081", "파일 확장자 인식에 실패했습니다."),
 
     INVALID_PROFILE_IMAGE_SEQUENCE("1090", "유효하지 않은 우선순위입니다."),
 
-    EMPTY_REQUEST_MATCHING("1100", "현재 요청하고 있는 매칭이 없습니다."),
 
-    NOT_YET_EXCHANGE_PROFILE("1110", "프로필 교환을 할 수 있는 매칭이 아닙니다."),
+
+    NOTYET_OPEN_PROFILE("1110", "아직 프로필을 공개할 수 없습니다."),
+    ALREADY_OPEN_PROFILE("1111", "이미 프로필을 공개했습니다."),
+    NOTYET_EXCHANGE_PROFILE("1112", "아직 프로필을 교환할 수 없습니다."),
+    ALREADY_EXCHANGE_PROFILE("1113", "이미 프로필을 교환했습니다."),
 
     EXCEED_MATCHING_TOPIC("1120", "더 이상 존재하는 토픽이 없습니다."),
-    INVALID_TOPIC("1121", "현재 유효하지 않은 토픽입니다. "),
+    EMPTY_TOPIC("1121", "현재 유효하지 않은 토픽입니다. "),
 
     NOT_YET_PROFILE_OPEN("1130", "상대방이 프로필 작성 중"),
     REJECT_PROFILE_EXCHANGE("1131", "프로필 교환이 거절된 매칭입니다."),

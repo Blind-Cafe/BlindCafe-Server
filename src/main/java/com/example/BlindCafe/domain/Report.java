@@ -1,44 +1,53 @@
 package com.example.BlindCafe.domain;
 
-import com.example.BlindCafe.domain.type.status.ReportStatus;
 import lombok.*;
 
 import javax.persistence.*;
 
-import static javax.persistence.EnumType.STRING;
-import static javax.persistence.FetchType.LAZY;
-
 @Entity
+@Table(name = "report")
 @Getter
 @Setter
-@Builder
-@AllArgsConstructor
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Report extends BaseTimeEntity {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "report_id")
     private Long id;
 
-    @OneToOne(fetch = LAZY)
-    @JoinColumn(name = "matching_id")
-    private Matching matching;
-
-    @ManyToOne(fetch = LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reporter")
     private User reporter;
 
-    @ManyToOne(fetch = LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reported")
     private User reported;
 
-    @OneToOne(fetch = LAZY)
+    private Long matchingId;
+
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reason_id")
     private Reason reason;
 
-    @Enumerated(STRING)
-    @Column(length = 10, nullable = false)
-    private ReportStatus status;
+    public void setReporter(User reporter) {
+        this.reporter = reporter;
+        reporter.getMyReport().add(this);
+    }
 
+    public void setReported(User reported) {
+        this.reported = reported;
+        reported.getReported().add(this);
+        if (reported.getReported().size() >= 10)
+            reported.suspend();
+    }
+
+    public static Report create(User reporter, User reported, Long matchingId , Reason reason) {
+        Report report = new Report();
+        report.setReporter(reporter);
+        report.setReported(reported);
+        report.setMatchingId(matchingId);
+        report.setReason(reason);
+        return report;
+    }
 }

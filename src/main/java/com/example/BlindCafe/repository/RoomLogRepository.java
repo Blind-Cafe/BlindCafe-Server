@@ -1,12 +1,10 @@
 package com.example.BlindCafe.repository;
 
-import com.example.BlindCafe.domain.Matching;
 import com.example.BlindCafe.domain.RoomLog;
-import com.example.BlindCafe.domain.User;
-import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.mongodb.repository.MongoRepository;
 
-import java.util.List;
+import java.util.Optional;
 
-public interface RoomLogRepository extends JpaRepository<RoomLog, Long> {
-    List<RoomLog> findByUserAndMatching(User user, Matching matching);
+public interface RoomLogRepository extends MongoRepository<RoomLog, Long> {
+    Optional<RoomLog> findFirstByMatchingIdAndUserIdOrderByAccessAtDesc(Long matchingId, Long userId);
 }

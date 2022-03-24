@@ -1,38 +1,57 @@
 package com.example.BlindCafe.domain;
 
 import com.example.BlindCafe.domain.topic.Topic;
-import com.example.BlindCafe.domain.type.status.TopicStatus;
+import com.example.BlindCafe.exception.BlindCafeException;
 import lombok.*;
 
 import javax.persistence.*;
+import java.util.Collections;
+import java.util.List;
 
-import static javax.persistence.FetchType.LAZY;
+import static com.example.BlindCafe.exception.CodeAndMessage.EXCEED_MATCHING_TOPIC;
 
 @Entity
+@Table(name = "matching_topic")
 @Getter
 @Setter
-@Builder
-@AllArgsConstructor
-@NoArgsConstructor
-public class MatchingTopic extends BaseTimeEntity {
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+public class MatchingTopic {
 
     @Id
     @GeneratedValue
     @Column(name = "matching_topic_id")
     private Long id;
 
-    @ManyToOne(fetch = LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "matching_id")
     private Matching matching;
 
-    @ManyToOne(fetch = LAZY)
-    @JoinColumn(name = "topic_id")
-    private Topic topic;
+    private String all;
+    private String remain;
 
-    @Column(nullable = false)
-    private Integer sequence;
+    public static MatchingTopic create(List<Topic> topics) {
+        MatchingTopic topic = new MatchingTopic();
+        Collections.shuffle(topics);
+        StringBuilder sb = new StringBuilder();
+        for (int i=0; i<topics.size(); i++) {
+            sb.append(topics.get(i).toString());
+            if (i != topics.size()-1)
+                sb.append(",");
+        }
+        topic.setAll(sb.toString());
+        topic.setRemain(sb.toString());
+        return topic;
+    }
 
-    @Enumerated(EnumType.STRING)
-    @Column(columnDefinition = "varchar(10) default 'WAIT'")
-    private TopicStatus status;
+    public Long getTopic() {
+        String topicList = this.remain;
+        int index = topicList.indexOf(",");
+        
+        // 더 이상 토픽이 없는 경우
+        if (index == -1)
+            throw new BlindCafeException(EXCEED_MATCHING_TOPIC);
+
+        this.remain = topicList.substring(index+1);
+        return Long.parseLong(topicList.substring(0, index));
+    }
 }

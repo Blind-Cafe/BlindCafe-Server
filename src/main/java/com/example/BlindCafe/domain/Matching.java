@@ -8,47 +8,163 @@ import javax.persistence.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-
-import static javax.persistence.CascadeType.ALL;
-import static javax.persistence.EnumType.STRING;
-import static javax.persistence.FetchType.LAZY;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 @Entity
+@Table(name = "matching")
 @Getter
 @Setter
-@Builder
-@AllArgsConstructor
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Matching extends BaseTimeEntity {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "matching_id")
     private Long id;
 
-    @OneToMany(mappedBy = "matching", cascade = ALL)
+    @OneToMany(mappedBy = "matching", cascade = CascadeType.ALL)
     private List<UserMatching> userMatchings = new ArrayList<>();
 
-    @OneToOne(fetch = LAZY)
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "interest_id")
     private Interest interest;
 
-    @OneToMany(mappedBy = "matching", cascade = ALL)
-    private List<MatchingTopic> topics = new ArrayList<>();
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "matching_push_id")
+    private MatchingPush push;
 
-    @OneToMany(mappedBy = "matching", cascade = ALL)
-    private List<Message> messages = new ArrayList<>();
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "matching_topic_id")
+    private MatchingTopic topic;
 
-    private LocalDateTime startTime;
-    private LocalDateTime expiryTime;
+    private LocalDateTime beginTime;
+    private LocalDateTime expiredTime;
 
     @Column(columnDefinition = "boolean default false", nullable = false)
     private Boolean isContinuous;
 
-    @Embedded
-    private Push push;
+    @Column(columnDefinition = "boolean default false", nullable = false)
+    private Boolean isOpenProfile;
 
-    @Enumerated(STRING)
+    @Column(columnDefinition = "boolean default false", nullable = false)
+    private Boolean isExchangeProfile;
+
+    private boolean isActive;
+
+    @Enumerated(EnumType.STRING)
     @Column(columnDefinition = "varchar(20) default 'MATCHING'", nullable = false)
     private MatchingStatus status;
+
+    public void setUserMatchings(List<UserMatching> userMatchings) {
+        userMatchings.forEach(um -> {
+            um.success();
+            um.setMatching(this);
+        });
+        this.userMatchings = userMatchings;
+    }
+
+    public void setPush(MatchingPush push) {
+        this.push = push;
+        push.setMatching(this);
+    }
+
+    public void setTopic(MatchingTopic topic) {
+        this.topic = topic;
+        topic.setMatching(this);
+    }
+
+    public static Matching create(
+            List<UserMatching> userMatchings,
+            Interest interest,
+            MatchingTopic topic
+    ) {
+        LocalDateTime now = LocalDateTime.now();
+        Matching matching = new Matching();
+        matching.setUserMatchings(userMatchings);
+        matching.setInterest(interest);
+        // 푸시
+        MatchingPush push = new MatchingPush();
+        matching.setPush(push);
+        // 토픽 생성
+        matching.setTopic(topic);
+        // 시간 설정
+        matching.setBeginTime(now);
+        matching.setExpiredTime(now.plusDays(3));
+        matching.setIsContinuous(false);
+        matching.setIsExchangeProfile(false);
+        matching.setActive(true);
+        matching.setStatus(MatchingStatus.MATCHING);
+
+        // 매칭 히스토리 업데이트
+        matching.updateMatchingHistory();
+
+        return matching;
+    }
+    
+    // 매칭 히스토리 업데이트
+    public void updateMatchingHistory() {
+        List<Long> users = this.getUserMatchings().stream()
+                .map(UserMatching::getUser)
+                .map(User::getId)
+                .collect(Collectors.toList());
+
+        for (int i=0; i<2; i++) {
+            this.getUserMatchings().get(i).getUser().updateMatchingHistory(users.get(1-i));
+        }
+    }
+
+    // 토픽 가져오기
+    public Long getTopic() {
+        return this.topic.getTopic();
+    }
+    
+    // 특정 유저의 유저 매칭 가져오기
+    public UserMatching getUserMatchingById(Long userId) {
+        return this.userMatchings.stream()
+                .filter(um -> um.getUser().getId().equals(userId))
+                .findAny().orElse(null);
+    }
+
+    // 프로필 공개 확인
+    public boolean openProfile() {
+        AtomicBoolean status = new AtomicBoolean(true);
+        this.getUserMatchings().forEach(um -> {
+            if (!um.getIsAcceptOpenProfile())
+                status.set(false);
+        });
+        this.isOpenProfile = status.get();
+        return this.isOpenProfile;
+    }
+
+    // 프로필 교환 확인
+    public boolean exchangeProfile() {
+        AtomicBoolean status = new AtomicBoolean(true);
+        this.getUserMatchings().forEach(um -> {
+            if (!um.getIsAcceptExchangeProfile())
+                status.set(false);
+        });
+        this.isExchangeProfile = status.get();
+
+        // 모두 프로필 교환 수락한 경우 7일 채팅으로 업데이트
+        if (this.isExchangeProfile) {
+            LocalDateTime now = LocalDateTime.now();
+            this.isContinuous = true;
+            this.beginTime = now;
+            this.expiredTime = now.plusDays(7);
+        }
+        return this.isExchangeProfile;
+    }
+
+    // 채팅방 나가기
+    public void leave(Long userId) {
+        this.getUserMatchingById(userId).leave();
+        // 채팅방 비활성화
+        this.inactive();
+    }
+
+    // 채팅방 비활성화
+    public void inactive() {
+        this.isActive = false;
+    }
 }
