@@ -40,15 +40,12 @@ public class MatchingListResponse {
                     .findAny()
                     .map(partnerMatching -> partnerMatching.getUser()).orElse(null);
 
-            if (partner != null) {
-                MatchingInfo info = new MatchingInfo();
-                info.setMatchingId(matching.getId());
-                info.setPartner(Partner.fromEntity(partner));
-                info.setBlind(!matching.getIsContinuous());
-                info.setExpiredDt(matching.getExpiredTime());
-                return info;
-            }
-            return null;
+            MatchingInfo info = new MatchingInfo();
+            info.setMatchingId(matching.getId());
+            info.setPartner(Partner.fromEntity(partner));
+            info.setBlind(!matching.getIsContinuous());
+            info.setExpiredDt(matching.getExpiredTime());
+            return info;
         }
 
         public void updateHistory(RoomHistory history) {

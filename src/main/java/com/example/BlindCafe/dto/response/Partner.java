@@ -15,9 +15,14 @@ public class Partner {
 
     public static Partner fromEntity(User user) {
         Partner partner = new Partner();
-        partner.setUserId(user.getId());
-        partner.setNickname(user.getNickname());
-        partner.setAvatar(user.getMainAvatar());
+        if (user != null) {
+            partner.setUserId(user.getId());
+            partner.setNickname(user.getNickname());
+            partner.setAvatar(user.getMainAvatar());
+        } else {
+            partner.setUserId(0L);
+            partner.setNickname("(알 수 없음)");
+        }
         return partner;
     }
 }

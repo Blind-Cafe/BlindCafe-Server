@@ -30,24 +30,21 @@ public class MatchingDetailResponse {
                 .findAny()
                 .map(partnerMatching -> partnerMatching.getUser()).orElse(null);
 
-        if (partner != null) {
-            MatchingDetailResponse response = new MatchingDetailResponse();
-            response.setMatchingId(matching.getId());
-            response.setPartner(Partner.fromEntity(partner));
+        MatchingDetailResponse response = new MatchingDetailResponse();
+        response.setMatchingId(matching.getId());
+        response.setPartner(Partner.fromEntity(partner));
 
-            boolean isSelectedDrink = false;
-            Drink selectedDrink = matching.getUserMatchings().stream()
-                    .filter(userMatching -> userMatching.getUser().getId().equals(userId))
-                    .findAny()
-                    .map(UserMatching::getDrink).orElse(null);
-            if (selectedDrink != null)
-                isSelectedDrink = true;
-            response.setSelectedDrink(isSelectedDrink);
-            response.setBeginDt(matching.getBeginTime());
-            response.setExpiredDt(matching.getExpiredTime());
-            response.setContinuous(matching.getIsContinuous());
-            return response;
-        }
-        return null;
+        boolean isSelectedDrink = false;
+        Drink selectedDrink = matching.getUserMatchings().stream()
+                .filter(userMatching -> userMatching.getUser().getId().equals(userId))
+                .findAny()
+                .map(UserMatching::getDrink).orElse(null);
+        if (selectedDrink != null)
+            isSelectedDrink = true;
+        response.setSelectedDrink(isSelectedDrink);
+        response.setBeginDt(matching.getBeginTime());
+        response.setExpiredDt(matching.getExpiredTime());
+        response.setContinuous(matching.getIsContinuous());
+        return response;
     }
 }
