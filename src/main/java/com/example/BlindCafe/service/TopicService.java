@@ -5,14 +5,12 @@ import com.example.BlindCafe.domain.topic.Audio;
 import com.example.BlindCafe.domain.topic.Image;
 import com.example.BlindCafe.domain.topic.Subject;
 import com.example.BlindCafe.domain.topic.Topic;
-import com.example.BlindCafe.domain.type.MessageType;
 import com.example.BlindCafe.exception.BlindCafeException;
 import com.example.BlindCafe.repository.TopicRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.*;
 
 import static com.example.BlindCafe.exception.CodeAndMessage.EMPTY_TOPIC;

@@ -1,10 +1,8 @@
 package com.example.BlindCafe.controller;
 
+import com.example.BlindCafe.domain.Report;
 import com.example.BlindCafe.dto.request.*;
-import com.example.BlindCafe.dto.response.AvatarListResponse;
-import com.example.BlindCafe.dto.response.DeleteUserResponse;
-import com.example.BlindCafe.dto.response.UserDetailResponse;
-import com.example.BlindCafe.dto.response.UserProfileResponse;
+import com.example.BlindCafe.dto.response.*;
 import com.example.BlindCafe.service.MatchingService;
 import com.example.BlindCafe.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -169,7 +167,7 @@ public class UserController {
             @RequestHeader(value = UID) String uid,
             @Valid @RequestBody ReportRequest request
     ) {
-        log.info("POST /api/report");
+        log.info("POST /api/user/report");
         // 신고하기
         userService.report(Long.parseLong(uid), request);
         // 방 나가기 처리 - 나가기 사유는 5번으로 고정
@@ -178,6 +176,11 @@ public class UserController {
     }
 
     /**
-     * 신고 내역 확인하기
+     * 신고 내역 조회하기
      */
+    @GetMapping("/report")
+    public ResponseEntity<ReportListResponse> getReports(@RequestHeader(value = UID) String uid) {
+        log.info("GET /api/user/report");
+        return ResponseEntity.ok(userService.getReports(Long.parseLong(uid)));
+    }
 }

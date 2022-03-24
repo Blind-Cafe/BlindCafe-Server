@@ -1,14 +1,10 @@
 package com.example.BlindCafe.service;
 
 import com.example.BlindCafe.domain.type.ReasonType;
-import com.example.BlindCafe.domain.type.status.MatchingStatus;
-import com.example.BlindCafe.dto.response.UserProfileResponse;
+import com.example.BlindCafe.dto.response.*;
 import com.example.BlindCafe.dto.request.*;
 import com.example.BlindCafe.domain.*;
 import com.example.BlindCafe.domain.type.status.UserStatus;
-import com.example.BlindCafe.dto.response.AvatarListResponse;
-import com.example.BlindCafe.dto.response.DeleteUserResponse;
-import com.example.BlindCafe.dto.response.UserDetailResponse;
 import com.example.BlindCafe.exception.BlindCafeException;
 import com.example.BlindCafe.repository.*;
 import com.example.BlindCafe.utils.AmazonS3Connector;
@@ -20,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static com.example.BlindCafe.exception.CodeAndMessage.*;
 import static com.example.BlindCafe.domain.type.Gender.N;
@@ -268,5 +265,19 @@ public class UserService {
         // 신고하기
         Report report = Report.create(user, partner, matching.getId(), reason);
         reportRepository.save(report);
+    }
+
+    /**
+     * 신고 내역 조회하기
+     */
+    public ReportListResponse getReports(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BlindCafeException(EMPTY_USER));
+
+        return new ReportListResponse(
+                user.getMyReport().stream()
+                    .sorted(Comparator.comparing(Report::getCreatedAt).reversed())
+                    .map(ReportListResponse.ReportDto::fromEntity)
+                    .collect(Collectors.toList()));
     }
 }

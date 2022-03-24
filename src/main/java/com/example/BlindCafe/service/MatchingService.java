@@ -13,7 +13,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -369,25 +368,6 @@ public class MatchingService {
         customReasonRepository.save(customReason);
 
         // TODO 방 나간 사유 메시지 publish
-    }
-
-    /**
-     * 채팅방 로그 남기기
-     */
-    @Transactional
-    public void createRoomLog(Long userId, Long matchingId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new BlindCafeException(NO_USER));
-
-        Matching matching = matchingRepository.findById(matchingId)
-                .orElseThrow(() -> new BlindCafeException(NO_MATCHING));
-
-        RoomLog roomLog = RoomLog.builder()
-                .user(user)
-                .matching(matching)
-                .latestTime(LocalDateTime.now())
-                .build();
-        roomLogRepository.save(roomLog);
     }
 
     /**

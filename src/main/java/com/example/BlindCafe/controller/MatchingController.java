@@ -126,17 +126,4 @@ public class MatchingController {
         matchingService.leaveMatching(Long.parseLong(uid), matchingId, reasonId);
         return ResponseEntity.ok().build();
     }
-
-    /**
-     * 채팅방 로그 찍기
-     */
-    @PostMapping("{matchingId}/log")
-    public ResponseEntity<Void> createRoomLog(
-            @RequestHeader(value = UID) String uid,
-            @PathVariable Long matchingId
-    ) {
-        log.info("POST /api/matching/{}/log", matchingId);
-        matchingService.createRoomLog(Long.parseLong(uid), matchingId);
-        return ResponseEntity.ok().build();
-    }
 }
