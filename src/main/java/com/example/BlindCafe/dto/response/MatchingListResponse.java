@@ -4,6 +4,7 @@ import com.example.BlindCafe.domain.Matching;
 import com.example.BlindCafe.domain.Message;
 import com.example.BlindCafe.domain.RoomLog;
 import com.example.BlindCafe.domain.User;
+import com.example.BlindCafe.domain.type.MessageType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -84,7 +85,21 @@ public class MatchingListResponse {
         public static RoomHistory fromEntities(Message message, RoomLog log) {
             RoomHistory history = new RoomHistory();
             history.setMatchingId(message.getMatchingId());
-            history.setLatestMessage(message.getContent());
+            String content = "";
+            if (message.getType().equals(MessageType.TEXT)) {
+                content = message.getContent();
+            } else if (message.getType().equals(MessageType.IMAGE)) {
+                content = "사진이 전송되었습니다.";
+            } else if (message.getType().equals(MessageType.AUDIO)) {
+                content = "음성메시지가 전송되었습니다.";
+            } else if (message.getType().equals(MessageType.TEXT_TOPIC)
+                    || message.getType().equals(MessageType.AUDIO_TOPIC)
+                    || message.getType().equals(MessageType.IMAGE_TOPIC)) {
+                content = "토픽이 전송되었습니다.";
+            } else {
+                content = "메시지가 전송되었습니다.";
+            }
+            history.setLatestMessage(content);
             boolean received = false;
             if (log != null) {
                 received = message.getCreatedAt().compareTo(log.getAccessAt()) <= 0 ? true : false;
