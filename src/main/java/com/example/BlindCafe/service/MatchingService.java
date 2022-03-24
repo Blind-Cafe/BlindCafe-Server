@@ -92,7 +92,10 @@ public class MatchingService {
         List<Long> partners = matchingHistoryRepository.findByUserId(userId).getMatchingPartners();
 
         // 매칭 풀에서 매칭 전적이 없는 사용자들의 매칭 요청 조회
-        List<UserMatching> ableMatchingRequests = userMatchingRepository.findAbleMatchingRequests(partners);
+        List<UserMatching> ableMatchingRequests =
+                userMatchingRepository.findAbleMatchingRequests(partners).stream()
+                    .filter(um -> isValidGender(um, user)) // 성별 필터링
+                    .collect(Collectors.toList());
 
         // 매칭 요청 풀에 매칭 가능한 요청이 없는 경우 매칭 요청 풀에 저장
         if (ableMatchingRequests.size() == 0) {
@@ -145,6 +148,21 @@ public class MatchingService {
             for (String s : split)
                 if (interestId.toString().equals(s)) return interestId;
         return PUBLIC_INTEREST_ID;
+    }
+
+    // 선호하는 성별인지 확인
+    private boolean isValidGender(UserMatching userMatching, User user) {
+        User otherUser = userMatching.getUser();
+
+        Gender userMyGender = user.getMyGender();
+        Gender userPartnerGender = user.getPartnerGender();
+        Gender otherUserMyGender = otherUser.getMyGender();
+        Gender otherUserPartnerGender = otherUser.getPartnerGender();
+
+        return (userPartnerGender.equals(otherUserMyGender) ||
+                userPartnerGender.equals(N)) &&
+                (otherUserPartnerGender.equals(userMyGender) ||
+                        otherUserPartnerGender.equals(N));
     }
 
     /**
@@ -326,26 +344,6 @@ public class MatchingService {
     }
 
     /**
-     * 유저간 선호하는 성별인지 확인
-     */
-    private boolean isValidGender(UserMatching userMatching, User user) {
-        User otherUser = userMatching.getUser();
-
-        Gender userMyGender = user.getMyGender();
-        Gender userPartnerGender = user.getPartnerGender();
-        Gender otherUserMyGender = otherUser.getMyGender();
-        Gender otherUserPartnerGender = otherUser.getPartnerGender();
-
-        if ((userPartnerGender.equals(otherUserMyGender) ||
-                userPartnerGender.equals(N)) &&
-            (otherUserPartnerGender.equals(userMyGender) ||
-                otherUserPartnerGender.equals(N)))
-            return true;
-        else
-            return false;
-    }
-
-    /**
      * 관심사가 공통되는지 확인
      */
     private boolean isContainInterest(UserMatching userMatching, List<Interest> userInterests) {
@@ -420,28 +418,6 @@ public class MatchingService {
         return DeleteMatchingDto.builder()
                 .codeAndMessage(SUCCESS)
                 .build();
-    }
-
-    /**
-     * 프로필 교환 시 내 프로필 조회
-     */
-    public MatchingProfileDto getMatchingProfile(Long userId, Long matchingId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new BlindCafeException(NO_USER));
-
-        Matching matching = matchingRepository.findById(matchingId)
-                .orElseThrow(() -> new BlindCafeException(NO_MATCHING));
-
-        if (!matching.getStatus().equals(PROFILE_EXCHANGE))
-            throw new BlindCafeException(NOT_YET_EXCHANGE_PROFILE);
-
-        User partner = matching.getUserMatchings().stream()
-                .filter(um -> !um.getUser().equals(user))
-                .map(um -> um.getUser() )
-                .findAny()
-                .orElseThrow(() -> new BlindCafeException(INVALID_MATCHING));
-
-        return makeProfile(user, partner);
     }
 
 
