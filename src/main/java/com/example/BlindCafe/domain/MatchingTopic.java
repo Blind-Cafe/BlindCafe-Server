@@ -1,11 +1,14 @@
 package com.example.BlindCafe.domain;
 
 import com.example.BlindCafe.domain.topic.Topic;
+import com.example.BlindCafe.exception.BlindCafeException;
 import lombok.*;
 
 import javax.persistence.*;
 import java.util.Collections;
 import java.util.List;
+
+import static com.example.BlindCafe.exception.CodeAndMessage.EXCEED_MATCHING_TOPIC;
 
 @Entity
 @Table(name = "matching_topic")
@@ -38,5 +41,17 @@ public class MatchingTopic {
         topic.setAll(sb.toString());
         topic.setRemain(sb.toString());
         return topic;
+    }
+
+    public Long getTopic() {
+        String topicList = this.remain;
+        int index = topicList.indexOf(",");
+        
+        // 더 이상 토픽이 없는 경우
+        if (index == -1)
+            throw new BlindCafeException(EXCEED_MATCHING_TOPIC);
+
+        this.remain = topicList.substring(index+1);
+        return Long.parseLong(topicList.substring(0, index));
     }
 }

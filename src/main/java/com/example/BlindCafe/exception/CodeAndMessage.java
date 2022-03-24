@@ -55,7 +55,7 @@ public enum CodeAndMessage {
     NOT_YET_EXCHANGE_PROFILE("1110", "프로필 교환을 할 수 있는 매칭이 아닙니다."),
 
     EXCEED_MATCHING_TOPIC("1120", "더 이상 존재하는 토픽이 없습니다."),
-    INVALID_TOPIC("1121", "현재 유효하지 않은 토픽입니다. "),
+    EMPTY_TOPIC("1121", "현재 유효하지 않은 토픽입니다. "),
 
     NOT_YET_PROFILE_OPEN("1130", "상대방이 프로필 작성 중"),
     REJECT_PROFILE_EXCHANGE("1131", "프로필 교환이 거절된 매칭입니다."),

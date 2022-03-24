@@ -2,9 +2,6 @@ package com.example.BlindCafe.service;
 
 import com.example.BlindCafe.dto.*;
 import com.example.BlindCafe.domain.*;
-import com.example.BlindCafe.domain.topic.Audio;
-import com.example.BlindCafe.domain.topic.Image;
-import com.example.BlindCafe.domain.topic.Subject;
 import com.example.BlindCafe.dto.request.SelectDrinkRequest;
 import com.example.BlindCafe.dto.response.MatchingDetailResponse;
 import com.example.BlindCafe.dto.response.MatchingListResponse;
@@ -16,9 +13,7 @@ import com.example.BlindCafe.domain.type.FcmMessage;
 import com.example.BlindCafe.domain.type.Gender;
 import com.example.BlindCafe.domain.type.MessageType;
 import com.example.BlindCafe.domain.type.status.MatchingStatus;
-import com.example.BlindCafe.domain.type.status.TopicStatus;
 import com.example.BlindCafe.domain.type.status.UserStatus;
-import com.example.BlindCafe.utils.TopicServeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -60,7 +55,6 @@ public class MatchingService {
 
     private final FirebaseService firebaseService;
     private final FirebaseCloudMessageService fcmService;
-    private final TopicServeService topicServeService;
 
     private final UserRepository userRepository;
 
@@ -71,11 +65,7 @@ public class MatchingService {
 
 
     private final static Long MAX_WAIT_TIME = 24L;
-    private final static int BASIC_CHAT_DAYS = 3;
     private final static int EXTEND_CHAT_DAYS = 7;
-
-    public final static Long SUBJECT_LIMIT = 1000L;
-    public final static Long AUDIO_LIMIT = 2000L;
 
     /**
      * 매칭 요청
@@ -227,7 +217,7 @@ public class MatchingService {
     @Transactional
     public MatchingDetailResponse getMatching(Long userId, Long matchingId) {
 
-        Matching matching = matchingRepository.findById(matchingId)
+        Matching matching = matchingRepository.findValidMatchingById(matchingId)
                 .orElseThrow(() -> new BlindCafeException(EMPTY_MATCHING));
 
         return MatchingDetailResponse.fromEntity(matching, userId);
@@ -239,7 +229,7 @@ public class MatchingService {
     @Transactional
     public void selectDrink(Long userId, SelectDrinkRequest request) {
 
-        Matching matching = matchingRepository.findById(request.getMatchingId())
+        Matching matching = matchingRepository.findValidMatchingById(request.getMatchingId())
                 .orElseThrow(() -> new BlindCafeException(EMPTY_MATCHING));
 
         UserMatching userMatching = matching.getUserMatchings().stream()
@@ -257,6 +247,22 @@ public class MatchingService {
         userMatching.selectDrink(drink);
 
         // TODO 음료 선택 메시지 publish
+    }
+
+    /**
+     * 토픽 가져오기
+     */
+    @Transactional
+    public void getTopic(Long matchingId) {
+
+        Matching matching = matchingRepository.findValidMatchingById(matchingId)
+                .orElseThrow(() -> new BlindCafeException(EMPTY_MATCHING));
+
+        // 토픽 아이디 가져오기 
+        Long topicId = matching.getTopic();
+
+        // 토픽 전송하기
+        topicService.sendTopic(matchingId, topicId);
     }
 
 
@@ -438,90 +444,7 @@ public class MatchingService {
         return makeProfile(user, partner);
     }
 
-    @Transactional
-    public TopicDto getTopic(Long userId, Long matchingId) {
-        Matching matching = matchingRepository.findById(matchingId)
-                .orElseThrow(() -> new BlindCafeException(NO_MATCHING));
 
-        matching.getUserMatchings().stream().
-                filter(um -> um.getUser().getId().equals(userId))
-                .findAny()
-                .orElseThrow(() -> new BlindCafeException(NO_AUTHORIZATION_MATCHING));
-
-        /**
-         * Todo
-         * 지금 프록시에서 instanceof로 클래스 타입 확인이 안 돼서
-         * 일단은 topicRepository 조회해서 클래스 타입 확인
-         * 나중에 matchingTopic -> getTopic을 instanceof로 클래스 타입 확인하기
-         */
-        MatchingTopic matchingTopic = matching.getTopics().stream()
-                .filter(mt -> mt.getStatus().equals(TopicStatus.WAIT))
-                .sorted(Comparator.comparing(MatchingTopic::getSequence))
-                .findFirst()
-                .orElseThrow(() -> new BlindCafeException(EXCEED_MATCHING_TOPIC));
-        Long topicId = matchingTopic.getTopic().getId();
-        matchingTopic.setStatus(TopicStatus.SELECT);
-
-        if (topicId <= SUBJECT_LIMIT) {
-            Subject subject = topicRepository.findSubjectById(topicId)
-                    .orElseThrow(() -> new BlindCafeException(INVALID_TOPIC));
-            insertTopic(matching, subject.getSubject(), MessageType.TEXT_TOPIC, LocalDateTime.now());
-            return TopicDto.builder()
-                    .type("text")
-                    .text(TopicDto.SubjectDto.builder()
-                            .content(subject.getSubject()).build())
-                    .build();
-        } else if (topicId <= AUDIO_LIMIT) {
-            Audio audio = topicRepository.findAudioById(topicId)
-                    .orElseThrow(() -> new BlindCafeException(INVALID_TOPIC));
-            insertTopic(matching, audio.getSrc(), MessageType.AUDIO_TOPIC, LocalDateTime.now());
-            return TopicDto.builder()
-                    .type("audio")
-                    .audio(TopicDto.ObjectDto.builder()
-                            .answer(audio.getTitle())
-                            .src(audio.getSrc()).build())
-                    .build();
-        } else {
-            Image image = topicRepository.findImageById(topicId)
-                    .orElseThrow(() -> new BlindCafeException(INVALID_TOPIC));
-            insertTopic(matching, image.getSrc(), MessageType.IMAGE_TOPIC, LocalDateTime.now());
-            return TopicDto.builder()
-                    .type("image")
-                    .image(TopicDto.ObjectDto.builder()
-                            .answer(image.getTitle())
-                            .src(image.getSrc()).build())
-                    .build();
-        }
-    }
-
-    private void insertTopic(Matching matching, String contents, MessageType messageType, LocalDateTime ldt) {
-        // 메세지 db에 저장
-        User admin = userRepository.findById(0L)
-                .orElseThrow(() -> new BlindCafeException(NO_USER));
-        Message message = new Message();
-        message.setMatching(matching);
-        message.setUser(admin);
-        message.setContents(contents);
-        message.setType(messageType);
-        message.setCreatedAt(ldt);
-        Message savedMessage = messageRepository.save(message);
-
-        Timestamp timestamp = Timestamp.valueOf(ldt);
-
-        FirestoreDto firestoreDto = FirestoreDto.builder()
-                .roomId(matching.getId())
-                .targetToken(null)
-                .message(new FirestoreDto.FirestoreMessage(
-                        Long.toString(savedMessage.getId()),
-                        Long.toString(admin.getId()),
-                        admin.getNickname(),
-                        savedMessage.getContents(),
-                        messageType.getFirestoreType(),
-                        timestamp
-                ))
-                .build();
-        firebaseService.insertMessage(firestoreDto);
-    }
 
     @Transactional
     public OpenMatchingProfileDto.Response openMatchingProfile(Long userId, Long matchingId, OpenMatchingProfileDto.Request request) {

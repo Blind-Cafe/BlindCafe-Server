@@ -8,7 +8,6 @@ import javax.persistence.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 @Entity
@@ -103,5 +102,9 @@ public class Matching extends BaseTimeEntity {
             this.getUserMatchings().get(i).getUser().updateMatchingHistory(users.get(1-i));
         }
     }
-    
+
+    // 토픽 가져오기
+    public Long getTopic() {
+        return this.topic.getTopic();
+    }
 }

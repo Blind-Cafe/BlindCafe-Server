@@ -75,6 +75,16 @@ public class MatchingController {
         return ResponseEntity.ok().build();
     }
 
+    /**
+     * 토픽 가져오기
+     */
+    @GetMapping("/{matchingId}/topic")
+    public ResponseEntity<Void> getTopic(@PathVariable Long matchingId) {
+        log.info("GET /api/matching/{}/topic", matchingId);
+        matchingService.getTopic(matchingId);
+        return ResponseEntity.ok().build();
+    }
+
 
 
 
@@ -156,18 +166,6 @@ public class MatchingController {
         log.info("DELETE /api/matching/{}/partner", matchingId);
         matchingService.rejectExchangeProfile(getUserId(authentication), matchingId, reasonNum);
         return ResponseEntity.ok().build();
-    }
-
-    /**
-     * 토픽 가져오기
-     */
-    @GetMapping("{matchingId}/topic")
-    public ResponseEntity<TopicDto> getTopic(
-            Authentication authentication,
-            @PathVariable Long matchingId
-    ) {
-        log.info("GET /api/matching/{}/topic", matchingId);
-        return ResponseEntity.ok(matchingService.getTopic(getUserId(authentication), matchingId));
     }
 
     /**

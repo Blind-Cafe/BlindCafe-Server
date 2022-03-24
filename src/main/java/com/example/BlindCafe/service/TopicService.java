@@ -1,13 +1,21 @@
 package com.example.BlindCafe.service;
 
 import com.example.BlindCafe.domain.MatchingTopic;
+import com.example.BlindCafe.domain.topic.Audio;
+import com.example.BlindCafe.domain.topic.Image;
+import com.example.BlindCafe.domain.topic.Subject;
 import com.example.BlindCafe.domain.topic.Topic;
+import com.example.BlindCafe.domain.type.MessageType;
+import com.example.BlindCafe.exception.BlindCafeException;
 import com.example.BlindCafe.repository.TopicRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.*;
+
+import static com.example.BlindCafe.exception.CodeAndMessage.EMPTY_TOPIC;
 
 @Service
 @RequiredArgsConstructor
@@ -19,6 +27,9 @@ public class TopicService {
     private static final int TOPIC_DIFF_QUANTITY = 6;
     private static final int TOPIC_IMAGE_QUANTITY = 5;
     private static final int TOPIC_AUDIO_QUANTITY = 4;
+
+    private final static Long SUBJECT_LIMIT = 1000L;
+    private final static Long AUDIO_LIMIT = 2000L;
 
     public static final Long PUBLIC_INTEREST_ID = 0L;
 
@@ -106,5 +117,27 @@ public class TopicService {
     private List<Topic> getTopicsWithShuffle(List<Topic> topics, int quantity) {
         Collections.shuffle(topics);
         return topics.subList(0, quantity);
+    }
+
+    // 토픽 전송하기
+    public void sendTopic(Long matchingId, Long topicId) {
+
+        Topic topic = topicRepository.findById(topicId).orElseThrow();
+
+        // TODO 매칭방에 토픽 전송하기
+        
+        if (topicId <= SUBJECT_LIMIT) {
+            Subject subject = topicRepository.findSubjectById(topicId)
+                    .orElseThrow(() -> new BlindCafeException(EMPTY_TOPIC));
+
+        } else if (topicId <= AUDIO_LIMIT) {
+            Audio audio = topicRepository.findAudioById(topicId)
+                    .orElseThrow(() -> new BlindCafeException(EMPTY_TOPIC));
+
+        } else {
+            Image image = topicRepository.findImageById(topicId)
+                    .orElseThrow(() -> new BlindCafeException(EMPTY_TOPIC));
+
+        }
     }
 }
