@@ -45,7 +45,12 @@ public class Matching extends BaseTimeEntity {
     private Boolean isContinuous;
 
     @Column(columnDefinition = "boolean default false", nullable = false)
+    private Boolean isOpenProfile;
+
+    @Column(columnDefinition = "boolean default false", nullable = false)
     private Boolean isExchangeProfile;
+
+    private boolean isActive;
 
     @Enumerated(EnumType.STRING)
     @Column(columnDefinition = "varchar(20) default 'MATCHING'", nullable = false)
@@ -88,6 +93,7 @@ public class Matching extends BaseTimeEntity {
         matching.setExpiredTime(now.plusDays(3));
         matching.setIsContinuous(false);
         matching.setIsExchangeProfile(false);
+        matching.setActive(true);
         matching.setStatus(MatchingStatus.MATCHING);
 
         // 매칭 히스토리 업데이트
@@ -120,11 +126,22 @@ public class Matching extends BaseTimeEntity {
                 .findAny().orElse(null);
     }
 
-    // 프로필 교환 확인
-    public boolean checkExchangeProfile() {
+    // 프로필 공개 확인
+    public boolean openProfile() {
         AtomicBoolean status = new AtomicBoolean(true);
         this.getUserMatchings().forEach(um -> {
-            if (!um.isProfileOpen())
+            if (!um.getIsAcceptOpenProfile())
+                status.set(false);
+        });
+        this.isOpenProfile = status.get();
+        return this.isOpenProfile;
+    }
+
+    // 프로필 교환 확인
+    public boolean exchangeProfile() {
+        AtomicBoolean status = new AtomicBoolean(true);
+        this.getUserMatchings().forEach(um -> {
+            if (!um.getIsAcceptExchangeProfile())
                 status.set(false);
         });
         this.isExchangeProfile = status.get();
@@ -136,7 +153,11 @@ public class Matching extends BaseTimeEntity {
             this.beginTime = now;
             this.expiredTime = now.plusDays(7);
         }
-
         return this.isExchangeProfile;
+    }
+
+    // 채팅방 비활성화
+    public void inactive() {
+        this.isActive = false;
     }
 }

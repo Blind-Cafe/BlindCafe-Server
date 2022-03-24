@@ -8,8 +8,7 @@ import javax.persistence.*;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import static com.example.BlindCafe.exception.CodeAndMessage.ALREADY_OPEN_PROFILE;
-import static com.example.BlindCafe.exception.CodeAndMessage.NOT_YET_EXCHANGE_PROFILE;
+import static com.example.BlindCafe.exception.CodeAndMessage.*;
 
 @Entity
 @Table(name = "user_matching")
@@ -37,7 +36,9 @@ public class UserMatching extends BaseTimeEntity {
 
     private String interests;
 
-    private Boolean isProfileOpen;
+    private Boolean isAcceptOpenProfile;
+
+    private Boolean isAcceptExchangeProfile;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -56,7 +57,8 @@ public class UserMatching extends BaseTimeEntity {
         }
         userMatching.setDrink(null);
         userMatching.setInterests(sb.toString());
-        userMatching.setIsProfileOpen(null);
+        userMatching.setIsAcceptOpenProfile(null);
+        userMatching.setIsAcceptExchangeProfile(null);
         userMatching.setStatus(MatchingStatus.WAIT);
         return userMatching;
     }
@@ -76,22 +78,48 @@ public class UserMatching extends BaseTimeEntity {
     public void selectDrink(Drink drink) {
         this.drink = drink;
     }
+    
+    // 프로필 공개하기
+    public boolean openProfile(boolean isAccept) {
+        LocalDateTime now = LocalDateTime.now();
+
+        // 프로필 공개 시점이 아닌 경우
+        if (this.getMatching().getIsContinuous()
+                || this.getMatching().getExpiredTime().isAfter(now))
+            throw new BlindCafeException(NOTYET_OPEN_PROFILE);
+
+        // 이미 프로필 공개를 수락/거절한 경우
+        if (this.isAcceptOpenProfile != null)
+            throw new BlindCafeException(ALREADY_OPEN_PROFILE);
+
+        // 프로필 공개 수락/거절
+        this.isAcceptOpenProfile = isAccept;
+
+        // 프로필 공개 거절한 경우 채팅방 비활성화
+        if (isAccept == false)
+            this.getMatching().inactive();
+
+        return this.getMatching().openProfile();
+    }
 
     // 프로필 교환하기
     public boolean exchangeProfile(boolean isAccept) {
-        LocalDateTime now = LocalDateTime.now();
-        
-        // 프로필 공개 시점이 아닌 경우
-        if (this.getMatching().getIsContinuous()
-            || this.getMatching().getExpiredTime().isAfter(now))
-            throw new BlindCafeException(NOT_YET_EXCHANGE_PROFILE);
 
-        // 이미 프로필 공개 수락/거절한 경우
-        if (this.isProfileOpen != null)
-            throw new BlindCafeException(ALREADY_OPEN_PROFILE);
+        // 프로필 교환 시점이 아닌 경우
+        if (this.isAcceptOpenProfile != true)
+            throw new BlindCafeException(NOTYET_EXCHANGE_PROFILE);
+        
+        // 이미 프로필 교환 수락/거절한 경우
+        if (this.isAcceptExchangeProfile != null)
+            throw new BlindCafeException(ALREADY_EXCHANGE_PROFILE);
 
         // 프로필 교환 수락/거절
-        this.isProfileOpen = isAccept;
-        return this.getMatching().checkExchangeProfile();
+        this.isAcceptExchangeProfile = isAccept;
+
+        // 프로필 교환 거절한 경우 채팅방 비활성화
+        if (isAccept == false)
+            this.getMatching().inactive();
+
+        return this.getMatching().exchangeProfile();
     }
 }

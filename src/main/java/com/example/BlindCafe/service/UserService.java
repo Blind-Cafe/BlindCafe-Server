@@ -232,4 +232,22 @@ public class UserService {
         // 관리자에게 건의사항 이메일로 전송하기
         mailUtil.sendMail(user.getNickname(), user.getPhone(), content, images);
     }
+
+    /**
+     * 사용자 프로필 작성 여부 확인
+     */
+    public boolean isValidProfile(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BlindCafeException(EMPTY_USER));
+
+        if (user.getMainAvatar() == null)
+            return false;
+        if (user.getAddress() == null)
+            return false;
+        if (user.getVoice() == null)
+            return false;
+        if (user.getMbti() == null)
+            return false;
+        return true;
+    }
 }

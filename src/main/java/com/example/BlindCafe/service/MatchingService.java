@@ -3,6 +3,7 @@ package com.example.BlindCafe.service;
 import com.example.BlindCafe.dto.*;
 import com.example.BlindCafe.domain.*;
 import com.example.BlindCafe.dto.request.ExchangeProfileRequest;
+import com.example.BlindCafe.dto.request.OpenProfileRequest;
 import com.example.BlindCafe.dto.request.SelectDrinkRequest;
 import com.example.BlindCafe.dto.response.MatchingDetailResponse;
 import com.example.BlindCafe.dto.response.MatchingListResponse;
@@ -37,6 +38,7 @@ import static com.example.BlindCafe.service.TopicService.PUBLIC_INTEREST_ID;
 @RequiredArgsConstructor
 public class MatchingService {
 
+    private final UserService userService;
     private final TopicService topicService;
 
     private final MatchingRepository matchingRepository;
@@ -272,11 +274,42 @@ public class MatchingService {
         Matching matching = matchingRepository.findValidMatchingById(matchingId)
                 .orElseThrow(() -> new BlindCafeException(EMPTY_MATCHING));
 
-        // 토픽 아이디 가져오기 
+        // 토픽 아이디 가져오기
         Long topicId = matching.getTopic();
 
         // 토픽 전송하기
         topicService.sendTopic(matchingId, topicId);
+    }
+
+    /**
+     * 프로필 공개 수락/거절하기
+     */
+    @Transactional
+    public void openProfile(Long userId, OpenProfileRequest request) {
+        
+        // 사용자 프로필 작성 여부 확인
+        if (!userService.isValidProfile(userId))
+            throw new BlindCafeException(NOT_REQUIRED_INFO_FOR_MATCHING);
+
+        Matching matching = matchingRepository.findValidMatchingById(request.getMatchingId())
+                .orElseThrow(() -> new BlindCafeException(EMPTY_MATCHING));
+
+        boolean isAccept = request.isAccept();
+        // 프로필 공개
+        boolean result = matching.getUserMatchingById(userId).openProfile(isAccept);
+
+        if (!isAccept) {
+            // TODO 프로필 공개 거절 메시지 Publish
+            
+            return;
+        }
+
+        // TODO 프로필 공개 수락 메시지 Publish
+
+
+        if (result) {
+            // TODO 프로필 교환 메시지 Publish
+        }
     }
 
     /**
@@ -288,23 +321,20 @@ public class MatchingService {
         Matching matching = matchingRepository.findValidMatchingById(request.getMatchingId())
                 .orElseThrow(() -> new BlindCafeException(EMPTY_MATCHING));
 
+        boolean isAccept = request.isAccept();
         // 프로필 교환
-        boolean exchangeResult = matching.getUserMatchingById(userId).exchangeProfile(request.isAccept());
+        boolean result = matching.getUserMatchingById(userId).exchangeProfile(isAccept);
 
-        // 프로필 공개를 수락한 경우
-        if (request.isAccept()) {
-            // TODO 프로필 공개 메시지 Publish
-
-            // 모두 프로필 공개를 수락한 경우
-            if (exchangeResult) {
-                // TODO 7일 채팅 메시지 Publish
-            }
-            return;
+        if (!isAccept) {
+            // TODO 프로필 교환 거절 메시지 Publish
         }
 
-        // 프로필 공개를 거절한 경우
-        // TODO 프로필 공개 거절 메시지 Publish
+        // TODO 프로필 교환 메시지 Publish
 
+        // 모두 프로필 공개를 수락한 경우
+        if (result) {
+            // TODO 7일 채팅 메시지 Publish
+        }
     }
 
 

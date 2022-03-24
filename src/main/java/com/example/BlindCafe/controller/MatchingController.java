@@ -1,6 +1,7 @@
 package com.example.BlindCafe.controller;
 
 import com.example.BlindCafe.dto.request.ExchangeProfileRequest;
+import com.example.BlindCafe.dto.request.OpenProfileRequest;
 import com.example.BlindCafe.dto.request.SelectDrinkRequest;
 import com.example.BlindCafe.dto.response.MatchingDetailResponse;
 import com.example.BlindCafe.dto.response.MatchingListResponse;
@@ -87,14 +88,27 @@ public class MatchingController {
     }
 
     /**
-     * 프로필 교환 수락/거절하기
+     * 프로필 공개 수락/거절하기
      */
     @PostMapping("/profile")
-    public ResponseEntity<Void> acceptProfileOpen(
+    public ResponseEntity<Void> openProfile(
+            @RequestHeader(value = UID) String uid,
+            @Valid @RequestBody OpenProfileRequest request
+    ) {
+        log.info("POST /api/matching/profile");
+        matchingService.openProfile(Long.parseLong(uid), request);
+        return ResponseEntity.ok().build();
+    }
+
+    /**
+     * 프로필 교환 수락/거절하기
+     */
+    @PostMapping("/exchange")
+    public ResponseEntity<Void> exchangeProfile(
             @RequestHeader(value = UID) String uid,
             @Valid @RequestBody ExchangeProfileRequest request
     ) {
-        log.info("POST /api/matching/profile");
+        log.info("POST /api/matching/exchange");
         matchingService.exchangeProfile(Long.parseLong(uid), request);
         return ResponseEntity.ok().build();
     }

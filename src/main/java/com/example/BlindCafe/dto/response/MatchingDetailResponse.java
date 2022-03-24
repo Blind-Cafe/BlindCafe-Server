@@ -23,6 +23,7 @@ public class MatchingDetailResponse {
     private LocalDateTime beginDt;
     private LocalDateTime expiredDt;
     private boolean isContinuous;
+    private boolean isActive;
 
     public static MatchingDetailResponse fromEntity(Matching matching, Long userId) {
         User partner = matching.getUserMatchings().stream()
@@ -45,6 +46,7 @@ public class MatchingDetailResponse {
         response.setBeginDt(matching.getBeginTime());
         response.setExpiredDt(matching.getExpiredTime());
         response.setContinuous(matching.getIsContinuous());
+        response.setActive(matching.isActive());
         return response;
     }
 }
