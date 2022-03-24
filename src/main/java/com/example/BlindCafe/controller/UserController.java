@@ -1,6 +1,5 @@
 package com.example.BlindCafe.controller;
 
-import com.example.BlindCafe.domain.Report;
 import com.example.BlindCafe.dto.request.*;
 import com.example.BlindCafe.dto.response.*;
 import com.example.BlindCafe.service.MatchingService;

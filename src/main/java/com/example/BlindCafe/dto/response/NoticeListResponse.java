@@ -18,12 +18,14 @@ public class NoticeListResponse {
     public static class NoticeInfo {
         private Long noticeId;
         private String title;
+        private String content;
         private LocalDateTime createdAt;
 
         public static NoticeInfo fromEntity(Notice notice) {
             return NoticeInfo.builder()
                     .noticeId(notice.getId())
                     .title(notice.getTitle())
+                    .content(notice.getContent())
                     .createdAt(notice.getCreatedAt())
                     .build();
         }
