@@ -5,6 +5,7 @@ import com.example.BlindCafe.dto.response.AvatarListResponse;
 import com.example.BlindCafe.dto.response.DeleteUserResponse;
 import com.example.BlindCafe.dto.response.UserDetailResponse;
 import com.example.BlindCafe.dto.response.UserProfileResponse;
+import com.example.BlindCafe.service.MatchingService;
 import com.example.BlindCafe.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +23,7 @@ import static com.example.BlindCafe.config.jwt.JwtAuthorizationFilter.UID;
 public class UserController {
 
     private final UserService userService;
+    private final MatchingService matchingService;
 
     /**
      * 유저 정보 추가 입력(온보딩)
@@ -158,4 +160,24 @@ public class UserController {
         userService.suggest(Long.parseLong(uid), request);
         return ResponseEntity.ok().build();
     }
+
+    /**
+     * 신고하기
+     */
+    @PostMapping("/report")
+    public ResponseEntity<Void> report(
+            @RequestHeader(value = UID) String uid,
+            @Valid @RequestBody ReportRequest request
+    ) {
+        log.info("POST /api/report");
+        // 신고하기
+        userService.report(Long.parseLong(uid), request);
+        // 방 나가기 처리 - 나가기 사유는 5번으로 고정
+        matchingService.leaveMatching(Long.parseLong(uid), request.getMatchingId(), 5L);
+        return ResponseEntity.ok().build();
+    }
+
+    /**
+     * 신고 내역 확인하기
+     */
 }

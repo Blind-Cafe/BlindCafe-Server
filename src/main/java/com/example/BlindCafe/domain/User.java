@@ -227,4 +227,9 @@ public class User extends BaseTimeEntity {
     public void updateMatchingHistory(Long partnerId) {
         this.matchingHistory.update(partnerId);
     }
+
+    // 정지
+    public void suspend() {
+        this.status = UserStatus.SUSPENDED;
+    }
 }

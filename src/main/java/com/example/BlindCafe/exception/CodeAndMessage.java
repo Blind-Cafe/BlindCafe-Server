@@ -35,6 +35,7 @@ public enum CodeAndMessage {
     ALREADY_MATCHING_REQUEST("1034", "이미 매칭 요청 중입니다."),
     LACK_OF_TICKET("1035", "매칭권이 부족합니다."),
     EMPTY_MATCHING_REQUEST("1100", "현재 요청하고 있는 매칭이 없습니다."),
+    EMPTY_PARTNER_INFO("1101", "상대방을 조회하는 도중 에러가 발생했습니다."),
 
     INVALID_ADDRESS("1040", "유효한 주소가 아닙니다."),
 

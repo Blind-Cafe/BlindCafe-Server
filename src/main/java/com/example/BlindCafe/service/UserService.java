@@ -1,5 +1,7 @@
 package com.example.BlindCafe.service;
 
+import com.example.BlindCafe.domain.type.ReasonType;
+import com.example.BlindCafe.domain.type.status.MatchingStatus;
 import com.example.BlindCafe.dto.response.UserProfileResponse;
 import com.example.BlindCafe.dto.request.*;
 import com.example.BlindCafe.domain.*;
@@ -34,6 +36,7 @@ public class UserService {
     private final ReasonRepository reasonRepository;
     private final CustomReasonRepository customReasonRepository;
     private final SuggestionRepository suggestionRepository;
+    private final ReportRepository reportRepository;
 
     private final AmazonS3Connector amazonS3Connector;
     private final MailUtil mailUtil;
@@ -239,5 +242,31 @@ public class UserService {
         
         // 관리자에게 건의사항 이메일로 전송하기
         mailUtil.sendMail(user.getNickname(), user.getPhone(), content, images);
+    }
+
+    /**
+     * 신고하기
+     */
+    @Transactional
+    public void report(Long userId, ReportRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BlindCafeException(EMPTY_USER));
+
+        Matching matching = user.getMatchings().stream()
+                .map(UserMatching::getMatching)
+                .filter(m -> m.getId().equals(request.getMatchingId()))
+                .findAny().orElseThrow(() -> new BlindCafeException(NON_AUTHORIZATION_MATCHING));
+
+        User partner = matching.getUserMatchings().stream()
+                .map(UserMatching::getUser)
+                .filter(u -> !u.equals(user))
+                .findAny().orElseThrow(() -> new BlindCafeException(EMPTY_PARTNER_INFO));
+
+        Reason reason = reasonRepository.findByReasonTypeAndNum(ReasonType.FOR_REPORT, request.getReason())
+                .orElseThrow(() -> new BlindCafeException(EMPTY_REASON));
+
+        // 신고하기
+        Report report = Report.create(user, partner, matching.getId(), reason);
+        reportRepository.save(report);
     }
 }
