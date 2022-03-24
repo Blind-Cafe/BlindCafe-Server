@@ -48,6 +48,14 @@ public class Matching extends BaseTimeEntity {
     @Column(columnDefinition = "varchar(20) default 'MATCHING'", nullable = false)
     private MatchingStatus status;
 
+    public void setUserMatchings(List<UserMatching> userMatchings) {
+        userMatchings.forEach(um -> {
+            um.success();
+            um.setMatching(this);
+        });
+        this.userMatchings = userMatchings;
+    }
+
     public void setPush(MatchingPush push) {
         this.push = push;
         push.setMatching(this);

@@ -52,6 +52,12 @@ public class UserMatching extends BaseTimeEntity {
         return userMatching;
     }
 
+    // 매칭 성공
+    public void success() {
+        this.status = MatchingStatus.MATCHING;
+    }
+
+    // 매칭 취소
     public void cancel() {
         this.status = MatchingStatus.CANCEL_REQUEST;
         this.user.restoreTicket();

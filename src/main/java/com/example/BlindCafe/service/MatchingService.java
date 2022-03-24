@@ -5,6 +5,7 @@ import com.example.BlindCafe.domain.*;
 import com.example.BlindCafe.domain.topic.Audio;
 import com.example.BlindCafe.domain.topic.Image;
 import com.example.BlindCafe.domain.topic.Subject;
+import com.example.BlindCafe.dto.response.MatchingListResponse;
 import com.example.BlindCafe.exception.BlindCafeException;
 import com.example.BlindCafe.firebase.FirebaseCloudMessageService;
 import com.example.BlindCafe.firebase.FirebaseService;
@@ -47,7 +48,14 @@ public class MatchingService {
     private final MatchingRepository matchingRepository;
     private final UserMatchingRepository userMatchingRepository;
     private final MatchingHistoryRepository matchingHistoryRepository;
+    private final TicketRepository ticketRepository;
 
+    private final MessageRepository messageRepository;
+    private final RoomLogRepository roomLogRepository;
+
+
+
+    
 
     private final FirebaseService firebaseService;
     private final FirebaseCloudMessageService fcmService;
@@ -59,9 +67,7 @@ public class MatchingService {
     private final DrinkRepository drinkRepository;
     private final ReasonRepository reasonRepository;
 
-    private final RoomLogRepository roomLogRepository;
-    private final MessageRepository messageRepository;
-    private final TicketRepository ticketRepository;
+
 
     private final static Long MAX_WAIT_TIME = 24L;
     private final static int BASIC_CHAT_DAYS = 3;
@@ -161,70 +167,60 @@ public class MatchingService {
     }
 
     /**
-     * 채팅방 관리
+     * 채팅방 리스트 조회
      */
+    public MatchingListResponse getMatchings(Long userId) {
+        
+        // 요청중인 매칭 조회
+        boolean request = isMatchingRequest(userId);
 
-    /**
-     * 채팅방 내 기능 관련
-     */
-
-
-    /**
-     * 매칭권 관련
-     */
-    // 매칭권 생성
-    @Transactional
-    public void createTickets(User user) {
-        Ticket newTicket = Ticket.create(user);
-        ticketRepository.save(newTicket);
-    }
-
-    // 현재 가지고 있는 매칭권 수 조회
-    public int getTicketCount(Long userId) {
-        Ticket ticket = ticketRepository.findByUserId(userId)
-                .orElseThrow(() -> new BlindCafeException(EMPTY_USER));
-        return ticket.getCount();
-    }
-
-    // 현재 요청 중인 매칭이 있는지 조회
-    public boolean isMatchingRequest(Long userId) {
-        Optional<UserMatching> matchingRequest =
-                userMatchingRepository.findMatchingRequestByUserId(userId);
-        if (Objects.isNull(matchingRequest)) return false;
-        else return true;
-    }
-
-    // 매칭 히스토리 테이블 만들기
-    public void createMatchingHistory(User user) {
-        MatchingHistory matchingHistory = MatchingHistory.create(user);
-        matchingHistoryRepository.save(matchingHistory);
-    }
-
-
-
-
-
-
-    /**
-     * 내 테이블 조회 - 프로필 교환을 완료한 상대방 목록 조회
-     */
-    public MatchingListDto getMatchings(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new BlindCafeException(NO_USER));
-
-        LocalDateTime now = LocalDateTime.now();
-        List<MatchingListDto.MatchingDto> matchings = user.getUserMatchings().stream()
-                .filter(userMatching -> !Objects.isNull(userMatching.getMatching()))
-                .filter(userMatching -> userMatching.getMatching().getIsContinuous())
-                .filter(userMatching -> userMatching.getMatching().getStatus().equals(MATCHING_CONTINUE) || userMatching.getMatching().getStatus().equals(FAILED_EXPIRED))
-                .map(userMatching -> userMatching.getMatching())
-                .map(matching -> makeMatchingDto(matching, user, now))
-                .filter(matchingDto -> !Objects.isNull(matchingDto))
-                .sorted(Comparator.comparing(MatchingListDto.MatchingDto::getTime).reversed())
+        // 존재하는 매칭 조회
+        List<Matching> matchings = userMatchingRepository.findMatchingByUserId(userId).stream()
+                .map(UserMatching::getMatching)
                 .collect(Collectors.toList());
 
-        return new MatchingListDto(matchings);
+        Map<Long, MatchingListResponse.MatchingInfo> matchingInfoMap = new HashMap<>();
+        for (Matching m: matchings) {
+            MatchingListResponse.MatchingInfo info = MatchingListResponse.MatchingInfo.fromEntity(m, userId);
+            matchingInfoMap.put(m.getId(), info);
+        }
+
+        // 채팅방 정렬을 위해서 채팅방 메시지 기록 조회
+        List<Long> matchingIds = matchings.stream()
+                .map(Matching::getId)
+                .collect(Collectors.toList());
+
+        List<MatchingListResponse.RoomHistory> sortedMatchingList = new ArrayList<>();
+        for (Long mid: matchingIds) {
+            // 최근 메시지 내용, 시간 조회
+            Message message = messageRepository.findFirstByMatchingIdOrderByCreatedAtDesc(mid);
+            // 채팅방 접속 기록 조회
+            RoomLog log = roomLogRepository.findFirstByMatchingIdAndUserIdOrderByAccessAtDesc(mid, userId)
+                    .orElse(null);
+            sortedMatchingList.add(MatchingListResponse.RoomHistory.fromEntities(message, log));
+        }
+
+        // 시간 순으로 내림차순 정렬
+        sortedMatchingList = sortedMatchingList.stream()
+                .sorted(Comparator.comparing(MatchingListResponse.RoomHistory::getCreatedAt).reversed())
+                .collect(Collectors.toList());
+
+        List<MatchingListResponse.MatchingInfo> blind = new ArrayList<>();
+        List<MatchingListResponse.MatchingInfo> bright = new ArrayList<>();
+        for (MatchingListResponse.RoomHistory m: sortedMatchingList) {
+            // 최근 메세지 및 수신 여부 추가
+            Long matchingId = m.getMatchingId();
+            MatchingListResponse.MatchingInfo info = matchingInfoMap.get(matchingId);
+            info.updateHistory(m);
+            // 3일, 7일 채팅에 따라서 분류
+            if (info.isBlind()) blind.add(info);
+            else bright.add(info);
+        }
+
+        return new MatchingListResponse(request, blind, bright);
     }
+
+
 
     private MatchingListDto.MatchingDto makeMatchingDto(Matching matching, User user, LocalDateTime now) {
         Long restDay = ChronoUnit.DAYS.between(now, matching.getExpiryTime()) >= 0L ?
@@ -302,12 +298,56 @@ public class MatchingService {
     private boolean isValidMessageType(Message message) {
         MessageType messageType = message.getType();
         if (messageType.equals(MessageType.DESCRIPTION) ||
-        messageType.equals(MessageType.DRINK)) {
+                messageType.equals(MessageType.DRINK)) {
             return false;
         }
         else
             return true;
     }
+
+
+    /**
+     * 채팅방 내 기능 관련
+     */
+
+
+    /**
+     * 매칭권 관련
+     */
+    // 매칭권 생성
+    @Transactional
+    public void createTickets(User user) {
+        Ticket newTicket = Ticket.create(user);
+        ticketRepository.save(newTicket);
+    }
+
+    // 현재 가지고 있는 매칭권 수 조회
+    public int getTicketCount(Long userId) {
+        Ticket ticket = ticketRepository.findByUserId(userId)
+                .orElseThrow(() -> new BlindCafeException(EMPTY_USER));
+        return ticket.getCount();
+    }
+
+    // 현재 요청 중인 매칭이 있는지 조회
+    public boolean isMatchingRequest(Long userId) {
+        Optional<UserMatching> matchingRequest =
+                userMatchingRepository.findMatchingRequestByUserId(userId);
+        if (Objects.isNull(matchingRequest)) return false;
+        else return true;
+    }
+
+    // 매칭 히스토리 테이블 만들기
+    public void createMatchingHistory(User user) {
+        MatchingHistory matchingHistory = MatchingHistory.create(user);
+        matchingHistoryRepository.save(matchingHistory);
+    }
+
+
+
+
+
+
+
 
     /**
      * 채팅방 정보 조회
