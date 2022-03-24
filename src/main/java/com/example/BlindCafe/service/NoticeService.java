@@ -6,8 +6,7 @@ import com.example.BlindCafe.domain.notice.GroupNotice;
 import com.example.BlindCafe.domain.notice.Notice;
 import com.example.BlindCafe.domain.notice.PersonalNotice;
 import com.example.BlindCafe.dto.request.CreateNoticeRequest;
-import com.example.BlindCafe.dto.response.CreateGroupNoticeResponse;
-import com.example.BlindCafe.dto.response.CreatePersonalNoticeResponse;
+import com.example.BlindCafe.dto.response.NoticeListResponse;
 import com.example.BlindCafe.exception.BlindCafeException;
 import com.example.BlindCafe.repository.NoticeLogRepository;
 import com.example.BlindCafe.repository.NoticeRepository;
@@ -17,8 +16,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static com.example.BlindCafe.exception.CodeAndMessage.EMPTY_USER;
 
@@ -34,32 +36,28 @@ public class NoticeService {
     private final int NOTICE_PAGE_SIZE = 25;
 
     /**
-     * 그룹 공지 작성하기
+     * 공지 조회하기 + 공지 화면 접속 로그 남기기
      */
     @Transactional
-    public CreateGroupNoticeResponse createNotice(CreateNoticeRequest request) {
-        GroupNotice notice = GroupNotice.create(request.getTitle(), request.getContent());
-        noticeRepository.save(notice);
-        return CreateGroupNoticeResponse.fromEntity(notice);
+    public NoticeListResponse getGroupNotices(Long userId, int page, Long offset) {
+        List<Notice> notices = new ArrayList<>();
+        if (page > -1) {
+            // page 기준으로 공지 조회
+            notices = noticeRepository.findGroupNoticeByPage(NOTICE_PAGE_SIZE, page * NOTICE_PAGE_SIZE);
+        } else {
+            notices = noticeRepository.findGroupNoticeByOffset(NOTICE_PAGE_SIZE, offset);
+        }
+
+        // 공지 화면 접속 로그 저장
+        updateNoticeLog(userId);
+
+        return new NoticeListResponse(notices.stream()
+                        .map(NoticeListResponse.NoticeInfo::fromEntity)
+                        .collect(Collectors.toList()));
     }
 
-    /**
-     * 개인 공지(쪽지) 작성하기
-     */
-    @Transactional
-    public CreatePersonalNoticeResponse createNotice(CreateNoticeRequest request, Long uid) {
-        User user = userRepository.findById(uid)
-                .orElseThrow(() -> new BlindCafeException(EMPTY_USER));
-        PersonalNotice notice = PersonalNotice.create(request.getTitle(), request.getContent(), user);
-        noticeRepository.save(notice);
-        return CreatePersonalNoticeResponse.fromEntity(notice);
-    }
-    
-    /**
-     * 공지 화면 접속 기록 저장
-     */
-    @Transactional
-    public void updateNoticeLog(Long uid) {
+    // 공지 화면 접속 기록 저장
+    private void updateNoticeLog(Long uid) {
         LocalDateTime now = LocalDateTime.now();
         NoticeLog noticeLog = noticeLogRepository.findByUserId(uid).orElse(null);
         if (Objects.isNull(noticeLog)) {
@@ -71,12 +69,32 @@ public class NoticeService {
     }
 
     /**
+     * 그룹 공지 작성하기
+     */
+    @Transactional
+    public void createNotice(CreateNoticeRequest request) {
+        GroupNotice notice = GroupNotice.create(request.getTitle(), request.getContent());
+        noticeRepository.save(notice);
+    }
+
+    /**
+     * 개인 공지(쪽지) 작성하기
+     */
+    @Transactional
+    public void createNotice(CreateNoticeRequest request, Long uid) {
+        User user = userRepository.findById(uid)
+                .orElseThrow(() -> new BlindCafeException(EMPTY_USER));
+        PersonalNotice notice = PersonalNotice.create(request.getTitle(), request.getContent(), user);
+        noticeRepository.save(notice);
+    }
+
+    /**
      * 미수신 공지 조회
      */
     public boolean isUnreceivedNotice(Long uid) {
 
         // 최근 공지 조회
-        Optional<Notice> latestNoticeOptional = noticeRepository.findTop1ByOrderByCreatedAtDesc();
+        Optional<Notice> latestNoticeOptional = noticeRepository.findFirstByOrderByCreatedAtDesc();
         if (latestNoticeOptional.isEmpty())
             return false;
 
