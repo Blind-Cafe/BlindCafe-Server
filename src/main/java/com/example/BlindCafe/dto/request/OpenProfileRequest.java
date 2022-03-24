@@ -16,4 +16,6 @@ public class OpenProfileRequest {
     private Long matchingId;
     @NotNull
     private boolean accept;
+
+    private Long reason;
 }

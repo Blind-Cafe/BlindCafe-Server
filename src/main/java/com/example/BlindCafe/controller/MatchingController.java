@@ -128,11 +128,6 @@ public class MatchingController {
     }
 
     /**
-     * 신고하기
-     */
-
-
-    /**
      * 채팅방 로그 찍기
      */
     @PostMapping("{matchingId}/log")

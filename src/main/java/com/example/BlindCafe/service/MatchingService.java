@@ -262,6 +262,9 @@ public class MatchingService {
      */
     @Transactional
     public void openProfile(Long userId, OpenProfileRequest request) {
+
+        if (!request.isAccept() && Objects.isNull(request.getReason()))
+            throw new BlindCafeException(REQUIRED_REASON);
         
         // 사용자 프로필 작성 여부 확인
         if (!isValidProfile(userId))
@@ -269,14 +272,22 @@ public class MatchingService {
 
         Matching matching = matchingRepository.findValidMatchingById(request.getMatchingId())
                 .orElseThrow(() -> new BlindCafeException(EMPTY_MATCHING));
+        User user = matching.getUserMatchingById(userId).getUser();
 
         boolean isAccept = request.isAccept();
         // 프로필 공개
         boolean result = matching.getUserMatchingById(userId).openProfile(isAccept);
 
         if (!isAccept) {
+            Reason reason = reasonRepository.findByReasonTypeAndNum(FOR_LEAVE_ROOM, request.getReason())
+                    .orElseThrow(() -> new BlindCafeException(EMPTY_REASON));
+
+            // 이유 저장
+            CustomReason customReason = CustomReason.create(user, request.getMatchingId(), reason);
+            customReasonRepository.save(customReason);
+
             // TODO 프로필 공개 거절 메시지 Publish
-            
+
             return;
         }
 
@@ -304,15 +315,28 @@ public class MatchingService {
     @Transactional
     public void exchangeProfile(Long userId, ExchangeProfileRequest request) {
 
+        if (!request.isAccept() && Objects.isNull(request.getReason()))
+            throw new BlindCafeException(REQUIRED_REASON);
+
         Matching matching = matchingRepository.findValidMatchingById(request.getMatchingId())
                 .orElseThrow(() -> new BlindCafeException(EMPTY_MATCHING));
+        User user = matching.getUserMatchingById(userId).getUser();
 
         boolean isAccept = request.isAccept();
         // 프로필 교환
         boolean result = matching.getUserMatchingById(userId).exchangeProfile(isAccept);
 
         if (!isAccept) {
+            Reason reason = reasonRepository.findByReasonTypeAndNum(FOR_LEAVE_ROOM, request.getReason())
+                    .orElseThrow(() -> new BlindCafeException(EMPTY_REASON));
+
+            // 이유 저장
+            CustomReason customReason = CustomReason.create(user, request.getMatchingId(), reason);
+            customReasonRepository.save(customReason);
+
             // TODO 프로필 교환 거절 메시지 Publish
+
+            return;
         }
 
         // TODO 프로필 교환 메시지 Publish

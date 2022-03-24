@@ -16,4 +16,6 @@ public class ExchangeProfileRequest {
     private Long matchingId;
     @NotNull
     private boolean accept;
+
+    private Long reason;
 }

@@ -44,6 +44,7 @@ public enum CodeAndMessage {
     NOT_REQUIRED_INFO_FOR_MATCHING("1060", "매칭을 요청하기에 충분한 정보가 입력되어 있지 않습니다."),
 
     EMPTY_REASON("1070", "유효하지 않은 이유입니다."),
+    REQUIRED_REASON("1071", "사유를 입력해야 합니다."),
 
     FILE_CONVERT_ERROR("1080", "파일 변환에 실패했습니다."),
     FILE_EXTENSION_ERROR("1081", "파일 확장자 인식에 실패했습니다."),
