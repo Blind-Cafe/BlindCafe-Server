@@ -1,4 +1,4 @@
-package com.example.BlindCafe.dto;
+package com.example.BlindCafe.dto.response;
 
 import com.example.BlindCafe.domain.*;
 import com.example.BlindCafe.domain.type.Mbti;

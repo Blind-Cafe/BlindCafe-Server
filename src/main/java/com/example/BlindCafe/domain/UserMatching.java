@@ -70,7 +70,7 @@ public class UserMatching extends BaseTimeEntity {
 
     // 매칭 취소
     public void cancel() {
-        this.status = MatchingStatus.CANCEL_REQUEST;
+        this.status = MatchingStatus.CANCEL;
         this.user.restoreTicket();
     }
 
@@ -121,5 +121,11 @@ public class UserMatching extends BaseTimeEntity {
             this.getMatching().inactive();
 
         return this.getMatching().exchangeProfile();
+    }
+    
+    // 방 나가기
+    public void leave() {
+        this.getUser().getMatchings().remove(this);
+        this.status = MatchingStatus.OUT;
     }
 }

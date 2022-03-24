@@ -113,84 +113,35 @@ public class MatchingController {
         return ResponseEntity.ok().build();
     }
 
-
-
-
-
     /**
      * 채팅방 나가기
      */
-    @DeleteMapping("{matchingId}")
-    public ResponseEntity<DeleteMatchingDto> deleteMatching(
-            Authentication authentication,
+    @DeleteMapping("/{matchingId}")
+    public ResponseEntity<Void> leaveMatching(
+            @RequestHeader(value = UID) String uid,
             @PathVariable Long matchingId,
-            @RequestParam(value = "reason") Long reasonNum
+            @RequestParam(value = "reason", defaultValue = "1") Long reasonId
     ) {
         log.info("DELETE /api/matching/{}", matchingId);
-        return ResponseEntity.ok(matchingService.deleteMatching(getUserId(authentication), matchingId, reasonNum));
-    }
-
-    /**
-     * 프로필 교환 시 내 프로필 조회
-     */
-    @GetMapping("{matchingId}/profile")
-    public ResponseEntity<MatchingProfileDto> getMatchingProfile(
-            Authentication authentication,
-            @PathVariable Long matchingId
-    ) {
-        log.info("GET /api/matching/{}/profile", matchingId);
-        return ResponseEntity.ok(matchingService.getMatchingProfile(getUserId(authentication), matchingId));
-    }
-
-    /**
-     * 상대방 프로필 확인하기
-     */
-    @GetMapping("{matchingId}/partner")
-    public ResponseEntity<MatchingProfileDto> getPartnerProfile(
-            Authentication authentication,
-            @PathVariable Long matchingId
-    ) {
-        log.info("GET /api/matching/{}/partner", matchingId);
-        return ResponseEntity.ok(
-                matchingService.getPartnerProfile(getUserId(authentication), matchingId));
-    }
-
-    /**
-     * 프로필 교환 수락하기
-     */
-    @PostMapping("{matchingId}/partner")
-    public ResponseEntity<OpenMatchingProfileDto.Response> acceptExchangeProfile(
-            Authentication authentication,
-            @PathVariable Long matchingId
-    ) {
-        log.info("POST /api/matching/{}/partner", matchingId);
-        return ResponseEntity.ok(matchingService.acceptPartnerProfile(getUserId(authentication), matchingId));
-    }
-
-    /**
-     * 프로필 교환 거절하기
-     */
-    @DeleteMapping("{matchingId}/partner")
-    public ResponseEntity<Void> rejectExchangeProfile(
-            Authentication authentication,
-            @PathVariable Long matchingId,
-            @RequestParam(value = "reason") Long reasonNum
-    ) {
-        log.info("DELETE /api/matching/{}/partner", matchingId);
-        matchingService.rejectExchangeProfile(getUserId(authentication), matchingId, reasonNum);
+        matchingService.leaveMatching(Long.parseLong(uid), matchingId, reasonId);
         return ResponseEntity.ok().build();
     }
+
+    /**
+     * 신고하기
+     */
+
 
     /**
      * 채팅방 로그 찍기
      */
     @PostMapping("{matchingId}/log")
     public ResponseEntity<Void> createRoomLog(
-            Authentication authentication,
+            @RequestHeader(value = UID) String uid,
             @PathVariable Long matchingId
     ) {
         log.info("POST /api/matching/{}/log", matchingId);
-        matchingService.createRoomLog(getUserId(authentication), matchingId);
+        matchingService.createRoomLog(Long.parseLong(uid), matchingId);
         return ResponseEntity.ok().build();
     }
 }

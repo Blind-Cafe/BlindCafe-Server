@@ -156,6 +156,13 @@ public class Matching extends BaseTimeEntity {
         return this.isExchangeProfile;
     }
 
+    // 채팅방 나가기
+    public void leave(Long userId) {
+        this.getUserMatchingById(userId).leave();
+        // 채팅방 비활성화
+        this.inactive();
+    }
+
     // 채팅방 비활성화
     public void inactive() {
         this.isActive = false;
