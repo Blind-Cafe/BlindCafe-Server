@@ -53,6 +53,7 @@ public enum CodeAndMessage {
 
 
     NOT_YET_EXCHANGE_PROFILE("1110", "프로필 교환을 할 수 있는 매칭이 아닙니다."),
+    ALREADY_OPEN_PROFILE("1111", "이미 프로필을 공개했습니다."),
 
     EXCEED_MATCHING_TOPIC("1120", "더 이상 존재하는 토픽이 없습니다."),
     EMPTY_TOPIC("1121", "현재 유효하지 않은 토픽입니다. "),

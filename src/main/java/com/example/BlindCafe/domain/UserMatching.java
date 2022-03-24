@@ -1,10 +1,15 @@
 package com.example.BlindCafe.domain;
 
 import com.example.BlindCafe.domain.type.status.MatchingStatus;
+import com.example.BlindCafe.exception.BlindCafeException;
 import lombok.*;
 
 import javax.persistence.*;
+import java.time.LocalDateTime;
 import java.util.List;
+
+import static com.example.BlindCafe.exception.CodeAndMessage.ALREADY_OPEN_PROFILE;
+import static com.example.BlindCafe.exception.CodeAndMessage.NOT_YET_EXCHANGE_PROFILE;
 
 @Entity
 @Table(name = "user_matching")
@@ -32,6 +37,8 @@ public class UserMatching extends BaseTimeEntity {
 
     private String interests;
 
+    private Boolean isProfileOpen;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private MatchingStatus status;
@@ -49,6 +56,7 @@ public class UserMatching extends BaseTimeEntity {
         }
         userMatching.setDrink(null);
         userMatching.setInterests(sb.toString());
+        userMatching.setIsProfileOpen(null);
         userMatching.setStatus(MatchingStatus.WAIT);
         return userMatching;
     }
@@ -67,5 +75,23 @@ public class UserMatching extends BaseTimeEntity {
     // 음료수 선택
     public void selectDrink(Drink drink) {
         this.drink = drink;
+    }
+
+    // 프로필 교환하기
+    public boolean exchangeProfile(boolean isAccept) {
+        LocalDateTime now = LocalDateTime.now();
+        
+        // 프로필 공개 시점이 아닌 경우
+        if (this.getMatching().getIsContinuous()
+            || this.getMatching().getExpiredTime().isAfter(now))
+            throw new BlindCafeException(NOT_YET_EXCHANGE_PROFILE);
+
+        // 이미 프로필 공개 수락/거절한 경우
+        if (this.isProfileOpen != null)
+            throw new BlindCafeException(ALREADY_OPEN_PROFILE);
+
+        // 프로필 교환 수락/거절
+        this.isProfileOpen = isAccept;
+        return this.getMatching().checkExchangeProfile();
     }
 }

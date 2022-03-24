@@ -8,6 +8,7 @@ import javax.persistence.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 @Entity
@@ -42,6 +43,9 @@ public class Matching extends BaseTimeEntity {
 
     @Column(columnDefinition = "boolean default false", nullable = false)
     private Boolean isContinuous;
+
+    @Column(columnDefinition = "boolean default false", nullable = false)
+    private Boolean isExchangeProfile;
 
     @Enumerated(EnumType.STRING)
     @Column(columnDefinition = "varchar(20) default 'MATCHING'", nullable = false)
@@ -83,6 +87,7 @@ public class Matching extends BaseTimeEntity {
         matching.setBeginTime(now);
         matching.setExpiredTime(now.plusDays(3));
         matching.setIsContinuous(false);
+        matching.setIsExchangeProfile(false);
         matching.setStatus(MatchingStatus.MATCHING);
 
         // 매칭 히스토리 업데이트
@@ -106,5 +111,32 @@ public class Matching extends BaseTimeEntity {
     // 토픽 가져오기
     public Long getTopic() {
         return this.topic.getTopic();
+    }
+    
+    // 특정 유저의 유저 매칭 가져오기
+    public UserMatching getUserMatchingById(Long userId) {
+        return this.userMatchings.stream()
+                .filter(um -> um.getUser().getId().equals(userId))
+                .findAny().orElse(null);
+    }
+
+    // 프로필 교환 확인
+    public boolean checkExchangeProfile() {
+        AtomicBoolean status = new AtomicBoolean(true);
+        this.getUserMatchings().forEach(um -> {
+            if (!um.isProfileOpen())
+                status.set(false);
+        });
+        this.isExchangeProfile = status.get();
+
+        // 모두 프로필 교환 수락한 경우 7일 채팅으로 업데이트
+        if (this.isExchangeProfile) {
+            LocalDateTime now = LocalDateTime.now();
+            this.isContinuous = true;
+            this.beginTime = now;
+            this.expiredTime = now.plusDays(7);
+        }
+
+        return this.isExchangeProfile;
     }
 }

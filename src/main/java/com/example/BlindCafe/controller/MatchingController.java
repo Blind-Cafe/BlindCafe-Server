@@ -1,5 +1,6 @@
 package com.example.BlindCafe.controller;
 
+import com.example.BlindCafe.dto.request.ExchangeProfileRequest;
 import com.example.BlindCafe.dto.request.SelectDrinkRequest;
 import com.example.BlindCafe.dto.response.MatchingDetailResponse;
 import com.example.BlindCafe.dto.response.MatchingListResponse;
@@ -85,6 +86,18 @@ public class MatchingController {
         return ResponseEntity.ok().build();
     }
 
+    /**
+     * 프로필 교환 수락/거절하기
+     */
+    @PostMapping("/profile")
+    public ResponseEntity<Void> acceptProfileOpen(
+            @RequestHeader(value = UID) String uid,
+            @Valid @RequestBody ExchangeProfileRequest request
+    ) {
+        log.info("POST /api/matching/profile");
+        matchingService.exchangeProfile(Long.parseLong(uid), request);
+        return ResponseEntity.ok().build();
+    }
 
 
 
@@ -113,20 +126,6 @@ public class MatchingController {
     ) {
         log.info("GET /api/matching/{}/profile", matchingId);
         return ResponseEntity.ok(matchingService.getMatchingProfile(getUserId(authentication), matchingId));
-    }
-
-    /**
-     * 프로필 공개하기
-     */
-    @PostMapping("{matchingId}/profile")
-    public ResponseEntity<OpenMatchingProfileDto.Response> openMatchingProfile(
-            Authentication authentication,
-            @PathVariable Long matchingId,
-            @Valid @RequestBody OpenMatchingProfileDto.Request request
-    ) {
-        log.info("POST /api/matching/{}/profile", matchingId);
-        return ResponseEntity.ok(
-                matchingService.openMatchingProfile(getUserId(authentication), matchingId, request));
     }
 
     /**

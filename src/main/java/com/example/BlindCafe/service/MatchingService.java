@@ -2,6 +2,7 @@ package com.example.BlindCafe.service;
 
 import com.example.BlindCafe.dto.*;
 import com.example.BlindCafe.domain.*;
+import com.example.BlindCafe.dto.request.ExchangeProfileRequest;
 import com.example.BlindCafe.dto.request.SelectDrinkRequest;
 import com.example.BlindCafe.dto.response.MatchingDetailResponse;
 import com.example.BlindCafe.dto.response.MatchingListResponse;
@@ -20,7 +21,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -31,7 +31,6 @@ import static com.example.BlindCafe.domain.type.ReasonType.FOR_WONT_EXCHANGE_PRO
 import static com.example.BlindCafe.domain.type.status.CommonStatus.NORMAL;
 import static com.example.BlindCafe.domain.type.status.MatchingStatus.*;
 import static com.example.BlindCafe.service.TopicService.PUBLIC_INTEREST_ID;
-import static java.util.Comparator.comparing;
 
 @Service
 @Transactional(readOnly = true)
@@ -62,9 +61,6 @@ public class MatchingService {
 
     private final ReasonRepository reasonRepository;
 
-
-
-    private final static Long MAX_WAIT_TIME = 24L;
     private final static int EXTEND_CHAT_DAYS = 7;
 
     /**
@@ -283,6 +279,34 @@ public class MatchingService {
         topicService.sendTopic(matchingId, topicId);
     }
 
+    /**
+     * 프로필 교환 수락/거절하기
+     */
+    @Transactional
+    public void exchangeProfile(Long userId, ExchangeProfileRequest request) {
+
+        Matching matching = matchingRepository.findValidMatchingById(request.getMatchingId())
+                .orElseThrow(() -> new BlindCafeException(EMPTY_MATCHING));
+
+        // 프로필 교환
+        boolean exchangeResult = matching.getUserMatchingById(userId).exchangeProfile(request.isAccept());
+
+        // 프로필 공개를 수락한 경우
+        if (request.isAccept()) {
+            // TODO 프로필 공개 메시지 Publish
+
+            // 모두 프로필 공개를 수락한 경우
+            if (exchangeResult) {
+                // TODO 7일 채팅 메시지 Publish
+            }
+            return;
+        }
+
+        // 프로필 공개를 거절한 경우
+        // TODO 프로필 공개 거절 메시지 Publish
+
+    }
+
 
 
     /**
@@ -317,69 +341,15 @@ public class MatchingService {
     }
 
 
+
+
+
+
+
     private String getFirstDescription(User user, User partner, Interest interest) {
         return user.getNickname() + "님과 " + partner.getNickname() + "님이 선택한 <" + interest.getName() + "> 테이블입니다.";
     }
 
-
-    /**
-     * 유저의 관심사를 우선순위 순으로 정렬
-     */
-    private List<Interest> getUserInterestSortedByPriority(User user) {
-        return user.getInterestOrders().stream()
-                .sorted(comparing(InterestOrder::getPriority))
-                .map(InterestOrder::getInterest)
-                .collect(Collectors.toList());
-    }
-
-    /**
-     * 유효한 시간 내의 요청인지 확인
-     */
-    private boolean isValidRequestTime(UserMatching otherMatching, LocalDateTime now) {
-        Long diffTime = ChronoUnit.HOURS.between(otherMatching.getCreatedAt(), now);
-        if (diffTime <= MAX_WAIT_TIME)
-            return true;
-        else
-            return false;
-    }
-
-    /**
-     * 관심사가 공통되는지 확인
-     */
-    private boolean isContainInterest(UserMatching userMatching, List<Interest> userInterests) {
-        List<Interest> otherInterests = userMatching.getUser().getInterestOrders()
-                .stream()
-                .map(InterestOrder::getInterest)
-                .collect(Collectors.toList());
-
-        for (int i=0; i<userInterests.size(); i++) {
-            if (otherInterests.contains(userInterests.get(i)))
-                return true;
-        }
-        return false;
-    }
-
-    /**
-     * 유저간 공통 관심사 추출
-     * Todo
-     * 나중에 isContainInterest 에서 한 번에 공통 관심사 뽑자
-     */
-    private Interest getCommonInterest(UserMatching userMatching, List<Interest> userInterests) {
-        List<Interest> otherInterests = userMatching.getUser().getInterestOrders()
-                .stream()
-                .map(InterestOrder::getInterest)
-                .collect(Collectors.toList());
-
-        for (int i=0; i<userInterests.size(); i++) {
-            if (otherInterests.contains(userInterests.get(i)))
-                return userInterests.get(i);
-        }
-        return null;
-    }
-
-    private boolean isMatched(UserMatching userMatching, List<User> pastPartners) {
-        return pastPartners.contains(userMatching.getUser());
-    }
 
     private String getDrinkDescription(User user, Drink drink) {
         return drink.getName() + "를 주문한 " + user.getNickname() + "님입니다.\n반갑게 맞아주세요.";
@@ -651,7 +621,7 @@ public class MatchingService {
     }
 
     @Transactional
-    public void rejectExc`hangeProfile(Long userId, Long matchingId, Long reasonNum) {
+    public void rejectExchangeProfile(Long userId, Long matchingId, Long reasonNum) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BlindCafeException(NO_USER));
 
