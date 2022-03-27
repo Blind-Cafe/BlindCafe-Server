@@ -2,10 +2,10 @@ package com.example.BlindCafe.interceptor;
 
 import com.example.BlindCafe.config.jwt.JwtUtils;
 import com.example.BlindCafe.exception.BlindCafeException;
-import com.example.BlindCafe.redis.RedisPublisher;
 import com.example.BlindCafe.service.PresenceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
@@ -29,12 +29,12 @@ public class StompChannelInterceptor implements ChannelInterceptor {
     private final int TOPIC_POSITION = 3;
 
     @Override
-    public Message<?> preSend(Message<?> message, MessageChannel channel) {
+    public Message<?> preSend(@NotNull Message<?> message, @NotNull MessageChannel channel) {
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
         String sessionId = accessor.getSessionId();
         String destination = accessor.getDestination();
 
-        switch (accessor.getCommand()) {
+        switch (Objects.requireNonNull(accessor.getCommand())) {
             case CONNECT: // WebSocket 연결, Header 검증
                 // 최초 연결 시 Header 검증
                 String uid = JwtUtils.getUsedId(getHeaderValue(accessor, TOKEN));
@@ -43,6 +43,9 @@ public class StompChannelInterceptor implements ChannelInterceptor {
                 break;
 
             case SUBSCRIBE: // 채팅방 구독 및 본인 토픽 구독
+                if (destination == null)
+                    break;
+
                 String topic = getTopic(destination);
                 // 채팅방 구독
                 if (topic != null) presenceService.joinRoom(sessionId, topic);
@@ -51,7 +54,7 @@ public class StompChannelInterceptor implements ChannelInterceptor {
             case UNSUBSCRIBE: // 채팅방 구독 취소
                 String mid = getHeaderValue(accessor, MATCHING);
                 // 채팅방 구독 취소
-                if (mid != null) presenceService.leaveRoom(sessionId, mid);
+                presenceService.leaveRoom(sessionId, mid);
                 break;
                 
             case DISCONNECT: // WebSocket 연결 해제
@@ -62,13 +65,11 @@ public class StompChannelInterceptor implements ChannelInterceptor {
     }
 
     private String getHeaderValue(StompHeaderAccessor accessor, String headerName) {
-        String value = null;
         try {
-            value = Objects.requireNonNull(accessor.getFirstNativeHeader(headerName));
+            return Objects.requireNonNull(accessor.getFirstNativeHeader(headerName));
         } catch (Exception e) {
             throw new BlindCafeException(FORBIDDEN_AUTHORIZATION);
         }
-        return value;
     }
 
     private String getTopic(String destination) {
