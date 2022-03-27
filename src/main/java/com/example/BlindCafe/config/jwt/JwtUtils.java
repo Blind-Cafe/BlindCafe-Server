@@ -1,13 +1,14 @@
 package com.example.BlindCafe.config.jwt;
 
 import com.example.BlindCafe.domain.User;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.JwsHeader;
-import io.jsonwebtoken.Jwts;
+import com.example.BlindCafe.exception.BlindCafeException;
+import io.jsonwebtoken.*;
 import org.springframework.data.util.Pair;
 
 import java.security.Key;
 import java.util.Date;
+
+import static com.example.BlindCafe.exception.CodeAndMessage.*;
 
 public class JwtUtils {
 
@@ -40,11 +41,17 @@ public class JwtUtils {
     }
 
     public static String getUsedId(String token) {
-        return Jwts.parserBuilder()
-                .setSigningKeyResolver(SigningKeyResolver.instance)
-                .build()
-                .parseClaimsJws(token)
-                .getBody()
-                .getSubject();
+        try {
+            return Jwts.parserBuilder()
+                    .setSigningKeyResolver(SigningKeyResolver.instance)
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody()
+                    .getSubject();
+        }  catch (ExpiredJwtException e) {
+            throw new BlindCafeException(EXPIRED_TOKEN);
+        } catch (IllegalArgumentException | MalformedJwtException | UnsupportedJwtException e) {
+            throw new BlindCafeException(FAILED_AUTHORIZATION);
+        }
     }
 }
