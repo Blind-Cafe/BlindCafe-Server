@@ -45,6 +45,7 @@ import static com.example.BlindCafe.domain.type.status.UserStatus.*;
 import static com.example.BlindCafe.exception.CodeAndMessage.*;
 import static com.example.BlindCafe.domain.type.Social.APPLE;
 import static com.example.BlindCafe.domain.type.Social.KAKAO;
+import static com.example.BlindCafe.service.NotificationService.deviceInfoInMemory;
 
 @Service
 @Transactional(readOnly = true)
@@ -94,6 +95,7 @@ public class AuthService {
 
         // 디바이스 토큰 및 기종 업데이트
         user.updateDevice(platform, deviceToken);
+        deviceInfoInMemory.put(user.getId(), Pair.of(platform, deviceToken));
 
         // access token & refresh token
         Pair<String, String> tokens = getTokens(user);

@@ -1,10 +1,8 @@
 package com.example.BlindCafe.dto.response;
 
-import com.example.BlindCafe.domain.Matching;
-import com.example.BlindCafe.domain.Message;
-import com.example.BlindCafe.domain.RoomLog;
-import com.example.BlindCafe.domain.User;
+import com.example.BlindCafe.domain.*;
 import com.example.BlindCafe.domain.type.MessageType;
+import com.example.BlindCafe.dto.common.PartnerDto;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -28,7 +26,7 @@ public class MatchingListResponse {
     @NoArgsConstructor
     public static class MatchingInfo {
         private Long matchingId;
-        private Partner partner;
+        private PartnerDto partner;
         private String latestMessage;
         private boolean received;
         private boolean blind;
@@ -38,11 +36,11 @@ public class MatchingListResponse {
             User partner = matching.getUserMatchings().stream()
                     .filter(userMatching -> !userMatching.getUser().getId().equals(userId))
                     .findAny()
-                    .map(partnerMatching -> partnerMatching.getUser()).orElse(null);
+                    .map(UserMatching::getUser).orElse(null);
 
             MatchingInfo info = new MatchingInfo();
             info.setMatchingId(matching.getId());
-            info.setPartner(Partner.fromEntity(partner));
+            info.setPartner(PartnerDto.fromEntity(partner));
             info.setBlind(!matching.getIsContinuous());
             info.setExpiredDt(matching.getExpiredTime());
             return info;
@@ -84,7 +82,7 @@ public class MatchingListResponse {
             history.setLatestMessage(content);
             boolean received = false;
             if (log != null) {
-                received = message.getCreatedAt().compareTo(log.getAccessAt()) <= 0 ? true : false;
+                received = message.getCreatedAt().compareTo(log.getAccessAt()) <= 0;
             }
             history.setReceived(received);
             history.setCreatedAt(message.getCreatedAt());

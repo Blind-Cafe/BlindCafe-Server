@@ -52,8 +52,6 @@ public enum CodeAndMessage {
 
     INVALID_PROFILE_IMAGE_SEQUENCE("1090", "유효하지 않은 우선순위입니다."),
 
-
-
     NOTYET_OPEN_PROFILE("1110", "아직 프로필을 공개할 수 없습니다."),
     ALREADY_OPEN_PROFILE("1111", "이미 프로필을 공개했습니다."),
     NOTYET_EXCHANGE_PROFILE("1112", "아직 프로필을 교환할 수 없습니다."),
@@ -71,6 +69,8 @@ public enum CodeAndMessage {
 
     FIREBASE_CREDENTIALS_ERROR("1160", "Firebase 인증 에러"),
     FIREBASE_INSERT_ERROR("1161", "Firebase 데이터 저장 에러" ),
+    FIREBASE_BUILD_MESSAGE_ERROR("1162", "FCM 메시지 생성 중 발생했습니다."),
+    FIREBASE_SEND_MESSAGE_ERROR("1163", "FCM 전송 중 에러가 발생했습니다."),
 
     TOPIC_SERVE_THREAD_ERROR("1170", "토픽 제공 스레드 에러입니다."),
 
