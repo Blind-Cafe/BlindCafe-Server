@@ -46,7 +46,7 @@ public class MatchingListResponse {
             return info;
         }
 
-        public void updateHistory(RoomHistory history) {
+        public void setHistory(RoomHistory history) {
             this.latestMessage = history.getLatestMessage();
             this.received = history.isReceived();
         }

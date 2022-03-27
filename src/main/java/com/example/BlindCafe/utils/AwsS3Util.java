@@ -27,7 +27,7 @@ import static com.example.BlindCafe.exception.CodeAndMessage.FILE_EXTENSION_ERRO
 @Slf4j
 @RequiredArgsConstructor
 @Component
-public class AmazonS3Connector {
+public class AwsS3Util {
 
     public static String DEFAULT_IMAGE;
 
