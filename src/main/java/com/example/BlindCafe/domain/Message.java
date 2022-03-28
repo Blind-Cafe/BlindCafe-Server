@@ -6,7 +6,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Document(collection = "message")
 @Getter
@@ -15,7 +14,6 @@ import java.util.UUID;
 public class Message {
 
     @Id
-    @Column(name = "message_id")
     private String id;
 
     private String matchingId;
@@ -32,7 +30,6 @@ public class Message {
     public static Message create(String matchingId, String userId, String content, MessageType type) {
         LocalDateTime createdAt = LocalDateTime.now();
         Message message = new Message();
-        message.setId(UUID.randomUUID().toString());
         message.setMatchingId(matchingId);
         message.setUserId(userId);
         message.setContent(content);

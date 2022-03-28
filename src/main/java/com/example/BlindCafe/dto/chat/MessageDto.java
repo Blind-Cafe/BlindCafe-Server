@@ -8,6 +8,7 @@ import lombok.*;
 @NoArgsConstructor
 @Builder
 public class MessageDto {
+    private String messageId;
     private String matchingId;
     private String senderId;
     private String senderName;

@@ -21,8 +21,6 @@ import java.time.LocalDateTime;
 public class NoticeLog {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "notice_id")
     private Long id;
 
     private Long userId;
