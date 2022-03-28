@@ -67,6 +67,12 @@ public class UserService {
     private void validateAddUserInfo(AddUserInfoRequest request) {
         if (request.getMyGender().equals(N))
             throw new BlindCafeException(BAD_REQUEST);
+        
+        if (request.getNickname().contains("admin")
+            || request.getNickname().contains("관리자")
+            || request.getNickname().contains("manager")
+            || request.getNickname().contains("매니저"))
+            throw new BlindCafeException(INVALID_NICKNAME);
 
         Pattern pattern = Pattern.compile("^\\d{3}[- .]?\\d{4}[- .]?\\d{4}$");
         Matcher matcher = pattern.matcher(request.getPhone());
