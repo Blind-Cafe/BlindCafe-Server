@@ -114,8 +114,8 @@ public class Matching extends BaseTimeEntity {
         }
     }
 
-    // 토픽 가져오기
-    public Long getTopic() {
+    // 다음 토픽 가져오기
+    public Long getNextTopic() {
         return this.topic.getTopic();
     }
     
@@ -124,17 +124,6 @@ public class Matching extends BaseTimeEntity {
         return this.userMatchings.stream()
                 .filter(um -> um.getUser().getId().equals(userId))
                 .findAny().orElse(null);
-    }
-
-    // 프로필 공개 확인
-    public boolean openProfile() {
-        AtomicBoolean status = new AtomicBoolean(true);
-        this.getUserMatchings().forEach(um -> {
-            if (!um.getIsAcceptOpenProfile())
-                status.set(false);
-        });
-        this.isOpenProfile = status.get();
-        return this.isOpenProfile;
     }
 
     // 프로필 교환 확인
@@ -152,6 +141,13 @@ public class Matching extends BaseTimeEntity {
             this.isContinuous = true;
             this.beginTime = now;
             this.expiredTime = now.plusDays(7);
+
+            // 사용자 음료수 뱃지 추가
+            for (UserMatching um: this.getUserMatchings()) {
+                User u = um.getUser();
+                Drink d = um.getDrink();
+                u.addDrink(d);
+            }
         }
         return this.isExchangeProfile;
     }

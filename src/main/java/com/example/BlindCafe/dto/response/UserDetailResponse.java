@@ -51,8 +51,7 @@ public class UserDetailResponse {
                                 .map(Interest::getId)
                                 .collect(Collectors.toList()))
                 .drinks(
-                        user.getDrinks().stream()
-                                .map(UserDrink::getDrink)
+                        user.getMyDrink().stream()
                                 .map(Drink::getId).collect(Collectors.toList()))
                 .build();
     }
