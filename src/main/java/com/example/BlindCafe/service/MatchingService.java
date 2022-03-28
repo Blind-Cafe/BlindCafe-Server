@@ -1,14 +1,19 @@
 package com.example.BlindCafe.service;
 
 import com.example.BlindCafe.domain.*;
+import com.example.BlindCafe.domain.topic.Audio;
+import com.example.BlindCafe.domain.topic.Image;
+import com.example.BlindCafe.domain.topic.Subject;
+import com.example.BlindCafe.domain.type.MessageType;
+import com.example.BlindCafe.dto.chat.MessageDto;
 import com.example.BlindCafe.dto.request.ExchangeProfileRequest;
-import com.example.BlindCafe.dto.request.OpenProfileRequest;
 import com.example.BlindCafe.dto.request.SelectDrinkRequest;
 import com.example.BlindCafe.dto.response.MatchingDetailResponse;
 import com.example.BlindCafe.dto.response.MatchingListResponse;
 import com.example.BlindCafe.exception.BlindCafeException;
 import com.example.BlindCafe.repository.*;
 import com.example.BlindCafe.domain.type.Gender;
+import com.example.BlindCafe.utils.MatchingMessageUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +32,7 @@ import static com.example.BlindCafe.service.TopicService.PUBLIC_INTEREST_ID;
 public class MatchingService {
 
     private final TopicService topicService;
+    private final ChatService chatService;
 
     private final UserRepository userRepository;
     private final MatchingRepository matchingRepository;
@@ -36,9 +42,10 @@ public class MatchingService {
     private final DrinkRepository drinkRepository;
     private final ReasonRepository reasonRepository;
     private final CustomReasonRepository customReasonRepository;
-
     private final MessageRepository messageRepository;
     private final RoomLogRepository roomLogRepository;
+
+    private final MatchingMessageUtil matchingMessageUtil;
 
     /**
      * 매칭 요청
@@ -98,20 +105,25 @@ public class MatchingService {
 
         // 토픽 생성
         MatchingTopic topic;
+        String interestName;
         if (similarInterest != null) {
             // 공통 관심사가 있는 경우
             topic = topicService.makeTopicBySimilarInterest(similarInterest.getId());
+            interestName = similarInterest.getName();
         } else {
             // 관심사가 다른 경우
             Long partnerFirstInterestId = Long.parseLong(partnerInterest.split(",")[0]);
             topic = topicService.makeTopicByDifferentInterest(interests.get(0), partnerFirstInterestId);
+            interestName = null;
         }
 
         // 매칭 생성
         Matching matching = Matching.create(userMatchings, similarInterest, topic);
-        matchingRepository.save(matching);
+        matching = matchingRepository.save(matching);
 
-        // TODO 접속 유무에 따라 메시지 퍼블리싱 또는 FCM 전송
+        // 매칭 성공 이벤트 Publish
+        MessageDto message = matchingMessageUtil.successMatching(matching.getId(), interestName);
+        chatService.publish(String.valueOf(matching.getId()), message);
     }
 
     // 관심사가 일치하는 요청있는지 확인
@@ -177,9 +189,11 @@ public class MatchingService {
             // 최근 메시지 내용, 시간 조회
             Message message = messageRepository.findFirstByMatchingIdOrderByCreatedAtDesc(mid);
             // 채팅방 접속 기록 조회
-            RoomLog log = roomLogRepository.findFirstByMatchingIdAndUserIdOrderByAccessAtDesc(mid, userId)
-                    .orElse(null);
-            sortedMatchingList.add(MatchingListResponse.RoomHistory.fromEntities(message, log));
+            RoomLog log = roomLogRepository.findRoomLogByMatchingId(mid.toString()).orElse(null);
+            String access = null;
+            if (log != null && log.getAccess().containsKey(userId.toString()))
+                access = log.getAccess().get(userId.toString());
+            sortedMatchingList.add(MatchingListResponse.RoomHistory.fromEntities(message, access));
         }
 
         // 시간 순으로 내림차순 정렬
@@ -227,17 +241,17 @@ public class MatchingService {
                 .filter(um -> um.getUser().getId().equals(userId))
                 .findAny().orElseThrow(() -> new BlindCafeException(NON_AUTHORIZATION_MATCHING));
 
-        // 음료를 이미 선택한 경우
-        if (userMatching.getDrink() != null)
-            throw new BlindCafeException(ALREADY_SELECT_DRINK);
-
         Drink drink = drinkRepository.findById(request.getDrink())
                 .orElseThrow(() -> new BlindCafeException(EMPTY_DRINK));
 
         // 음료 선택
         userMatching.selectDrink(drink);
 
-        // TODO 음료 선택 메시지 publish
+        // 음료 선택 이벤트 Publish
+        String username = userMatching.getUser().getNickname();
+        String drinkName = drink.getName();
+        MessageDto message = matchingMessageUtil.selectDrink(matching.getId(), username, drinkName);
+        chatService.publish(String.valueOf(matching.getId()), message);
     }
 
     /**
@@ -249,22 +263,35 @@ public class MatchingService {
         Matching matching = matchingRepository.findValidMatchingById(matchingId)
                 .orElseThrow(() -> new BlindCafeException(EMPTY_MATCHING));
 
-        // 토픽 아이디 가져오기
-        Long topicId = matching.getTopic();
+        // 토픽 가져오기
+        Long topicId = matching.getNextTopic();
 
-        // 토픽 전송하기
-        topicService.sendTopic(matchingId, topicId);
+        // 토픽 전송 퍼블리싱
+        MessageDto message = makeMessageDtoByTopic(matchingId, topicId);
+        chatService.publish(String.valueOf(matching.getId()), message);
+    }
+
+    private MessageDto makeMessageDtoByTopic(Long mid, Long topicId) {
+        int topicType = topicService.getTopicType(topicId);
+        switch (topicType) {
+            case 0:
+                Subject subject = topicService.getSubject(topicId);
+                return matchingMessageUtil.sendTopic(mid, MessageType.TEXT_TOPIC, subject.getSubject());
+            case 1:
+                Audio audio = topicService.getAudio(topicId);
+                return matchingMessageUtil.sendTopic(mid, MessageType.AUDIO_TOPIC, audio.getSrc());
+            default:
+                Image image = topicService.getImage(topicId);
+                return matchingMessageUtil.sendTopic(mid, MessageType.IMAGE_TOPIC, image.getSrc());
+        }
     }
 
     /**
-     * 프로필 공개 수락/거절하기
+     * 프로필 교환 수락/거절하기
      */
     @Transactional
-    public void openProfile(Long userId, OpenProfileRequest request) {
+    public void exchangeProfile(Long userId, ExchangeProfileRequest request) {
 
-        if (!request.isAccept() && Objects.isNull(request.getReason()))
-            throw new BlindCafeException(REQUIRED_REASON);
-        
         // 사용자 프로필 작성 여부 확인
         if (!isValidProfile(userId))
             throw new BlindCafeException(NOT_REQUIRED_INFO_FOR_MATCHING);
@@ -273,28 +300,25 @@ public class MatchingService {
                 .orElseThrow(() -> new BlindCafeException(EMPTY_MATCHING));
         User user = matching.getUserMatchingById(userId).getUser();
 
-        boolean isAccept = request.isAccept();
-        // 프로필 공개
-        boolean result = matching.getUserMatchingById(userId).openProfile(isAccept);
+        boolean isBothAccept = matching.getUserMatchingById(userId).exchangeProfile();
 
-        if (!isAccept) {
-            Reason reason = reasonRepository.findByReasonTypeAndNum(FOR_LEAVE_ROOM, request.getReason())
-                    .orElseThrow(() -> new BlindCafeException(EMPTY_REASON));
+        // 프로필 교환 메시지 Publish
+        MessageDto message = matchingMessageUtil.exchangeProfile(matching.getId(), user.getId(), user.getNickname());
+        chatService.publish(String.valueOf(matching.getId()), message);
 
-            // 이유 저장
-            CustomReason customReason = CustomReason.create(user, request.getMatchingId(), reason);
-            customReasonRepository.save(customReason);
+        // 양 쪽 모두 프로필을 공개한 경우 교환
+        if (isBothAccept) {
+            // 프로필 교환 성공(7일 채팅) 메시지 Publish
+            message = matchingMessageUtil.successExchange(matching.getId());
+            chatService.publish(String.valueOf(matching.getId()), message);
 
-            // TODO 프로필 공개 거절 메시지 Publish
-
-            return;
-        }
-
-        // TODO 프로필 공개 수락 메시지 Publish
-
-
-        if (result) {
-            // TODO 프로필 교환 메시지 Publish
+            // 음료 획득 메시지 Publish
+            for (UserMatching um: matching.getUserMatchings()) {
+                User u = um.getUser();
+                Drink d = um.getDrink();
+                message = matchingMessageUtil.takeDrink(matching.getId(), u.getNickname(), d.getName());
+                chatService.publish(String.valueOf(matching.getId()), message);
+            }
         }
     }
 
@@ -306,44 +330,6 @@ public class MatchingService {
                 && user.getAddress() != null
                 && user.getVoice() != null
                 && user.getMbti() != null;
-    }
-
-    /**
-     * 프로필 교환 수락/거절하기
-     */
-    @Transactional
-    public void exchangeProfile(Long userId, ExchangeProfileRequest request) {
-
-        if (!request.isAccept() && Objects.isNull(request.getReason()))
-            throw new BlindCafeException(REQUIRED_REASON);
-
-        Matching matching = matchingRepository.findValidMatchingById(request.getMatchingId())
-                .orElseThrow(() -> new BlindCafeException(EMPTY_MATCHING));
-        User user = matching.getUserMatchingById(userId).getUser();
-
-        boolean isAccept = request.isAccept();
-        // 프로필 교환
-        boolean result = matching.getUserMatchingById(userId).exchangeProfile(isAccept);
-
-        if (!isAccept) {
-            Reason reason = reasonRepository.findByReasonTypeAndNum(FOR_LEAVE_ROOM, request.getReason())
-                    .orElseThrow(() -> new BlindCafeException(EMPTY_REASON));
-
-            // 이유 저장
-            CustomReason customReason = CustomReason.create(user, request.getMatchingId(), reason);
-            customReasonRepository.save(customReason);
-
-            // TODO 프로필 교환 거절 메시지 Publish
-
-            return;
-        }
-
-        // TODO 프로필 교환 메시지 Publish
-
-        // 모두 프로필 공개를 수락한 경우
-        if (result) {
-            // TODO 7일 채팅 메시지 Publish
-        }
     }
 
     /**
@@ -359,15 +345,25 @@ public class MatchingService {
                 .orElseThrow(() -> new BlindCafeException(EMPTY_REASON));
 
         User user = matching.getUserMatchingById(userId).getUser();
+        User partner = matching.getUserMatchings().stream()
+                .map(UserMatching::getUser)
+                .filter(u -> !u.equals(user))
+                .findAny().orElse(null);
 
         // 채팅방 나가기
         matching.leave(userId);
+        
+        // Partner가 null인 경우 먼저 방을 나갔거나 탈퇴 회원
+        if (partner != null) {
+            // 방 나간 사유 저장
+            CustomReason customReason = CustomReason.create(user, matchingId, reason);
+            customReasonRepository.save(customReason);
 
-        // 방 나간 사유 저장
-        CustomReason customReason = CustomReason.create(user, matchingId, reason);
-        customReasonRepository.save(customReason);
+            // 방 나가기 메시지 Publish
 
-        // TODO 방 나간 사유 메시지 publish
+            MessageDto message = matchingMessageUtil.leaveMatching(matchingId, user.getNickname(), partner.getNickname(),reason.getText());
+            chatService.publish(String.valueOf(matchingId), message);
+        }
     }
 
     /**

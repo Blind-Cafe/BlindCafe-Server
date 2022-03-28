@@ -45,11 +45,11 @@ public class TopicService {
         // 그 외 관심사
         List<Long> ids = new ArrayList<>();
         ids.add(interestId);
-        topics.addAll(getTopicByInterestNotIn(ids, TOPIC_OTHER_QUANTITY));
+        topics.addAll(getTopicByInterestNotIn(ids));
         // 이미지
-        topics.addAll(getImageTopic(TOPIC_IMAGE_QUANTITY));
+        topics.addAll(getImageTopicList());
         // 오디오
-        topics.addAll(getAudioTopic(TOPIC_AUDIO_QUANTITY));
+        topics.addAll(getAudioTopicList());
         return MatchingTopic.create(topics);
     }
 
@@ -67,11 +67,11 @@ public class TopicService {
         List<Long> ids = new ArrayList<>();
         ids.add(interestId1);
         ids.add(interestId2);
-        topics.addAll(getTopicByInterestNotIn(ids, TOPIC_OTHER_QUANTITY));
+        topics.addAll(getTopicByInterestNotIn(ids));
         // 이미지
-        topics.addAll(getImageTopic(TOPIC_IMAGE_QUANTITY));
+        topics.addAll(getImageTopicList());
         // 오디오
-        topics.addAll(getAudioTopic(TOPIC_AUDIO_QUANTITY));
+        topics.addAll(getAudioTopicList());
         return MatchingTopic.create(topics);
     }
 
@@ -81,7 +81,7 @@ public class TopicService {
     }
 
     // 나머지 관심사에서 섞어서 뽑기
-    private List<Topic> getTopicByInterestNotIn(List<Long> ids, int quantity) {
+    private List<Topic> getTopicByInterestNotIn(List<Long> ids) {
         List<Topic> topics = new ArrayList<>();
         Map<Long, List<Topic>> topicMap = new HashMap<>();
 
@@ -94,21 +94,19 @@ public class TopicService {
         });
 
         // 관심사 id 기준으로 섞어서 입력받은 수만큼 추출
-        topicMap.keySet().forEach(key -> {
-            topics.addAll(getTopicsWithShuffle(topicMap.get(key), quantity));
-        });
-
+        topicMap.keySet().forEach(key ->
+                topics.addAll(getTopicsWithShuffle(topicMap.get(key), TOPIC_OTHER_QUANTITY)));
         return topics;
     }
 
     // 이미지 토픽 가져오기
-    private List<Topic> getImageTopic(int quantity) {
-        return getTopicsWithShuffle(topicRepository.findImages(), quantity);
+    private List<Topic> getImageTopicList() {
+        return getTopicsWithShuffle(topicRepository.findImages(), TOPIC_IMAGE_QUANTITY);
     }
 
     // 오디오 토픽 가져오기
-    private List<Topic> getAudioTopic(int quantity) {
-        return getTopicsWithShuffle(topicRepository.findAudios(), quantity);
+    private List<Topic> getAudioTopicList() {
+        return getTopicsWithShuffle(topicRepository.findAudios(), TOPIC_AUDIO_QUANTITY);
     }
 
     // 셔플 후 원하는 수량만큼 뽑기
@@ -116,26 +114,26 @@ public class TopicService {
         Collections.shuffle(topics);
         return topics.subList(0, quantity);
     }
+    
+    // 토픽 ID로 토픽 종류 확인
+    public int getTopicType(Long topicId) {
+        if (topicId <= SUBJECT_LIMIT) return 0;
+        if (topicId <= AUDIO_LIMIT) return 1;
+        return 2;
+    }
 
-    // 토픽 전송하기
-    public void sendTopic(Long matchingId, Long topicId) {
+    public Subject getSubject(Long topicId) {
+        return topicRepository.findSubjectById(topicId)
+                .orElseThrow(() -> new BlindCafeException(EMPTY_TOPIC));
+    }
 
-        Topic topic = topicRepository.findById(topicId).orElseThrow();
+    public Audio getAudio(Long topicId) {
+        return topicRepository.findAudioById(topicId)
+                .orElseThrow(() -> new BlindCafeException(EMPTY_TOPIC));
+    }
 
-        // TODO 매칭방에 토픽 전송하기
-        
-        if (topicId <= SUBJECT_LIMIT) {
-            Subject subject = topicRepository.findSubjectById(topicId)
-                    .orElseThrow(() -> new BlindCafeException(EMPTY_TOPIC));
-
-        } else if (topicId <= AUDIO_LIMIT) {
-            Audio audio = topicRepository.findAudioById(topicId)
-                    .orElseThrow(() -> new BlindCafeException(EMPTY_TOPIC));
-
-        } else {
-            Image image = topicRepository.findImageById(topicId)
-                    .orElseThrow(() -> new BlindCafeException(EMPTY_TOPIC));
-
-        }
+    public Image getImage(Long topicId) {
+        return topicRepository.findImageById(topicId)
+                .orElseThrow(() -> new BlindCafeException(EMPTY_TOPIC));
     }
 }
