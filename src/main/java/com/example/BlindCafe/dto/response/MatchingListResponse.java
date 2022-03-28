@@ -62,10 +62,10 @@ public class MatchingListResponse {
         private boolean received;
         private String createdAt;
 
-        public static RoomHistory fromEntities(Message message, RoomLog log) {
+        public static RoomHistory fromEntities(Message message, String access) {
             RoomHistory history = new RoomHistory();
             history.setMatchingId(Long.parseLong(message.getMatchingId()));
-            String content = "";
+            String content;
             if (message.getType().equals(MessageType.TEXT)) {
                 content = message.getContent();
             } else if (message.getType().equals(MessageType.IMAGE)) {
@@ -81,8 +81,8 @@ public class MatchingListResponse {
             }
             history.setLatestMessage(content);
             boolean received = false;
-            if (log != null) {
-                received = message.getCreatedAt().compareTo(log.getAccessAt()) <= 0;
+            if (access != null) {
+                received = message.getCreatedAt().compareTo(access) <= 0;
             }
             history.setReceived(received);
             history.setCreatedAt(message.getCreatedAt());

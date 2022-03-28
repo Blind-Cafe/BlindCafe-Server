@@ -9,11 +9,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import javax.persistence.*;
 import java.time.LocalDateTime;
 
-/**
- * TODO
- * Mogno로 설정하기
- */
-
 @Document(collection = "notice_log")
 @Getter
 @Setter

@@ -6,7 +6,6 @@ import com.example.BlindCafe.domain.type.Gender;
 import com.example.BlindCafe.domain.type.Social;
 import com.example.BlindCafe.domain.type.status.CommonStatus;
 import com.example.BlindCafe.domain.type.status.UserStatus;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 
 import javax.persistence.*;
@@ -211,6 +210,18 @@ public class User extends BaseTimeEntity {
     // 사용자 목소리 삭제하기
     public void deleteVoice() {
         this.setVoice(null);
+    }
+
+    // 매칭 시 음료수 뱃지 추가하기
+    public void addDrink(Drink drink) {
+        UserDrink userDrink = UserDrink.create(this, drink);
+        this.drinks.add(userDrink);
+    }
+
+    // 내 음료수 조회하기(중복 제거)
+    public List<Drink> getMyDrink() {
+        Set<Drink> set = new HashSet<>(this.drinks.stream().map(UserDrink::getDrink).collect(Collectors.toList()));
+        return new ArrayList<>(set);
     }
     
     // 티켓 소비
