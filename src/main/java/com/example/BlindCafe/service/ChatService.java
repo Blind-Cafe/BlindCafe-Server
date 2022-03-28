@@ -5,12 +5,17 @@ import com.example.BlindCafe.domain.Message;
 import com.example.BlindCafe.domain.type.MessageType;
 import com.example.BlindCafe.dto.chat.FileMessageDto;
 import com.example.BlindCafe.dto.chat.MessageDto;
+import com.example.BlindCafe.dto.response.MessageListResponse;
 import com.example.BlindCafe.exception.BlindCafeException;
 import com.example.BlindCafe.redis.RedisPublisher;
 import com.example.BlindCafe.repository.MatchingRepository;
 import com.example.BlindCafe.repository.MessageRepository;
 import com.example.BlindCafe.utils.AwsS3Util;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,7 +47,8 @@ public class ChatService {
 
         // 메세지 저장
         Message newMessage = Message.create(mid, uid, message.getContent(), getType(message.getType()));
-        messageRepository.save(newMessage);
+        newMessage = messageRepository.save(newMessage);
+        message.setMessageId(newMessage.getId());
 
         // 메시지 퍼블리싱
         redisPublisher.publish(mid, message, true);
@@ -90,6 +96,11 @@ public class ChatService {
     /**
      * 메시지 조회
      */
+    public MessageListResponse getMessages(String mid, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Page<Message> pages = messageRepository.findByMatchingId(mid, pageable);
+        return new MessageListResponse(pages.map(MessageListResponse.MessageDetail::fromEntity));
+    }
 
 
     private MessageType getType(String type) {
@@ -100,4 +111,6 @@ public class ChatService {
         }
         throw new BlindCafeException(INVALID_MESSAGE_TYPE);
     }
+
+
 }
