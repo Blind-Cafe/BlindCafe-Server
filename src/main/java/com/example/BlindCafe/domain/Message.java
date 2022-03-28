@@ -2,13 +2,13 @@ package com.example.BlindCafe.domain;
 
 import com.example.BlindCafe.domain.type.MessageType;
 import lombok.*;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-@Entity
-@Table(name = "message")
+@Document(collection = "message")
 @Getter
 @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -18,9 +18,9 @@ public class Message {
     @Column(name = "message_id")
     private String id;
 
-    private Long matchingId;
+    private String matchingId;
 
-    private Long userId;
+    private String userId;
 
     private String content;
 
@@ -29,7 +29,7 @@ public class Message {
 
     private String createdAt;
 
-    public static Message create(Long matchingId, Long userId, String content, MessageType type) {
+    public static Message create(String matchingId, String userId, String content, MessageType type) {
         LocalDateTime createdAt = LocalDateTime.now();
         Message message = new Message();
         message.setId(UUID.randomUUID().toString());

@@ -6,8 +6,8 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum Platform {
-    AOS("안드로이드"),
-    IOS("애플");
+    AOS("AOS"),
+    IOS("IOS");
 
     private final String description;
 }

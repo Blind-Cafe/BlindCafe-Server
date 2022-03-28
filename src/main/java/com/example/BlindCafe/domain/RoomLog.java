@@ -1,35 +1,35 @@
 package com.example.BlindCafe.domain;
 
 import lombok.*;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
-@Entity
-@Table(name = "room_log")
+@Document(collection = "room_log")
 @Getter
 @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class RoomLog {
 
     @Id
-    @Column(name = "room_log_id")
-    private String id;
+    private String matchingId;
 
-    private Long userId;
+    private Map<String, String> access;
 
-    private Long matchingId;
-
-    private String accessAt;
-
-    public static RoomLog create(Long userId, Long matchingId) {
-        LocalDateTime now = LocalDateTime.now();
+    public static RoomLog create(String matchingId, String userId, String time) {
         RoomLog log = new RoomLog();
-        log.setId(UUID.randomUUID().toString());
-        log.setUserId(userId);
         log.setMatchingId(matchingId);
-        log.setAccessAt(now.toString());
+        Map<String, String> map = new HashMap<>();
+        map.put(userId, time);
+        log.setAccess(map);
         return log;
+    }
+
+    public void update(String userId, String time) {
+        this.access.put(userId, time);
     }
 }

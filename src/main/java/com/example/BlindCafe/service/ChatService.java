@@ -1,25 +1,20 @@
 package com.example.BlindCafe.service;
 
-import com.example.BlindCafe.dto.FcmMessageDto;
-import com.example.BlindCafe.dto.FirestoreDto;
-import com.example.BlindCafe.dto.MessageDto;
 import com.example.BlindCafe.domain.Matching;
 import com.example.BlindCafe.domain.Message;
-import com.example.BlindCafe.domain.User;
+import com.example.BlindCafe.domain.type.MessageType;
+import com.example.BlindCafe.dto.chat.FileMessageDto;
+import com.example.BlindCafe.dto.chat.MessageDto;
 import com.example.BlindCafe.exception.BlindCafeException;
-import com.example.BlindCafe.firebase.FirebaseCloudMessageService;
-import com.example.BlindCafe.firebase.FirebaseService;
+import com.example.BlindCafe.redis.RedisPublisher;
 import com.example.BlindCafe.repository.MatchingRepository;
 import com.example.BlindCafe.repository.MessageRepository;
-import com.example.BlindCafe.repository.UserRepository;
-import com.example.BlindCafe.domain.type.MessageType;
-import com.example.BlindCafe.domain.type.status.UserStatus;
+import com.example.BlindCafe.utils.AwsS3Util;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.sql.Timestamp;
-import java.time.LocalDateTime;
+import java.util.List;
 
 import static com.example.BlindCafe.exception.CodeAndMessage.*;
 
@@ -28,75 +23,81 @@ import static com.example.BlindCafe.exception.CodeAndMessage.*;
 @Transactional(readOnly = true)
 public class ChatService {
 
-    private final UserRepository userRepository;
-    private final MatchingRepository matchingRepository;
+    private final PresenceService presenceService;
+    private final NotificationService notificationService;
+    private final RedisPublisher redisPublisher;
+
     private final MessageRepository messageRepository;
+    private final MatchingRepository matchingRepository;
 
-    private final FirebaseService firebaseService;
-    private final FirebaseCloudMessageService fcmService;
+    private final AwsS3Util awsS3Util;
 
+    /**
+     * 텍스트 메시지 전송
+     */
     @Transactional
-    public void sendMessage(Long userId, Long matchingId, MessageDto request) {
-        User user = userRepository.findById(userId)
-                .filter(u -> u.getStatus().equals(UserStatus.NORMAL))
-                .orElseThrow(() -> new BlindCafeException(NO_USER));
-        Matching matching = matchingRepository.findById(matchingId)
-                .orElseThrow(() -> new BlindCafeException(NO_MATCHING));
+    public void publish(String mid, MessageDto message) {
+        String uid = message.getSenderId();
+        message.setDestination("0");
 
-        MessageType messageType = getType(request.getType());
+        // 메세지 저장
+        Message newMessage = Message.create(mid, uid, message.getContent(), getType(message.getType()));
+        messageRepository.save(newMessage);
 
-        // 메세지 db에 저장
-        Message message = new Message();
-        message.setMatching(matching);
-        message.setUser(user);
-        message.setContents(request.getContents());
-        message.setType(messageType);
-        Message savedMessage = messageRepository.save(message);
+        // 메시지 퍼블리싱
+        redisPublisher.publish(mid, message, true);
 
-        // 메세지 firestore 저장
-        User partner = matching.getUserMatchings().stream()
-                .filter(um -> !um.getUser().equals(user))
-                .map(um -> um.getUser() )
-                .findAny()
-                .orElseThrow(() -> new BlindCafeException(INVALID_MATCHING));
+        // 방에 어떤 사용자가 있는지 확인
+        Matching matching = matchingRepository.findValidMatchingById(Long.parseLong(mid))
+                .orElseThrow(() -> new BlindCafeException(EMPTY_MATCHING));
 
-        LocalDateTime ldt = savedMessage.getCreatedAt();
-        Timestamp timestamp = Timestamp.valueOf(ldt);
+        List<String> targets = matching.getUserIds();
 
-        FirestoreDto firestoreDto = FirestoreDto.builder()
-                .roomId(matchingId)
-                .targetToken(partner.getDeviceId())
-                .message(new FirestoreDto.FirestoreMessage(
-                        Long.toString(savedMessage.getId()),
-                        Long.toString(user.getId()),
-                        user.getNickname(),
-                        savedMessage.getContents(),
-                        request.getType(),
-                        timestamp
-                ))
-                .build();
-        FcmMessageDto.Request req = firebaseService.insertMessage(firestoreDto);
+        // 메시지를 만든 사람과 전송하는 사람이 같은 경우 타켓에서 삭제 (관리자가 전송하는 경우 다를 수 있음)
+        if (!uid.equals("0"))
+            targets.remove(uid);
 
-        // 푸쉬
-        fcmService.sendMessageTo(
-                firestoreDto.getTargetToken(),
-                req.getTitle(),
-                req.getBody(),
-                req.getPath(),
-                "T",
-                req.getMatchingId(),
-                null
-        );
+        // 채팅을 수신받을 사용자가 더 이상 없는 경우
+        if (targets.size() < 1) return;
+
+        // 메시지를 받아야 하는 사용자들이 접속해있는지 확인 후
+        // 접속 유무에 따라 채팅방 리스트 정렬을 위한 퍼블리싱 또는 알림 전송
+        for (String target: targets) {
+            // 사용자가 접속해있는지 확인
+            String currentPosition = presenceService.isCurrentPosition(target);
+
+            // 접속해있지 않다면 푸시 알림 전송
+            if (currentPosition == null) {
+                notificationService.sendPushMessage(Long.parseLong(target), message);
+            } else {
+                // 접속해있지만 채팅방에 없는 경우 사용자한테 직접 퍼블리싱
+                if (!mid.equals(currentPosition)) {
+                    message.setDestination(target);
+                    redisPublisher.publish(uid, message, false);
+                }
+            }
+        }
     }
 
-    private MessageType getType(int type) {
-        if (type == 1)
-            return MessageType.TEXT;
-        else if (type == 2)
-            return MessageType.IMAGE;
-        else if (type == 3)
-            return MessageType.AUDIO;
-        else
-            throw new BlindCafeException(NO_MESSAGE_TYPE);
+    /**
+     * 이미지, 비디오, 오디오 파일 업로드
+     */
+    public MessageDto upload(String mid, FileMessageDto message) {
+        String src = awsS3Util.uploadFileFromMessage(message.getFile(), mid);
+        return MessageDto.fromFileMessage(message, src);
+    }
+
+    /**
+     * 메시지 조회
+     */
+
+
+    private MessageType getType(String type) {
+        int typeIntValue = Integer.parseInt(type);
+        for (MessageType t: MessageType.values()) {
+            if (t.getType() == typeIntValue)
+                return t;
+        }
+        throw new BlindCafeException(INVALID_MESSAGE_TYPE);
     }
 }

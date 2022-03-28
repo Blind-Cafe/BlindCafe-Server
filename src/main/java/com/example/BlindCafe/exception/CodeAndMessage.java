@@ -19,6 +19,7 @@ public enum CodeAndMessage {
     ALREADY_REQUIRED_INFO("1010", "이미 추가 정보를 입력받았습니다."),
     DUPLICATED_PHONE_NUMBER("1013", "전화번호가 중복됩니다."),
     INVALID_PHONE_NUMBER("1014", "전화번호 형식이 올바르지 않습니다."),
+    INVALID_NICKNAME("1015", "'관리자' 또는 '매니저' 키워드를 포함하는 닉네임을 사용할 수 없습니다."),
 
     INVALID_MAIN_INTEREST("1011", "메인 관심사가 유효하지 않습니다."),
     INVALID_SUB_INTEREST("1012", "세부 관심사가 유효하지 않습니다."),
@@ -52,8 +53,6 @@ public enum CodeAndMessage {
 
     INVALID_PROFILE_IMAGE_SEQUENCE("1090", "유효하지 않은 우선순위입니다."),
 
-
-
     NOTYET_OPEN_PROFILE("1110", "아직 프로필을 공개할 수 없습니다."),
     ALREADY_OPEN_PROFILE("1111", "이미 프로필을 공개했습니다."),
     NOTYET_EXCHANGE_PROFILE("1112", "아직 프로필을 교환할 수 없습니다."),
@@ -71,12 +70,17 @@ public enum CodeAndMessage {
 
     FIREBASE_CREDENTIALS_ERROR("1160", "Firebase 인증 에러"),
     FIREBASE_INSERT_ERROR("1161", "Firebase 데이터 저장 에러" ),
+    FIREBASE_BUILD_MESSAGE_ERROR("1162", "FCM 메시지 생성 중 발생했습니다."),
+    FIREBASE_SEND_MESSAGE_ERROR("1163", "FCM 전송 중 에러가 발생했습니다."),
 
     TOPIC_SERVE_THREAD_ERROR("1170", "토픽 제공 스레드 에러입니다."),
 
     DUPLICATED_MATCHING_REQUEST("1180", "이미 매칭 요청 중입니다."),
 
     EMAIL_SEND_ERROR("1200", "이메일 전송 중 에러가 발생했습니다."),
+
+    INVALID_MESSAGE_TYPE("1300", "메시지 타입이 올바르지 않습니다."),
+    SEND_MESSAGE_ERROR("1301", "메시지 전송 도중 에러가 발생했습니다."),
 
     BAD_REQUEST("4000", "잘못된 요청입니다."),
     FAILED_AUTHORIZATION("4001", "검증에 실패했습니다."),

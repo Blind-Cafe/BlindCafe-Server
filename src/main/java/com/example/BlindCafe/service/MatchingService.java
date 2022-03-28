@@ -193,7 +193,7 @@ public class MatchingService {
             // 최근 메세지 및 수신 여부 추가
             Long matchingId = m.getMatchingId();
             MatchingListResponse.MatchingInfo info = matchingInfoMap.get(matchingId);
-            info.updateHistory(m);
+            info.setHistory(m);
             // 3일, 7일 채팅에 따라서 분류
             if (info.isBlind()) blind.add(info);
             else bright.add(info);

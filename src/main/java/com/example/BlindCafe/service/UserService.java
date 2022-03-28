@@ -7,7 +7,7 @@ import com.example.BlindCafe.domain.*;
 import com.example.BlindCafe.domain.type.status.UserStatus;
 import com.example.BlindCafe.exception.BlindCafeException;
 import com.example.BlindCafe.repository.*;
-import com.example.BlindCafe.utils.AmazonS3Connector;
+import com.example.BlindCafe.utils.AwsS3Util;
 import com.example.BlindCafe.utils.MailUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -35,7 +35,7 @@ public class UserService {
     private final SuggestionRepository suggestionRepository;
     private final ReportRepository reportRepository;
 
-    private final AmazonS3Connector amazonS3Connector;
+    private final AwsS3Util awsS3Util;
     private final MailUtil mailUtil;
 
     private static final int USER_INTEREST_LENGTH = 3;
@@ -67,6 +67,12 @@ public class UserService {
     private void validateAddUserInfo(AddUserInfoRequest request) {
         if (request.getMyGender().equals(N))
             throw new BlindCafeException(BAD_REQUEST);
+        
+        if (request.getNickname().contains("admin")
+            || request.getNickname().contains("관리자")
+            || request.getNickname().contains("manager")
+            || request.getNickname().contains("매니저"))
+            throw new BlindCafeException(INVALID_NICKNAME);
 
         Pattern pattern = Pattern.compile("^\\d{3}[- .]?\\d{4}[- .]?\\d{4}$");
         Matcher matcher = pattern.matcher(request.getPhone());
@@ -140,7 +146,7 @@ public class UserService {
                 .orElseThrow(() -> new BlindCafeException(EMPTY_USER));
         
         // S3에 이미지 업로드
-        String src = amazonS3Connector.uploadAvatar(request.getImage(), userId);
+        String src = awsS3Util.uploadAvatar(request.getImage(), userId);
         
         // 프로필 이미지 수정
         user.updateAvatar(src, sequence);
@@ -234,7 +240,7 @@ public class UserService {
         suggestionRepository.save(suggestion);
 
         // 건의사항 첨부 이미지 저장
-        String images = amazonS3Connector.uploadSuggestion(request.getImages(), suggestion.getId());
+        String images = awsS3Util.uploadSuggestion(request.getImages(), suggestion.getId());
         suggestion.updateImage(images);
         
         // 관리자에게 건의사항 이메일로 전송하기

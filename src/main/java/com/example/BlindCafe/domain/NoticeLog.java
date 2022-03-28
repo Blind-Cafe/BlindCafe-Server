@@ -4,6 +4,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -13,8 +14,7 @@ import java.time.LocalDateTime;
  * Mogno로 설정하기
  */
 
-@Entity
-@Table(name = "notice_log")
+@Document(collection = "notice_log")
 @Getter
 @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
