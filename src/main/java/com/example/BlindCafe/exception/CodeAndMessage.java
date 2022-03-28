@@ -52,11 +52,8 @@ public enum CodeAndMessage {
     FILE_EXTENSION_ERROR("1081", "파일 확장자 인식에 실패했습니다."),
 
     INVALID_PROFILE_IMAGE_SEQUENCE("1090", "유효하지 않은 우선순위입니다."),
-
-    NOTYET_OPEN_PROFILE("1110", "아직 프로필을 공개할 수 없습니다."),
-    ALREADY_OPEN_PROFILE("1111", "이미 프로필을 공개했습니다."),
-    NOTYET_EXCHANGE_PROFILE("1112", "아직 프로필을 교환할 수 없습니다."),
-    ALREADY_EXCHANGE_PROFILE("1113", "이미 프로필을 교환했습니다."),
+    NOT_YET_EXCHANGE_PROFILE("1110", "아직 프로필을 공개할 수 없습니다."),
+    ALREADY_EXCHANGE_PROFILE("1111", "이미 프로필을 공개했습니다."),
 
     EXCEED_MATCHING_TOPIC("1120", "더 이상 존재하는 토픽이 없습니다."),
     EMPTY_TOPIC("1121", "현재 유효하지 않은 토픽입니다. "),

@@ -97,7 +97,7 @@ public class FcmUtil {
                 .filter(mt -> mt.getType() == t)
                 .findAny().orElseThrow(() -> new BlindCafeException(FIREBASE_BUILD_MESSAGE_ERROR));
 
-        if (messageType.equals(TEXT) || messageType.equals(DESCRIPTION)) return content;
+        if (messageType.equals(TEXT) || messageType.equals(DESCRIPTION) || messageType.equals(DESCRIPTION_NON_PUSH)) return content;
         else return messageType.getMsg();
     }
 

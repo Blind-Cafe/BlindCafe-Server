@@ -14,8 +14,4 @@ import javax.validation.constraints.NotNull;
 public class ExchangeProfileRequest {
     @NotNull
     private Long matchingId;
-    @NotNull
-    private boolean accept;
-
-    private Long reason;
 }

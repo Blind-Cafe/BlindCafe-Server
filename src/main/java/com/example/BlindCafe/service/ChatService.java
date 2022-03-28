@@ -53,6 +53,10 @@ public class ChatService {
         // 메시지 퍼블리싱
         redisPublisher.publish(mid, message, true);
 
+        // 채팅방 외부에 있을 경우 알림을 받을 필요 없는 메시지 (ex. 방 나가기)
+        if (message.getType().equals(String.valueOf(MessageType.DESCRIPTION_NON_PUSH)))
+            return;
+
         // 방에 어떤 사용자가 있는지 확인
         Matching matching = matchingRepository.findValidMatchingById(Long.parseLong(mid))
                 .orElseThrow(() -> new BlindCafeException(EMPTY_MATCHING));
@@ -102,7 +106,7 @@ public class ChatService {
         return new MessageListResponse(pages.map(MessageListResponse.MessageDetail::fromEntity));
     }
 
-
+    // 메시지 타입 조회
     private MessageType getType(String type) {
         int typeIntValue = Integer.parseInt(type);
         for (MessageType t: MessageType.values()) {
@@ -111,6 +115,4 @@ public class ChatService {
         }
         throw new BlindCafeException(INVALID_MESSAGE_TYPE);
     }
-
-
 }
