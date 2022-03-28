@@ -12,10 +12,10 @@ import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 import static com.example.BlindCafe.exception.CodeAndMessage.FORBIDDEN_AUTHORIZATION;
-import static com.example.BlindCafe.redis.RedisPublisher.TOPIC_MATCHING;
 
 @Slf4j
 @Component
@@ -26,10 +26,10 @@ public class StompChannelInterceptor implements ChannelInterceptor {
 
     private final String TOKEN = "token";
     private final String MATCHING = "matching";
-    private final int TOPIC_POSITION = 3;
 
     @Override
     public Message<?> preSend(@NotNull Message<?> message, @NotNull MessageChannel channel) {
+        LocalDateTime now = LocalDateTime.now();
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
         String sessionId = accessor.getSessionId();
         String destination = accessor.getDestination();
@@ -54,7 +54,7 @@ public class StompChannelInterceptor implements ChannelInterceptor {
             case UNSUBSCRIBE: // 채팅방 구독 취소
                 String mid = getHeaderValue(accessor, MATCHING);
                 // 채팅방 구독 취소
-                presenceService.leaveRoom(sessionId, mid);
+                if (mid != null) presenceService.leaveRoom(sessionId, now);
                 break;
                 
             case DISCONNECT: // WebSocket 연결 해제
@@ -72,10 +72,11 @@ public class StompChannelInterceptor implements ChannelInterceptor {
         }
     }
 
+    // destination : /queue/chat/matching/1
     private String getTopic(String destination) {
         String[] split = destination.split("/");
-        if (split[TOPIC_POSITION].contains(TOPIC_MATCHING)) {
-            return split[TOPIC_POSITION].split("-")[1];
+        if (split[3].equals(MATCHING)) {
+            return split[4];
         }
         return null;
     }

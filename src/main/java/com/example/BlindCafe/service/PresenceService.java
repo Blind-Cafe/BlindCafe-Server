@@ -1,20 +1,28 @@
 package com.example.BlindCafe.service;
 
+import com.example.BlindCafe.domain.RoomLog;
+import com.example.BlindCafe.repository.RoomLogRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.SetOperations;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class PresenceService {
 
     private final RedisTemplate<String, String> redisTemplate;
 
+    private final RoomLogRepository roomLogRepository;
+
     private final String SESSION_KEY = "p:session:";
     private final String USER_KEY = "p:user:";
-    private final String MATCHING_KEY = "p:matching:";
+    private final String LOBBY = "0";
     private final String DISCONNECT = "off";
 
     /**
@@ -22,7 +30,7 @@ public class PresenceService {
      */
     public void connect(String uid, String sessionId) {
         ValueOperations<String, String> valueOperations = redisTemplate.opsForValue();
-        valueOperations.set(USER_KEY + uid, sessionId);
+        valueOperations.set(USER_KEY + uid, LOBBY);
         valueOperations.set(SESSION_KEY + sessionId, uid);
     }
 
@@ -32,19 +40,27 @@ public class PresenceService {
     public void joinRoom(String sessionId, String mid) {
         String uid = getUidBySessionId(sessionId);
         if (uid != null) {
-            SetOperations<String, String> setOperations = redisTemplate.opsForSet();
-            setOperations.add(MATCHING_KEY + mid, uid);
+            ValueOperations<String, String> valueOperations = redisTemplate.opsForValue();
+            valueOperations.set(USER_KEY + uid, mid);
         }
     }
 
     /**
      * 방 퇴장
      */
-    public void leaveRoom(String sessionId, String mid) {
+    public void leaveRoom(String sessionId, LocalDateTime time) {
         String uid = getUidBySessionId(sessionId);
         if (uid != null) {
-            SetOperations<String, String> setOperations = redisTemplate.opsForSet();
-            setOperations.remove(MATCHING_KEY + mid, uid);
+            ValueOperations<String, String> valueOperations = redisTemplate.opsForValue();
+            String mid = valueOperations.get(USER_KEY + uid);
+            Optional<RoomLog> roomLogOptional = roomLogRepository.findRoomLogByMatchingId(mid);
+            if (roomLogOptional.isEmpty()) {
+                RoomLog log = RoomLog.create(mid, uid, time.toString());
+                roomLogRepository.save(log);
+            } else {
+                roomLogOptional.get().update(uid, time.toString());
+            }
+            valueOperations.set(USER_KEY + uid, LOBBY);
         }
     }
 
@@ -61,13 +77,14 @@ public class PresenceService {
     }
 
     /**
-     * 접속 유무 확인
+     * 사용자의 현재 접속해 있는 위치(채팅방 또는 로비)
      */
-    public boolean isConnected(Long userId) {
-        String uid = userId.toString();
+    public String isCurrentPosition(String uid) {
         ValueOperations<String, String> valueOperations = redisTemplate.opsForValue();
-        String sessionId = valueOperations.get(USER_KEY + uid);
-        return sessionId != null && !sessionId.equals(DISCONNECT);
+        String position = valueOperations.get(USER_KEY + uid);
+        if (position == null || position.equals(DISCONNECT))
+            return null;
+        return position;
     }
 
     private String getUidBySessionId(String sessionId) {
