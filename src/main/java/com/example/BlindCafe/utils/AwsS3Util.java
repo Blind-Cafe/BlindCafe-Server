@@ -35,6 +35,7 @@ public class AwsS3Util {
     private final Tika tika = new Tika();
     private final String PROFILE_IMAGE_DIR = "users/profiles/";
     public final String SUGGESTION_IMAGE_DIR = "suggestion/";
+    private final String MESSAGE_DIR = "chat/";
     private static String cloudfrontUrl;
 
     @Value("${cloud.aws.s3.bucket}")
@@ -67,6 +68,14 @@ public class AwsS3Util {
         });
         sb.deleteCharAt(sb.length() - 1);
         return sb.toString();
+    }
+
+    public String uploadFileFromMessage(MultipartFile multipartFile, String mid) {
+        File file = convertToFile(multipartFile);
+        String fileName = MESSAGE_DIR + mid + "/" + UUID.randomUUID() + extension(multipartFile);
+        amazonS3Client.putObject(new PutObjectRequest(bucket, fileName, file));
+        file.delete();
+        return cloudfrontUrl + fileName;
     }
 
     private File convertToFile(MultipartFile multipartFile) {

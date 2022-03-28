@@ -2,7 +2,7 @@ package com.example.BlindCafe.service;
 
 import com.example.BlindCafe.domain.User;
 import com.example.BlindCafe.domain.type.Platform;
-import com.example.BlindCafe.dto.common.MessageDto;
+import com.example.BlindCafe.dto.chat.MessageDto;
 import com.example.BlindCafe.exception.BlindCafeException;
 import com.example.BlindCafe.repository.UserRepository;
 import com.example.BlindCafe.utils.FcmUtil;
@@ -12,13 +12,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import static com.example.BlindCafe.domain.type.Platform.AOS;
-import static com.example.BlindCafe.domain.type.Platform.IOS;
 import static com.example.BlindCafe.exception.CodeAndMessage.EMPTY_USER;
 
 /**
@@ -51,7 +49,7 @@ public class NotificationService {
     /**
      * 채팅 메시지 알림 전송
      */
-    public void sendMessage(Long userId, MessageDto messageDto) {
+    public void sendPushMessage(Long userId, MessageDto messageDto) {
         // 메모리에 사용자 정보 있는지 조회
         Pair<Platform, String> deviceInfo = deviceInfoInMemory.getOrDefault(userId, null);
 
@@ -83,7 +81,7 @@ public class NotificationService {
     /**
      * 플랫폼 별 공지에 대한 알림 전송
      */
-    public void sendGroupNotice(String title, String content, Platform platform) {
+    public void sendPushMessageAtGroupNotice(String title, String content, Platform platform) {
 
         List<String> tokens = userRepository.findNormalUsersByPlatform(platform.getDescription()).stream()
                 .map(User::getDeviceToken)
