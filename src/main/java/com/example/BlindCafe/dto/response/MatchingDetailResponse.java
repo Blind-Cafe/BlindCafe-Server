@@ -4,7 +4,7 @@ import com.example.BlindCafe.domain.Drink;
 import com.example.BlindCafe.domain.Matching;
 import com.example.BlindCafe.domain.User;
 import com.example.BlindCafe.domain.UserMatching;
-import com.example.BlindCafe.dto.common.PartnerDto;
+import com.example.BlindCafe.dto.request.PartnerDto;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

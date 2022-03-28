@@ -1,4 +1,4 @@
-package com.example.BlindCafe.dto.common;
+package com.example.BlindCafe.dto.request;
 
 import com.example.BlindCafe.domain.User;
 import lombok.Getter;

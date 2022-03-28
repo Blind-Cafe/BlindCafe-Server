@@ -2,7 +2,7 @@ package com.example.BlindCafe.dto.response;
 
 import com.example.BlindCafe.domain.*;
 import com.example.BlindCafe.domain.type.MessageType;
-import com.example.BlindCafe.dto.common.PartnerDto;
+import com.example.BlindCafe.dto.request.PartnerDto;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -64,7 +64,7 @@ public class MatchingListResponse {
 
         public static RoomHistory fromEntities(Message message, RoomLog log) {
             RoomHistory history = new RoomHistory();
-            history.setMatchingId(message.getMatchingId());
+            history.setMatchingId(Long.parseLong(message.getMatchingId()));
             String content = "";
             if (message.getType().equals(MessageType.TEXT)) {
                 content = message.getContent();
