@@ -71,4 +71,8 @@ public class MatchingMessageUtil {
     // 매칭 종료 1시간 전에 전송하는 메시지
 
     // 72시간 지났을 때(프로필 공개 의사 여부 확인) 전송하는 메시지
+    public MessageDto sendExchangeProfile(Long mid) {
+        String content = "내 프로필을 전송하고 상대방이 프로필을 받아보세요.\n프로필 교환 성공 시, 이어 대화하실 수 있습니다.";
+        return MessageDto.fromAdmin(mid, MessageType.DESCRIPTION, content);
+    }
 }

@@ -172,4 +172,12 @@ public class Matching extends BaseTimeEntity {
     public void inactive() {
         this.isActive = false;
     }
+
+    // 프로필 교환 템플릿 전송 가능한지 여부 확인
+    public boolean isAbleToSendExchangeProfileTemplate(LocalDateTime now) {
+        return !this.isContinuous                   // 3일 채팅 상태
+                && this.expiredTime.isAfter(now)    // 만료 시간 지남
+                && !this.getPush().isThreeDays()    // 전송 안한 경우
+                && this.isActive;                   // 채팅방 활성화
+    }
 }

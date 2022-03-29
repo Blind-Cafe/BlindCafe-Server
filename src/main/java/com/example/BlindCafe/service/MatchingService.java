@@ -5,6 +5,7 @@ import com.example.BlindCafe.domain.topic.Audio;
 import com.example.BlindCafe.domain.topic.Image;
 import com.example.BlindCafe.domain.topic.Subject;
 import com.example.BlindCafe.domain.type.MessageType;
+import com.example.BlindCafe.domain.type.status.MatchingStatus;
 import com.example.BlindCafe.dto.chat.MessageDto;
 import com.example.BlindCafe.dto.request.ExchangeProfileRequest;
 import com.example.BlindCafe.dto.request.SelectDrinkRequest;
@@ -18,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -225,7 +227,27 @@ public class MatchingService {
         Matching matching = matchingRepository.findValidMatchingById(matchingId)
                 .orElseThrow(() -> new BlindCafeException(EMPTY_MATCHING));
 
+        // 채팅방 정보 조회 시 채팅방 상태 업데이트
+        // (배치 작업으로 채팅방 상태를 업데이트해주지만 배치 텀으로 인해 최신화 안된 경우를 해결하기 위해)
+        update(matching);
+
         return MatchingDetailResponse.fromEntity(matching, userId);
+    }
+
+    // 채팅방 상태 업데이트 ()
+    private void update(Matching matching) {
+        LocalDateTime now = LocalDateTime.now();
+
+        // 둘 중 한명이라도 나간 경우 채팅방 비활성화
+        if (matching.getUserMatchings()
+                .stream()
+                .filter(um -> um.getStatus().equals(MatchingStatus.MATCHING)).count() != 2
+        ) {
+            matching.inactive();
+        }
+
+        // 72시간 넘은 경우 프로필 교환 템플릿 전송
+        sendExchangeProfile(matching, now);
     }
 
     /**
@@ -394,5 +416,18 @@ public class MatchingService {
     public void createMatchingHistory(User user) {
         MatchingHistory matchingHistory = MatchingHistory.create(user);
         matchingHistoryRepository.save(matchingHistory);
+    }
+
+    /**
+     * 매칭 내에서 진행 관련
+     */
+
+    // 프로필 교환 템플릿 전송
+    @Transactional
+    public void sendExchangeProfile(Matching matching, LocalDateTime now) {
+        if (matching.isAbleToSendExchangeProfileTemplate(now)) {
+            MessageDto message = matchingMessageUtil.sendExchangeProfile(matching.getId());
+            chatService.publish(String.valueOf(matching.getId()), message);
+        }
     }
 }
