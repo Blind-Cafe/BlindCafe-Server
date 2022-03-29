@@ -54,9 +54,6 @@ public class User extends BaseTimeEntity {
     private List<UserInterest> interests = new ArrayList<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-    private List<InterestOrder> interestOrders = new ArrayList<>();
-
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<Avatar> avatars = new ArrayList<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
@@ -83,6 +80,10 @@ public class User extends BaseTimeEntity {
 
     @Enumerated(EnumType.STRING)
     private Platform platform;
+
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JoinColumn(name = "notification_setting_id")
+    private NotificationSetting notificationSetting;
 
     @Enumerated(EnumType.STRING)
     private Mbti mbti;
@@ -220,8 +221,7 @@ public class User extends BaseTimeEntity {
 
     // 내 음료수 조회하기(중복 제거)
     public List<Drink> getMyDrink() {
-        Set<Drink> set = new HashSet<>(this.drinks.stream().map(UserDrink::getDrink).collect(Collectors.toList()));
-        return new ArrayList<>(set);
+        return this.drinks.stream().map(UserDrink::getDrink).distinct().collect(Collectors.toList());
     }
     
     // 티켓 소비

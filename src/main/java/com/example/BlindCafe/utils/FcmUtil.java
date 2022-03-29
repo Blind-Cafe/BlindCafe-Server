@@ -9,7 +9,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.*;
 
-import static com.example.BlindCafe.domain.type.MessageType.*;
 import static com.example.BlindCafe.exception.CodeAndMessage.FIREBASE_BUILD_MESSAGE_ERROR;
 import static com.example.BlindCafe.exception.CodeAndMessage.FIREBASE_SEND_MESSAGE_ERROR;
 
@@ -25,7 +24,7 @@ public class FcmUtil {
     // 단일 메시지 전송
     public String sendMessage(Message message) {
         try {
-            return this.instance.send(message);
+            return instance.send(message);
         } catch (Exception e) {
             throw new BlindCafeException(FIREBASE_SEND_MESSAGE_ERROR);
         }
@@ -34,7 +33,7 @@ public class FcmUtil {
     // 일괄 메시지 전송
     public BatchResponse sendMessage(MulticastMessage message) {
         try {
-            return this.instance.sendMulticast(message);
+            return instance.sendMulticast(message);
         } catch (Exception e) {
             throw new BlindCafeException(FIREBASE_SEND_MESSAGE_ERROR);
         }
@@ -86,25 +85,21 @@ public class FcmUtil {
     }
 
     // 제목 만들기
-    public String makeTitle(String username) {
+    public String makeTitle(MessageType messageType, String username) {
+        if (messageType.getTitle() != null ) return messageType.getTitle();
         return username;
     }
 
     // 바디 만들기
-    public String makeBody(String type, String content) {
-        int t = Integer.parseInt(type);
-        MessageType messageType = Arrays.stream(values())
-                .filter(mt -> mt.getType() == t)
-                .findAny().orElseThrow(() -> new BlindCafeException(FIREBASE_BUILD_MESSAGE_ERROR));
-
-        if (messageType.equals(TEXT) || messageType.equals(DESCRIPTION) || messageType.equals(DESCRIPTION_NON_PUSH)) return content;
-        else return messageType.getMsg();
+    public String makeBody(MessageType messageType, String content) {
+        if (messageType.getBody() != null) return messageType.getBody();
+        return content;
     }
 
     // 미리보기 이미지 만들기
-    public String makeImage(String type, String content) {
-        if (type.equals(IMAGE)) return content;
-        else return null;
+    public String makeImage(MessageType messageType, String content) {
+        if (messageType.isImage()) return content;
+        return null;
     }
 
     // custom data 만들기

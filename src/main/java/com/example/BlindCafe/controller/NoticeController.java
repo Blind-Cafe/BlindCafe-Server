@@ -18,6 +18,7 @@ import static com.example.BlindCafe.exception.CodeAndMessage.FORBIDDEN_AUTHORIZA
 @Slf4j
 @RestController
 @RequiredArgsConstructor
+@RequestMapping("/api/notice")
 public class NoticeController {
 
     private final NoticeService noticeService;
@@ -25,7 +26,7 @@ public class NoticeController {
     /**
      * 공지 조회하기
      */
-    @GetMapping("/notice")
+    @GetMapping()
     public ResponseEntity<NoticeListResponse> getGroupNotices(
             @RequestHeader(value = UID) String uid,
             @RequestParam(value = "page", defaultValue = "-1") int page,
@@ -38,7 +39,7 @@ public class NoticeController {
     /**
      * 공지 작성하기
      */
-    @PostMapping("/notice")
+    @PostMapping()
     public ResponseEntity<Void> writeNotice(
             @RequestHeader(value = ADMIN) String admin,
             CreateNoticeRequest request

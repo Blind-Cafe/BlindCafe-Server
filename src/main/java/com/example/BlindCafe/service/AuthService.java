@@ -56,6 +56,7 @@ public class AuthService {
     private final UserRepository userRepository;
 
     private final MatchingService matchingService;
+    private final NotificationService notificationService;
 
     private final String KAKAO_AUTH = "https://kapi.kakao.com/v2/user/me";
     private final String APPLE_AUTH = "https://appleid.apple.com/auth/keys";
@@ -83,6 +84,8 @@ public class AuthService {
             matchingService.createTickets(newUser);
             // 매칭 히스토리 테이블 생성
             matchingService.createMatchingHistory(newUser);
+            // 알림 설정
+            notificationService.createSetting(newUser);
 
             return Pair.of(
                     HttpStatus.CREATED,

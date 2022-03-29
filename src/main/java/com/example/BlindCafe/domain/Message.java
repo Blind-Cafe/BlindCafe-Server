@@ -20,6 +20,8 @@ public class Message {
 
     private String userId;
 
+    private String username;
+
     private String content;
 
     @Enumerated(EnumType.STRING)
@@ -27,11 +29,12 @@ public class Message {
 
     private String createdAt;
 
-    public static Message create(String matchingId, String userId, String content, MessageType type) {
+    public static Message create(String matchingId, String userId, String username, String content, MessageType type) {
         LocalDateTime createdAt = LocalDateTime.now();
         Message message = new Message();
         message.setMatchingId(matchingId);
         message.setUserId(userId);
+        message.setUsername(username);
         message.setContent(content);
         message.setType(type);
         message.setCreatedAt(createdAt.toString());

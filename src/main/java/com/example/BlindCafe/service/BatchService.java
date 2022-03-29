@@ -18,7 +18,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.example.BlindCafe.service.NotificationService.deviceInfoInMemory;
+import static com.example.BlindCafe.service.NotificationService.*;
 
 /**
  * 배치 작업을 위한 서비스
@@ -151,8 +151,10 @@ public class BatchService {
         }
     }
 
-    // Step 4 : 메모리로 관리하는 사용자 디바이스 정보 초기화
+    // Step 4 : 메모리로 관리하는 사용자 알림 설정 및 디바이스 정보 초기화
     private void initializationUserDeviceAtMemory() {
+        entireNotificationSettingInMemory.clear();
+        roomNotificationOffInMemory.clear();
         deviceInfoInMemory.clear();
     }
 
