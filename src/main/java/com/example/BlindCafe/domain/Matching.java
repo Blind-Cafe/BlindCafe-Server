@@ -1,11 +1,13 @@
 package com.example.BlindCafe.domain;
 
 import com.example.BlindCafe.domain.type.status.MatchingStatus;
+import com.example.BlindCafe.utils.DateTimeUtil;
 import lombok.*;
 
 import javax.persistence.*;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -173,11 +175,68 @@ public class Matching extends BaseTimeEntity {
         this.isActive = false;
     }
 
-    // 프로필 교환 템플릿 전송 가능한지 여부 확인
-    public boolean isAbleToSendExchangeProfileTemplate(LocalDateTime now) {
-        return !this.isContinuous                   // 3일 채팅 상태
-                && this.expiredTime.isAfter(now)    // 만료 시간 지남
-                && !this.getPush().isThreeDays()    // 전송 안한 경우
-                && this.isActive;                   // 채팅방 활성화
+    // 시간 별 채팅방 기능 허용 템플릿 전송
+    public int sendMatchingFunction(LocalDateTime now) {
+        if (this.isContinuous) return 0;
+        if (!this.isActive) return 0;
+
+        Long continuousTime = ChronoUnit.HOURS.between(this.getBeginTime(), now);
+        if (continuousTime.equals(DateTimeUtil.HOUR_OF_ONE_DAY)) {
+            if (this.getPush().isOneDay()) return 0;
+            this.getPush().setOneDay(true);
+            return 1;
+        } else if (continuousTime.equals(DateTimeUtil.HOUR_OF_TWO_DAYS)) {
+            if (this.getPush().isTwoDays()) return 0;
+            this.getPush().setTwoDays(true);
+            return 2;
+        }
+        return 0;
+    }
+
+    // 3일 채팅에서 종료 1시간 전인지 확인 -> 마감 임박 메시지 전송
+    public boolean sendEndOfBasicMatching(LocalDateTime now) {
+        if(!this.isActive) return false;
+        if (this.isContinuous) return false;
+        if (this.getPush().isEndOfOneHour()) return false;
+
+        Long continuousTime = ChronoUnit.HOURS.between(now, this.expiredTime);
+        if (continuousTime.equals(1L)) {
+            this.getPush().setEndOfOneHour(true);
+            return true;
+        }
+        return false;
+    }
+
+    // 프로필 교환 템플릿 전송
+    public boolean sendExchangeProfile(LocalDateTime now) {
+        if (this.isContinuous) return false;
+        if (this.expiredTime.isBefore(now)) return false;
+        if (this.getPush().isThreeDays()) return false;
+        if (!this.isActive) return false;
+
+        this.getPush().setThreeDays(true);
+        return true;
+    }
+
+    // 7일 채팅에서 종료까지 1일 남은 경우 종료 임박 템플릿 전송
+    public boolean checkEndOfContinuousMatching(LocalDateTime now) {
+        if(!this.isActive) return false;
+        if (!this.isContinuous) return false;
+        if (this.getPush().isLastChat()) return false;
+
+        Long continuousTime = ChronoUnit.DAYS.between(now, this.expiredTime);
+        if (continuousTime.equals(1L)) {
+            this.getPush().setLastChat(true);
+            return true;
+        }
+        return false;
+    }
+
+    // 7일 채팅 만료
+    public void expiry(LocalDateTime now) {
+        if (!this.isActive) return;
+        if (!this.isContinuous) return;
+        if (this.expiredTime.isAfter(now))
+            this.isActive = false;
     }
 }
