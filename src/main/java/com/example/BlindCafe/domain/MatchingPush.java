@@ -28,7 +28,6 @@ public class MatchingPush {
     private boolean twoDays;
     private boolean endOfOneHour;
     private boolean threeDays;
-    private boolean profileOpen;
     private boolean matchingContinue;
     private boolean lastChat;
 
@@ -39,7 +38,6 @@ public class MatchingPush {
         push.setTwoDays(false);
         push.setEndOfOneHour(false);
         push.setThreeDays(false);
-        push.setProfileOpen(false);
         push.setMatchingContinue(false);
         push.setLastChat(false);
         return push;

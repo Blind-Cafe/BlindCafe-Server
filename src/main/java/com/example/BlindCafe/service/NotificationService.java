@@ -42,7 +42,8 @@ public class NotificationService {
      * 캐시를 사용하면 좋겠지만 현재 스펙상 메모리를 활용해서 사용자의 장비 정보를 관리
      * (ConcurrentHashMap 활용해서 최소한의 동시성 문제 고려)
      * AuthService.login()에서 사용자 로그인 시 장비 값 업데이트
-     * 계속 메모리로 관리하는 경우 너무 커질 수 있기 때문에 배치 작업으로 하루에 한 번 리셋
+     * 계속 메모리로 관리하는 경우 너무 커질 수 있기 때문에 배치 작업으로 1시간마다 리셋
+     * (반복적인 채팅에 대한 효율 향상, 불필요한 메모리 차지 절약)
      */
     public static ConcurrentHashMap<Long, Pair<Platform, String>> deviceInfoInMemory = new ConcurrentHashMap<>();
 
@@ -89,7 +90,7 @@ public class NotificationService {
 
         int size = tokens.size();
         int iteration = size / MULTICAST_MESSAGE_SIZE;
-        if (size % MULTICAST_MESSAGE_SIZE != 0) iteration ++;
+        if (size % MULTICAST_MESSAGE_SIZE != 0) iteration++;
 
         MulticastMessage message;
         for (int count=0; count<iteration; count++) {
@@ -103,7 +104,7 @@ public class NotificationService {
                         fcmUtil.makeCustomData(NOTICE, "0"));
             } else {
                 message = fcmUtil.makeMessage(
-                        tokens.subList(count * MULTICAST_MESSAGE_SIZE, count + MULTICAST_MESSAGE_SIZE),
+                        tokens.subList(count * MULTICAST_MESSAGE_SIZE, (count + 1) * MULTICAST_MESSAGE_SIZE),
                         title,
                         content,
                         null,

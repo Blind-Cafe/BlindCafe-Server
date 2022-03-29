@@ -7,12 +7,12 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 @Repository
 public interface UserMatchingRepository extends JpaRepository<UserMatching, Long> {
-    List<UserMatching> findByStatus(MatchingStatus status);
     
     // 매칭 요청 중인지 조회
     @Query("SELECT um FROM UserMatching um WHERE um.status = 'WAIT' AND um.user = ?1")
@@ -25,4 +25,9 @@ public interface UserMatchingRepository extends JpaRepository<UserMatching, Long
     // 사용자의 유효한 매칭 조회
     @Query("SELECT um FROM UserMatching um WHERE um.status = 'MATCHING' AND um.user = ?1")
     List<UserMatching> findMatchingByUserId(Long userId);
+
+    // 특정 시간보다 이전에 발생한 매칭 요청
+    @Query("SELECT um FROM UserMatching um WHERE um.status = 'WAIT' AND um.createdAt < ?1")
+    List<UserMatching> findAgingMatchingRequests(LocalDateTime time);
+
 }

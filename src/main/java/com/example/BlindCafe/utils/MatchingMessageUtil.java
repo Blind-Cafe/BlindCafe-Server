@@ -64,11 +64,36 @@ public class MatchingMessageUtil {
         return MessageDto.fromAdmin(mid, MessageType.DESCRIPTION_NON_PUSH, content);
     }
 
-    // 24시간 지났을 때 전송하는 메시지
+    // 24/48시간 지났을 때 전송하는 메시지
+    public MessageDto sendMatchingFunction(Long mid, int day) {
+        String content;
+        if (day == 1) {
+            content = "대화 방이 열린 지, 24시간이 지났습니다.\n"
+                    + "지금부터 사진을 보내실 수 있어요📸\n"
+                    + "첫 사진으로, 즐거웠던 여행 사진을 보내볼까요?";
+        } else {
+            content =  "대화 방이 열린 지, 48시간이 지났습니다.\n"
+                    + "이제 내 목소리를 녹음해 전송할 수 있어요🎙️\n"
+                    + "간단한 인사말 혹은 좋아하는 노래 한 소절을 보내볼까요?";
+        }
+        return MessageDto.fromAdmin(mid, MessageType.DESCRIPTION, content);
+    }
 
-    // 48시간 지났을 때 전송하는 메시지
-
-    // 매칭 종료 1시간 전에 전송하는 메시지
+    // 3일 채팅에서 종료 1시간 전에 전송하는 메시지
+    public MessageDto sendEndOfBasicMatching(Long mid) {
+        String content = "💗잠시 후 이 대화방은 닫힙니다. 그동안 못다한 말을 해보세요💗";
+        return MessageDto.fromAdmin(mid, MessageType.DESCRIPTION, content);
+    }
 
     // 72시간 지났을 때(프로필 공개 의사 여부 확인) 전송하는 메시지
+    public MessageDto sendExchangeProfile(Long mid) {
+        String content = "내 프로필을 전송하고 상대방이 프로필을 받아보세요.\n프로필 교환 성공 시, 이어 대화하실 수 있습니다.";
+        return MessageDto.fromAdmin(mid, MessageType.DESCRIPTION, content);
+    }
+
+    // 7일 채팅에서 종료 1일전에 전송하는 메시지
+    public MessageDto sendEndOfContinuousMatching(Long mid) {
+        String content = "💗내일 이 대화방은 닫힙니다. 그동안 못다한 말을 해보세요💗";
+        return MessageDto.fromAdmin(mid, MessageType.DESCRIPTION, content);
+    }
 }

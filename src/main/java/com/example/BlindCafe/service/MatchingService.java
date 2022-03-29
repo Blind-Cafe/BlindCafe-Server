@@ -18,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -225,6 +226,10 @@ public class MatchingService {
         Matching matching = matchingRepository.findValidMatchingById(matchingId)
                 .orElseThrow(() -> new BlindCafeException(EMPTY_MATCHING));
 
+        // 채팅방 정보 조회 시 3일 채팅에서 72시간 넘은 경우 프로필 교환 메시지 전송
+        // (배치 작업으로 채팅방 상태를 업데이트해주지만 배치 텀으로 인해 최신화 안된 경우를 해결하기 위해)
+        checkMatchingTime(matching, LocalDateTime.now());
+
         return MatchingDetailResponse.fromEntity(matching, userId);
     }
 
@@ -394,5 +399,64 @@ public class MatchingService {
     public void createMatchingHistory(User user) {
         MatchingHistory matchingHistory = MatchingHistory.create(user);
         matchingHistoryRepository.save(matchingHistory);
+    }
+
+    /**
+     * 매칭 내에서 진행 관련
+     */
+    // 3일 채팅에서 매칭 지속 시간에 따른 이벤트 퍼블리싱
+    @Transactional
+    public void checkMatchingTime(Matching matching, LocalDateTime time) {
+        if (!matching.isActive()) return;
+        
+        // 3일 채팅
+        if (!matching.getIsContinuous()) {
+            checkMatchingFunction(matching, time); // 24,48시간 기능 해제 메시지
+            checkEndOfBasicMatching(matching, time); // 3일 채팅 종료 1시간 메시지
+            checkExchangeProfile(matching, time); // 프로필 교환 메시지
+            return;
+        }
+        
+        // 7일 채팅
+        checkEndOfContinuousMatching(matching, time);
+        expiry(matching, time);
+    }
+
+    // 3일 채팅에서 24/48시간 지났는지 확인 -> 사진/목소리 기능 해제 메시지 전송
+    private void checkMatchingFunction(Matching matching, LocalDateTime time) {
+        int result = matching.sendMatchingFunction(time);
+        if (result > 0) {
+            MessageDto message = matchingMessageUtil.sendMatchingFunction(matching.getId(), result);
+            chatService.publish(String.valueOf(matching.getId()), message);
+        }
+    }
+
+    // 3일 채팅에서 종료 1시간 전인지 확인 -> 마감 임박 메시지 전송
+    private void checkEndOfBasicMatching(Matching matching, LocalDateTime time) {
+        if (matching.sendEndOfBasicMatching(time)) {
+            MessageDto message = matchingMessageUtil.sendEndOfBasicMatching(matching.getId());
+            chatService.publish(String.valueOf(matching.getId()), message);
+        }
+    }
+
+    // 3일 채팅에서 72시간 지났는지 확인 -> 프로필 교환 템플릿 전송
+    private void checkExchangeProfile(Matching matching, LocalDateTime time) {
+        if (matching.sendExchangeProfile(time)) {
+            MessageDto message = matchingMessageUtil.sendExchangeProfile(matching.getId());
+            chatService.publish(String.valueOf(matching.getId()), message);
+        }
+    }
+
+    // 7일 채팅에서 종료까지 1일 남은 경우 종료 임박 템플릿 전송
+    private void checkEndOfContinuousMatching(Matching matching, LocalDateTime time) {
+        if (matching.checkEndOfContinuousMatching(time)) {
+            MessageDto message = matchingMessageUtil.sendEndOfContinuousMatching(matching.getId());
+            chatService.publish(String.valueOf(matching.getId()), message);
+        }
+    }
+
+    // 7일 채팅 만료 시간이 지난 경우 채팅방 비활성화
+    private void expiry(Matching matching, LocalDateTime time) {
+        matching.expiry(time);
     }
 }
