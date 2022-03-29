@@ -1,5 +1,6 @@
 package com.example.BlindCafe.dto.chat;
 
+import com.example.BlindCafe.domain.Message;
 import com.example.BlindCafe.domain.type.MessageType;
 import lombok.*;
 
@@ -17,12 +18,24 @@ public class MessageDto {
     private String content;
     private String destination = "0";
 
+    public static MessageDto fromCollection(Message message) {
+        return MessageDto.builder()
+                .messageId(message.getId())
+                .matchingId(message.getMatchingId())
+                .senderId(message.getUserId())
+                .senderName(message.getUsername())
+                .type(message.getType().getType())
+                .content(message.getContent())
+                .destination("0")
+                .build();
+    }
+
     public static MessageDto fromAdmin(Long mid, MessageType type, String content) {
         return MessageDto.builder()
                 .matchingId(String.valueOf(mid))
                 .senderId("0")
                 .senderName("admin")
-                .type(String.valueOf(type))
+                .type(type.getType())
                 .content(content)
                 .destination("0")
                 .build();
