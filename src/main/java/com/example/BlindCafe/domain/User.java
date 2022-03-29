@@ -81,6 +81,10 @@ public class User extends BaseTimeEntity {
     @Enumerated(EnumType.STRING)
     private Platform platform;
 
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JoinColumn(name = "notification_setting_id")
+    private NotificationSetting notificationSetting;
+
     @Enumerated(EnumType.STRING)
     private Mbti mbti;
 

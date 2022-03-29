@@ -1,9 +1,12 @@
 package com.example.BlindCafe.service;
 
+import com.example.BlindCafe.domain.NotificationSetting;
 import com.example.BlindCafe.domain.User;
 import com.example.BlindCafe.domain.type.Platform;
 import com.example.BlindCafe.dto.chat.MessageDto;
+import com.example.BlindCafe.dto.request.NotificationSettingRequest;
 import com.example.BlindCafe.exception.BlindCafeException;
+import com.example.BlindCafe.repository.NotificationSettingRepository;
 import com.example.BlindCafe.repository.UserRepository;
 import com.example.BlindCafe.utils.FcmUtil;
 import com.google.firebase.messaging.*;
@@ -11,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -33,9 +37,15 @@ public class NotificationService {
     private final FcmUtil fcmUtil;
 
     private final UserRepository userRepository;
+    private final NotificationSettingRepository notificationSettingRepository;
 
     private static final String NOTICE = "N";
     private static final String CHAT = "C";
+    private final Long ALL = 0L;
+
+    private final int EITHER_FALSE = 0;
+    private final int BOTH_TRUE = 1;
+    private final int EITHER_NULL = 2;
 
     /**
      * 사용자 ID를 기준으로 매번 DB를 조회하는 건 비효율적
@@ -45,12 +55,32 @@ public class NotificationService {
      * 계속 메모리로 관리하는 경우 너무 커질 수 있기 때문에 배치 작업으로 1시간마다 리셋
      * (반복적인 채팅에 대한 효율 향상, 불필요한 메모리 차지 절약)
      */
+    // 알림 전체 ON/OFF 설정
+    public static ConcurrentHashMap<Long, Boolean> entireNotificationSettingInMemory = new ConcurrentHashMap<>();
+    // 특정 채팅방 알림 OFF 명단
+    public static ConcurrentHashMap<Long, String> roomNotificationOffInMemory = new ConcurrentHashMap<>();
+    // 사용자 디바이스 정보
     public static ConcurrentHashMap<Long, Pair<Platform, String>> deviceInfoInMemory = new ConcurrentHashMap<>();
 
     /**
      * 채팅 메시지 알림 전송
      */
     public void sendPushMessage(Long userId, MessageDto messageDto) {
+
+        // 전체 또는 채팅방 알림 ON/OFF 여부 확인
+        int result = isActivate(userId, messageDto.getMatchingId());
+        // 전체 또는 채팅방 중 하나라도 OFF인 경우
+        if (result == EITHER_FALSE) return; 
+        // 전체 또는 채팅방 중 하나라도 정보를 모르는 경우
+        if (result != BOTH_TRUE) {
+            NotificationSetting setting = notificationSettingRepository.findByUserId(userId)
+                    .orElseThrow(() -> new BlindCafeException(EMPTY_USER));
+            entireNotificationSettingInMemory.put(userId, setting.isAll());
+            roomNotificationOffInMemory.put(userId, setting.getInactivateRooms());
+            // 다시 검사해서 둘 중 하나라도 OFF인 경우 처리
+            if (isActivate(userId, messageDto.getMatchingId()) == EITHER_FALSE) return;
+        }
+
         // 메모리에 사용자 정보 있는지 조회
         Pair<Platform, String> deviceInfo = deviceInfoInMemory.getOrDefault(userId, null);
 
@@ -113,5 +143,54 @@ public class NotificationService {
             }
             fcmUtil.sendMessage(message);
         }
+    }
+
+    // 알림 설정 변경
+    @Transactional
+    public void update(Long userId, NotificationSettingRequest request) {
+
+        NotificationSetting setting = notificationSettingRepository.findByUserId(userId)
+                .orElseThrow(() -> new BlindCafeException(EMPTY_USER));
+
+        if (request.getTarget().equals(ALL)) {
+            setting.setAll(request.isActivate());
+            entireNotificationSettingInMemory.put(userId, request.isActivate());
+            return;
+        }
+
+        setting.setRoom(String.valueOf(request.getTarget()), request.isActivate());
+        roomNotificationOffInMemory.put(userId, setting.getInactivateRooms());
+    }
+
+    // 알림 설정 초기화
+    @Transactional
+    public void createSetting(User newUser) {
+        NotificationSetting setting = NotificationSetting.create(newUser);
+        notificationSettingRepository.save(setting);
+    }
+
+    private int isActivate(Long userId, String mid) {
+
+        boolean status1 = false;
+        boolean status2 = false;
+
+        // 메모리에 ON/OFF 설정 있는지 조회
+        Boolean entireActivate = entireNotificationSettingInMemory.getOrDefault(userId, null);
+        if (entireActivate != null) {
+            if (!entireActivate) return EITHER_FALSE;
+            status1 = true;
+        }
+
+        String offRoomList = roomNotificationOffInMemory.getOrDefault(userId, null);
+        if (offRoomList != null) {
+            String[] offRooms = offRoomList.split(":");
+            for (String offRoom: offRooms) {
+                if (offRoom.equals(mid)) return EITHER_FALSE;
+            }
+            status2 = true;
+        }
+
+        if (status1 && status2) return BOTH_TRUE;
+        else return EITHER_NULL;
     }
 }
