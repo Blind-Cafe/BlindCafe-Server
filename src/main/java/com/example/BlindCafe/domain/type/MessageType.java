@@ -22,12 +22,12 @@ public enum MessageType {
     SUCCESS_EXCHANGE(true, "15", "💘프로필 교환 성공💘", "프로필 교환에 성공했습니다. 축하드려요!", false, true),
     LAST_CHAT(false, "16", "💗마지막 대화💗", "내일 이 대화방은 닫힙니다. 그동안 못다한 말을 해보세요", false, true),
     MATCHING_UP(false, "17", "⏳매칭 요청 급상승 중⏳", "현재 사용자들의 매칭 요청이 증가하고 있어요. 매칭을 요청하세요!", false, true),
-    TAKE_DRINK(false, "18", null, null, false, false),
-    LEAVE(false, "19", null, null, false, false),
+    TAKE_DRINK(false, "18", null, "음료수 뱃지를 획득했습니다.", false, false),
+    LEAVE(false, "19", null, "방을 나가셨습니다.", false, false),
 
-    TEXT_TOPIC(true, "20", null, "토픽이 전송되었습니다.", false, true),
-    IMAGE_TOPIC(true, "21", null, "토픽이 전송되었습니다.", false, true),
-    AUDIO_TOPIC(true, "22", null, "토픽이 전송되었습니다.", false, true);
+    TEXT_TOPIC(true, "20", "토픽 전송", "토픽이 전송되었습니다.", false, true),
+    IMAGE_TOPIC(true, "21", "토픽 전송", "토픽이 전송되었습니다.", false, true),
+    AUDIO_TOPIC(true, "22", "토픽 전송", "토픽이 전송되었습니다.", false, true);
 
     private final boolean inChat;
     private final String type;

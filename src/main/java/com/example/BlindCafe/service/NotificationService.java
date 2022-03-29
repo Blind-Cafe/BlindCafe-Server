@@ -2,6 +2,7 @@ package com.example.BlindCafe.service;
 
 import com.example.BlindCafe.domain.NotificationSetting;
 import com.example.BlindCafe.domain.User;
+import com.example.BlindCafe.domain.type.MessageType;
 import com.example.BlindCafe.domain.type.Platform;
 import com.example.BlindCafe.dto.chat.MessageDto;
 import com.example.BlindCafe.dto.request.NotificationSettingRequest;
@@ -22,6 +23,7 @@ import java.util.stream.Collectors;
 
 import static com.example.BlindCafe.domain.type.Platform.AOS;
 import static com.example.BlindCafe.exception.CodeAndMessage.EMPTY_USER;
+import static com.example.BlindCafe.exception.CodeAndMessage.INVALID_MESSAGE_TYPE;
 
 /**
  * TODO FCM 전송 로그 저장하기
@@ -98,11 +100,13 @@ public class NotificationService {
             deviceInfo = newDeviceInfo;
         }
 
+        MessageType type = getMessageType(messageDto.getType());
+
         Message message = fcmUtil.makeMessage(
                 deviceInfo.getSecond(), // device token
-                fcmUtil.makeTitle(messageDto.getSenderName()), // title
-                fcmUtil.makeBody(messageDto.getType(), messageDto.getContent()), // body
-                fcmUtil.makeImage(messageDto.getType(), messageDto.getContent()), // image
+                fcmUtil.makeTitle(type, messageDto.getSenderName()), // title
+                fcmUtil.makeBody(type, messageDto.getContent()), // body
+                fcmUtil.makeImage(type, messageDto.getContent()), // image
                 deviceInfo.getFirst(), // platform
                 fcmUtil.makeCustomData(CHAT, messageDto.getMatchingId()) // custom data
         );
@@ -192,5 +196,15 @@ public class NotificationService {
 
         if (status1 && status2) return BOTH_TRUE;
         else return EITHER_NULL;
+    }
+
+    // 메세지 타입 조회
+    private MessageType getMessageType(String type) {
+        for (MessageType messageType: MessageType.values()) {
+            if (messageType.getType().equals(type)) {
+                return messageType;
+            }
+        }
+        throw new BlindCafeException(INVALID_MESSAGE_TYPE);
     }
 }

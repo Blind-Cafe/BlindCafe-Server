@@ -43,18 +43,19 @@ public class ChatService {
     @Transactional
     public void publish(String mid, MessageDto message) {
         String uid = message.getSenderId();
-        message.setDestination("0");
+        boolean isNotification = isNotification(message.getType());
 
         // 메세지 저장
-        Message newMessage = Message.create(mid, uid, message.getContent(), getType(message.getType()));
+        Message newMessage = Message.create(mid, uid, message.getSenderName(), message.getContent(), getSavedType(message.getType()));
         newMessage = messageRepository.save(newMessage);
-        message.setMessageId(newMessage.getId());
+        MessageDto savedMessage = MessageDto.fromCollection(newMessage);
+        message.setMessageId(savedMessage.getMessageId());
 
         // 메시지 퍼블리싱
-        redisPublisher.publish(mid, message, true);
+        redisPublisher.publish(mid, savedMessage, true);
 
         // 채팅방 외부에 있을 경우 알림을 받을 필요 없는 메시지 (ex. 방 나가기)
-        if (message.getType().equals(String.valueOf(MessageType.DESCRIPTION_NON_PUSH)))
+        if (!isNotification)
             return;
 
         // 방에 어떤 사용자가 있는지 확인
@@ -83,7 +84,7 @@ public class ChatService {
                 // 접속해있지만 채팅방에 없는 경우 사용자한테 직접 퍼블리싱
                 if (!mid.equals(currentPosition)) {
                     message.setDestination(target);
-                    redisPublisher.publish(uid, message, false);
+                    redisPublisher.publish(uid, savedMessage, false);
                 }
             }
         }
@@ -106,13 +107,23 @@ public class ChatService {
         return new MessageListResponse(pages.map(MessageListResponse.MessageDetail::fromEntity));
     }
 
-    // 메시지 타입 조회
-    private MessageType getType(String type) {
-        int typeIntValue = Integer.parseInt(type);
-        for (MessageType t: MessageType.values()) {
-            if (t.getType() == typeIntValue)
-                return t;
+    // 실제 메시지 타입 조회
+    private boolean isNotification(String type) {
+        for (MessageType messageType: MessageType.values()) {
+            if (messageType.getType().equals(type)) {
+                return messageType.isNotification();
+            }
         }
         throw new BlindCafeException(INVALID_MESSAGE_TYPE);
+    }
+    
+    // 저장할 메시지 타입 조회
+    private MessageType getSavedType(String type) {
+        for (MessageType messageType: MessageType.values()) {
+            if (messageType.isInChat() && messageType.getType().equals(type)) {
+                return messageType;
+            }
+        }
+        return MessageType.TEXT;
     }
 }

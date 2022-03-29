@@ -9,7 +9,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.*;
 
-import static com.example.BlindCafe.domain.type.MessageType.*;
 import static com.example.BlindCafe.exception.CodeAndMessage.FIREBASE_BUILD_MESSAGE_ERROR;
 import static com.example.BlindCafe.exception.CodeAndMessage.FIREBASE_SEND_MESSAGE_ERROR;
 
@@ -86,25 +85,21 @@ public class FcmUtil {
     }
 
     // 제목 만들기
-    public String makeTitle(String username) {
+    public String makeTitle(MessageType messageType, String username) {
+        if (messageType.getTitle() != null ) return messageType.getTitle();
         return username;
     }
 
     // 바디 만들기
-    public String makeBody(String type, String content) {
-        for (MessageType messageType: MessageType.values()) {
-            if (messageType.getType().equals(type)) {
-                if (messageType.getBody() != null) return messageType.getBody();
-                else return content;
-            }
-        }
-        throw new BlindCafeException(FIREBASE_BUILD_MESSAGE_ERROR);
+    public String makeBody(MessageType messageType, String content) {
+        if (messageType.getBody() != null) return messageType.getBody();
+        return content;
     }
 
     // 미리보기 이미지 만들기
-    public String makeImage(String type, String content) {
-        if (IMAGE.getType().equals(type)) return content;
-        else return null;
+    public String makeImage(MessageType messageType, String content) {
+        if (messageType.isImage()) return content;
+        return null;
     }
 
     // custom data 만들기
