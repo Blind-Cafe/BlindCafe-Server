@@ -25,7 +25,7 @@ public class FcmUtil {
     // 단일 메시지 전송
     public String sendMessage(Message message) {
         try {
-            return this.instance.send(message);
+            return instance.send(message);
         } catch (Exception e) {
             throw new BlindCafeException(FIREBASE_SEND_MESSAGE_ERROR);
         }
@@ -34,7 +34,7 @@ public class FcmUtil {
     // 일괄 메시지 전송
     public BatchResponse sendMessage(MulticastMessage message) {
         try {
-            return this.instance.sendMulticast(message);
+            return instance.sendMulticast(message);
         } catch (Exception e) {
             throw new BlindCafeException(FIREBASE_SEND_MESSAGE_ERROR);
         }
@@ -92,18 +92,18 @@ public class FcmUtil {
 
     // 바디 만들기
     public String makeBody(String type, String content) {
-        int t = Integer.parseInt(type);
-        MessageType messageType = Arrays.stream(values())
-                .filter(mt -> mt.getType() == t)
-                .findAny().orElseThrow(() -> new BlindCafeException(FIREBASE_BUILD_MESSAGE_ERROR));
-
-        if (messageType.equals(TEXT) || messageType.equals(DESCRIPTION) || messageType.equals(DESCRIPTION_NON_PUSH)) return content;
-        else return messageType.getMsg();
+        for (MessageType messageType: MessageType.values()) {
+            if (messageType.getType().equals(type)) {
+                if (messageType.getBody() != null) return messageType.getBody();
+                else return content;
+            }
+        }
+        throw new BlindCafeException(FIREBASE_BUILD_MESSAGE_ERROR);
     }
 
     // 미리보기 이미지 만들기
     public String makeImage(String type, String content) {
-        if (type.equals(IMAGE)) return content;
+        if (IMAGE.getType().equals(type)) return content;
         else return null;
     }
 
