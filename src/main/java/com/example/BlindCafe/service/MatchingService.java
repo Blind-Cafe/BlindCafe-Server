@@ -373,13 +373,6 @@ public class MatchingService {
     /**
      * 매칭권 관련
      */
-    // 매칭권 생성
-    @Transactional
-    public void createTickets(User user) {
-        Ticket newTicket = Ticket.create(user);
-        ticketRepository.save(newTicket);
-    }
-
     // 현재 가지고 있는 매칭권 수 조회
     public int getTicketCount(Long userId) {
         Ticket ticket = ticketRepository.findByUserId(userId)
@@ -392,13 +385,6 @@ public class MatchingService {
         Optional<UserMatching> matchingRequest =
                 userMatchingRepository.findMatchingRequestByUserId(userId);
         return !Objects.isNull(matchingRequest);
-    }
-
-    // 매칭 히스토리 테이블 만들기
-    @Transactional
-    public void createMatchingHistory(User user) {
-        MatchingHistory matchingHistory = MatchingHistory.create(user);
-        matchingHistoryRepository.save(matchingHistory);
     }
 
     /**

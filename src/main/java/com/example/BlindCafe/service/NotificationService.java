@@ -166,13 +166,6 @@ public class NotificationService {
         roomNotificationOffInMemory.put(userId, setting.getInactivateRooms());
     }
 
-    // 알림 설정 초기화
-    @Transactional
-    public void createSetting(User newUser) {
-        NotificationSetting setting = NotificationSetting.create(newUser);
-        notificationSettingRepository.save(setting);
-    }
-
     private int isActivate(Long userId, String mid) {
 
         boolean status1 = false;

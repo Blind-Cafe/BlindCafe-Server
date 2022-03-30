@@ -29,15 +29,9 @@ public class MatchingHistory {
 
     private String partners;
 
-    public void setUser(User user) {
-        this.user = user;
-        user.setMatchingHistory(this);
-    }
-
-    public static MatchingHistory create(User user) {
+    public static MatchingHistory create() {
         MatchingHistory history = new MatchingHistory();
-        history.setUser(user);
-        history.setPartners(user.getId().toString());
+        history.setPartners("");
         return history;
     }
 

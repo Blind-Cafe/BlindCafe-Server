@@ -96,6 +96,7 @@ public class User extends BaseTimeEntity {
     @Enumerated(EnumType.STRING)
     private UserStatus status;
 
+
     public List<Avatar> getAvatars() {
         return this.avatars.stream()
                 .filter(avatar -> avatar.getStatus().equals(CommonStatus.NORMAL))
@@ -113,17 +114,38 @@ public class User extends BaseTimeEntity {
         return this.address != null ? this.address.toString() : null;
     }
 
+    public void setTicket(Ticket ticket) {
+        this.ticket = ticket;
+        ticket.setUser(this);
+    }
+
+    public void setMatchingHistory(MatchingHistory history) {
+        this.matchingHistory = history;
+        history.setUser(this);
+    }
+
+    public void setNotificationSetting(NotificationSetting setting) {
+        this.notificationSetting = setting;
+        setting.setUser(this);
+    }
+
     public static User create(
             Social socialType,
             String socialId,
             Platform platform,
-            String deviceToken
+            String deviceToken,
+            Ticket ticket,
+            MatchingHistory history,
+            NotificationSetting setting
     ) {
         User user = new User();
         user.setSocialType(socialType);
         user.setSocialId(socialId);
         user.setPlatform(platform);
         user.setDeviceToken(deviceToken);
+        user.setTicket(ticket);
+        user.setMatchingHistory(history);
+        user.setNotificationSetting(setting);
         user.setAdmin(false);
         user.setStatus(UserStatus.NOT_YET);
         return user;
