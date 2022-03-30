@@ -58,9 +58,6 @@ public class AuthService {
     private final RedisTemplate redisTemplate;
     private final UserRepository userRepository;
 
-    private final MatchingService matchingService;
-    private final NotificationService notificationService;
-
     private final String KAKAO_AUTH = "https://kapi.kakao.com/v2/user/me";
     private final String APPLE_AUTH = "https://appleid.apple.com/auth/keys";
 
