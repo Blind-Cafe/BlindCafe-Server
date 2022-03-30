@@ -7,12 +7,13 @@ import com.example.BlindCafe.service.NoticeService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Objects;
 
-import static com.example.BlindCafe.config.jwt.JwtAuthorizationFilter.ADMIN;
-import static com.example.BlindCafe.config.jwt.JwtAuthorizationFilter.UID;
+import static com.example.BlindCafe.config.SecurityConfig.getUid;
+import static com.example.BlindCafe.config.SecurityConfig.isAdmin;
 import static com.example.BlindCafe.exception.CodeAndMessage.FORBIDDEN_AUTHORIZATION;
 
 @Slf4j
@@ -28,12 +29,12 @@ public class NoticeController {
      */
     @GetMapping()
     public ResponseEntity<NoticeListResponse> getGroupNotices(
-            @RequestHeader(value = UID) String uid,
+            Authentication authentication,
             @RequestParam(value = "page", defaultValue = "-1") int page,
             @RequestParam(value = "offset", defaultValue = "0") Long offset
     ) {
         log.info("GET /api/notice");
-        return ResponseEntity.ok(noticeService.getGroupNotices(Long.parseLong(uid), page, offset));
+        return ResponseEntity.ok(noticeService.getGroupNotices(getUid(authentication), page, offset));
     }
 
     /**
@@ -41,11 +42,11 @@ public class NoticeController {
      */
     @PostMapping()
     public ResponseEntity<Void> writeNotice(
-            @RequestHeader(value = ADMIN) String admin,
+            Authentication authentication,
             CreateNoticeRequest request
     ) {
         log.info("POST /api/notice");
-        if (!admin.equals(ADMIN))
+        if (!isAdmin(authentication))
             throw new BlindCafeException(FORBIDDEN_AUTHORIZATION);
 
         if (Objects.isNull(request.getUserId())) noticeService.createNotice(request);

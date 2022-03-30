@@ -206,7 +206,6 @@ public class User extends BaseTimeEntity {
     public List<Interest> getMainInterests() {
         return this.getInterests().stream()
                 .map(UserInterest::getInterest)
-                .filter(Interest::getIsMain)
                 .collect(Collectors.toList());
     }
 

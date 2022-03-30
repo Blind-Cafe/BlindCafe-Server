@@ -8,11 +8,12 @@ import com.example.BlindCafe.service.MatchingService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 
-import static com.example.BlindCafe.config.jwt.JwtAuthorizationFilter.UID;
+import static com.example.BlindCafe.config.SecurityConfig.getUid;
 
 @Slf4j
 @RestController
@@ -26,9 +27,9 @@ public class MatchingController {
      * 매칭 요청하기
      */
     @PostMapping
-    public ResponseEntity<Void> createMatching(@RequestHeader(value = UID) String uid) {
+    public ResponseEntity<Void> createMatching(Authentication authentication) {
         log.info("POST /api/matching");
-        matchingService.createMatching(Long.parseLong(uid));
+        matchingService.createMatching(getUid(authentication));
         return ResponseEntity.ok().build();
     }
 
@@ -36,9 +37,9 @@ public class MatchingController {
      * 매칭 취소하기
      */
     @PostMapping("/cancel")
-    public ResponseEntity<Void> cancelMatching(@RequestHeader(value = UID) String uid) {
+    public ResponseEntity<Void> cancelMatching(Authentication authentication) {
         log.info("POST /api/matching/cancel");
-        matchingService.cancelMatching(Long.parseLong(uid));
+        matchingService.cancelMatching(getUid(authentication));
         return ResponseEntity.ok().build();
     }
 
@@ -46,9 +47,9 @@ public class MatchingController {
      * 채팅방 리스트 조회
      */
     @GetMapping
-    public ResponseEntity<MatchingListResponse> getMatchings(@RequestHeader(value = UID) String uid) {
+    public ResponseEntity<MatchingListResponse> getMatchings(Authentication authentication) {
         log.info("GET /api/matching");
-        return ResponseEntity.ok(matchingService.getMatchings(Long.parseLong(uid)));
+        return ResponseEntity.ok(matchingService.getMatchings(getUid(authentication)));
     }
 
     /**
@@ -56,11 +57,11 @@ public class MatchingController {
      */
     @GetMapping("/{matchingId}")
     public ResponseEntity<MatchingDetailResponse> getMatching(
-            @RequestHeader(value = UID) String uid,
+            Authentication authentication,
             @PathVariable Long matchingId
     )  {
         log.info("GET /api/matching/{}", matchingId);
-        return ResponseEntity.ok(matchingService.getMatching(Long.parseLong(uid), matchingId));
+        return ResponseEntity.ok(matchingService.getMatching(getUid(authentication), matchingId));
     }
 
     /**
@@ -68,11 +69,11 @@ public class MatchingController {
      */
     @PostMapping("/drink")
     public ResponseEntity<Void> selectDrink(
-            @RequestHeader(value = UID) String uid,
+            Authentication authentication,
             @Valid @RequestBody SelectDrinkRequest request
     ) {
         log.info("POST /api/matching/drink");
-        matchingService.selectDrink(Long.parseLong(uid), request);
+        matchingService.selectDrink(getUid(authentication), request);
         return ResponseEntity.ok().build();
     }
 
@@ -91,11 +92,11 @@ public class MatchingController {
      */
     @PostMapping("/exchange")
     public ResponseEntity<Void> exchangeProfile(
-            @RequestHeader(value = UID) String uid,
+            Authentication authentication,
             @Valid @RequestBody ExchangeProfileRequest request
     ) {
         log.info("POST /api/matching/exchange");
-        matchingService.exchangeProfile(Long.parseLong(uid), request);
+        matchingService.exchangeProfile(getUid(authentication), request);
         return ResponseEntity.ok().build();
     }
 
@@ -104,12 +105,12 @@ public class MatchingController {
      */
     @DeleteMapping("/{matchingId}")
     public ResponseEntity<Void> leaveMatching(
-            @RequestHeader(value = UID) String uid,
+            Authentication authentication,
             @PathVariable Long matchingId,
             @RequestParam(value = "reason", defaultValue = "1") Long reasonId
     ) {
         log.info("DELETE /api/matching/{}", matchingId);
-        matchingService.leaveMatching(Long.parseLong(uid), matchingId, reasonId);
+        matchingService.leaveMatching(getUid(authentication), matchingId, reasonId);
         return ResponseEntity.ok().build();
     }
 }

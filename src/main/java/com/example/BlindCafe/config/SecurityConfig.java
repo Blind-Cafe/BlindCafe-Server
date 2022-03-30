@@ -49,4 +49,14 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         // 정적 리소스 spring security 대상에서 제외
         web.ignoring().requestMatchers(PathRequest.toStaticResources().atCommonLocations());
     }
+
+    public static Long getUid(Authentication authentication) {
+        User user = (User) authentication.getPrincipal();
+        return user.getId();
+    }
+
+    public static boolean isAdmin(Authentication authentication) {
+        User user = (User) authentication.getPrincipal();
+        return user.isAdmin();
+    }
 }
