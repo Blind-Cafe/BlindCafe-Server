@@ -43,7 +43,8 @@ public enum CodeAndMessage {
     FCM_JSON_PARSE_ERROR("1050", "FCM JSON 형식이 올바르지 않습니다."),
     FCM_SERVER_ERROR("1051", "FCM 전송 중 오류가 발생했습니다."),
 
-    NOT_REQUIRED_INFO_FOR_MATCHING("1060", "매칭을 요청하기에 충분한 정보가 입력되어 있지 않습니다."),
+    REQUIRED_AVATAR("1060", "프로필을 공개하기 위해서는 프로필 이미지를 설정해야 합니다."),
+    REQUIRED_ADDRESS("1061", "프로필을 공개하기 위해서는 주소를 설정해야 합니다."),
 
     EMPTY_REASON("1070", "유효하지 않은 이유입니다."),
     REQUIRED_REASON("1071", "사유를 입력해야 합니다."),

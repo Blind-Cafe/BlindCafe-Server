@@ -297,13 +297,13 @@ public class MatchingService {
     @Transactional
     public void exchangeProfile(Long userId, ExchangeProfileRequest request) {
 
-        // 사용자 프로필 작성 여부 확인
-        if (!isValidProfile(userId))
-            throw new BlindCafeException(NOT_REQUIRED_INFO_FOR_MATCHING);
-
         Matching matching = matchingRepository.findValidMatchingById(request.getMatchingId())
                 .orElseThrow(() -> new BlindCafeException(EMPTY_MATCHING));
+
         User user = matching.getUserMatchingById(userId).getUser();
+
+        // 사용자 프로필 작성 여부 확인
+        isValidProfile(user);
 
         boolean isBothAccept = matching.getUserMatchingById(userId).exchangeProfile();
 
@@ -328,13 +328,12 @@ public class MatchingService {
     }
 
     // 사용자 프로필 작성 여부 확인
-    private boolean isValidProfile(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new BlindCafeException(EMPTY_USER));
-        return user.getMainAvatar() != null
-                && user.getAddress() != null
-                && user.getVoice() != null
-                && user.getMbti() != null;
+    private void isValidProfile(User user) {
+        // "이 때 프로필에서 `사진`, `나이`, `성별`, `지역`이 필수설정되어야 전송가능하다.
+        if (user.getMainAvatar() == null)
+            throw new BlindCafeException(REQUIRED_AVATAR);
+        if (user.getAddress() == null)
+            throw new BlindCafeException(REQUIRED_ADDRESS);
     }
 
     /**
@@ -396,6 +395,7 @@ public class MatchingService {
     }
 
     // 매칭 히스토리 테이블 만들기
+    @Transactional
     public void createMatchingHistory(User user) {
         MatchingHistory matchingHistory = MatchingHistory.create(user);
         matchingHistoryRepository.save(matchingHistory);
