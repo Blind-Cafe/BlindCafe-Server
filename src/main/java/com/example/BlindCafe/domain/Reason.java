@@ -16,7 +16,7 @@ import static javax.persistence.EnumType.STRING;
 public class Reason {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "reason_id")
     private Long id;
 

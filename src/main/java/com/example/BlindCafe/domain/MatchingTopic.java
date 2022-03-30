@@ -2,6 +2,7 @@ package com.example.BlindCafe.domain;
 
 import com.example.BlindCafe.domain.topic.Topic;
 import com.example.BlindCafe.exception.BlindCafeException;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 
 import javax.persistence.*;
@@ -18,15 +19,15 @@ import static com.example.BlindCafe.exception.CodeAndMessage.EXCEED_MATCHING_TOP
 public class MatchingTopic {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "matching_topic_id")
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "matching_id")
+    @JsonIgnore
+    @OneToOne(mappedBy = "topic", fetch = FetchType.LAZY)
     private Matching matching;
 
-    private String all;
+    private String entire;
     private String remain;
 
     public static MatchingTopic create(List<Topic> topics) {
@@ -38,7 +39,7 @@ public class MatchingTopic {
             if (i != topics.size()-1)
                 sb.append(",");
         }
-        topic.setAll(sb.toString());
+        topic.setEntire(sb.toString());
         topic.setRemain(sb.toString());
         return topic;
     }

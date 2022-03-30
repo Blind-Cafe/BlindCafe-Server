@@ -21,7 +21,7 @@ public class NotificationSetting {
     private Long id;
 
     @JsonIgnore
-    @OneToOne(mappedBy = "notification_setting", fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "setting", fetch = FetchType.LAZY)
     private User user;
 
     private boolean isAll;

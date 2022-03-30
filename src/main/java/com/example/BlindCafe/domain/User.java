@@ -69,9 +69,9 @@ public class User extends BaseTimeEntity {
     @JoinColumn(name = "ticket_id")
     private Ticket ticket;
 
-    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "matching_history_id")
-    private MatchingHistory matchingHistory;
+    private MatchingHistory history;
 
     @Embedded
     private Address address;
@@ -81,9 +81,9 @@ public class User extends BaseTimeEntity {
     @Enumerated(EnumType.STRING)
     private Platform platform;
 
-    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "notification_setting_id")
-    private NotificationSetting notificationSetting;
+    private NotificationSetting setting;
 
     @Enumerated(EnumType.STRING)
     private Mbti mbti;
@@ -120,12 +120,12 @@ public class User extends BaseTimeEntity {
     }
 
     public void setMatchingHistory(MatchingHistory history) {
-        this.matchingHistory = history;
+        this.history = history;
         history.setUser(this);
     }
 
     public void setNotificationSetting(NotificationSetting setting) {
-        this.notificationSetting = setting;
+        this.setting = setting;
         setting.setUser(this);
     }
 
@@ -258,7 +258,7 @@ public class User extends BaseTimeEntity {
 
     // 매칭 히스토리 업데이트
     public void updateMatchingHistory(Long partnerId) {
-        this.matchingHistory.update(partnerId);
+        this.history.update(partnerId);
     }
 
     // 정지

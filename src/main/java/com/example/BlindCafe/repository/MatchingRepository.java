@@ -13,6 +13,6 @@ import java.util.Optional;
 public interface MatchingRepository extends JpaRepository<Matching, Long> {
     @Query("SELECT m FROM Matching m WHERE m.id = ?1 AND m.status = 'MATCHING'")
     Optional<Matching> findValidMatchingById(Long matchingId);
-    List<Matching> findByStatus(MatchingStatus status);
+    @Query("SELECT m FROM Matching m WHERE m.status = ?1 AND m.isActive = ?2")
     List<Matching> findByStatusAndActive(MatchingStatus status, boolean isActive);
 }

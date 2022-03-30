@@ -24,7 +24,7 @@ public class MatchingHistory {
     private Long id;
 
     @JsonIgnore
-    @OneToOne(mappedBy = "matching_history", fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "history", fetch = FetchType.LAZY)
     private User user;
 
     private String partners;
