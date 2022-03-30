@@ -23,6 +23,16 @@ public class UserController {
     private final MatchingService matchingService;
 
     /**
+     * 전화번호 중복 확인
+     */
+    @PostMapping("/phone-check")
+    public ResponseEntity<PhoneCheckResponse> isDuplicatedPhoneNumber(@Valid @RequestBody PhoneCheckRequest request) {
+        log.info("POST /api/auth/phone-check");
+        boolean status = userService.isDuplicatedPhoneNumber(request.getPhone());
+        return ResponseEntity.ok(new PhoneCheckResponse(status));
+    }
+
+    /**
      * 유저 정보 추가 입력(온보딩)
      */
     @PostMapping

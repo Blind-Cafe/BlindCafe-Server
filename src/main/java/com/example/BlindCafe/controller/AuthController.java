@@ -43,16 +43,6 @@ public class AuthController {
     }
 
     /**
-     * 전화번호 중복 확인
-     */
-    @PostMapping("/phone-check")
-    public ResponseEntity<PhoneCheckResponse> isDuplicatedPhoneNumber(@Valid @RequestBody PhoneCheckRequest request) {
-        log.info("POST /api/auth/phone-check");
-        boolean status = authService.isDuplicatedPhoneNumber(request.getPhone());
-        return ResponseEntity.ok(new PhoneCheckResponse(status));
-    }
-
-    /**
      * 토큰 갱신
      */
     @PostMapping("/refresh")

@@ -211,16 +211,6 @@ public class AuthService {
     }
 
     /**
-     * 전화번호 중복 검사
-     */
-    public Boolean isDuplicatedPhoneNumber(String phone) {
-        Optional<User> userOptional = userRepository.findByPhone(phone);
-        if (userOptional.isPresent())
-            return true;
-        return false;
-    }
-
-    /**
      * 토큰 갱신
      */
     public RefreshTokenResponse refresh(RefreshTokenRequest request) {

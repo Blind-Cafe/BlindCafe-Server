@@ -42,6 +42,14 @@ public class UserService {
     private static final int USER_AVATAR_MAX_LENGTH = 3;
 
     /**
+     * 전화번호 중복 검사
+     */
+    public Boolean isDuplicatedPhoneNumber(String phone) {
+        Optional<User> userOptional = userRepository.findByPhone(phone);
+        return userOptional.isPresent();
+    }
+
+    /**
      * 사용자 추가 정보 입력
      */
     @Transactional
