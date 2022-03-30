@@ -15,5 +15,5 @@ public class NotificationSettingRequest {
     @NotNull
     private Long target;
     @NotNull
-    private boolean activate;
+    private boolean active;
 }

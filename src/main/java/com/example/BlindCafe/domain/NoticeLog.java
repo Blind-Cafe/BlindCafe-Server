@@ -16,20 +16,20 @@ import java.time.LocalDateTime;
 public class NoticeLog {
 
     @Id
-    private Long id;
+    private String id;
 
     private Long userId;
 
-    private LocalDateTime accessDt;
+    private String accessDt;
 
     public static NoticeLog create(Long uid, LocalDateTime accessDt) {
         NoticeLog log = new NoticeLog();
         log.setUserId(uid);
-        log.setAccessDt(accessDt);
+        log.setAccessDt(accessDt.toString());
         return log;
     }
 
     public void update(LocalDateTime accessDt) {
-        this.setAccessDt(accessDt);
+        this.accessDt = accessDt.toString();
     }
 }

@@ -11,6 +11,7 @@ import com.example.BlindCafe.exception.BlindCafeException;
 import com.example.BlindCafe.repository.NoticeLogRepository;
 import com.example.BlindCafe.repository.NoticeRepository;
 import com.example.BlindCafe.repository.UserRepository;
+import com.example.BlindCafe.utils.DateTimeUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,6 +41,7 @@ public class NoticeService {
      */
     @Transactional
     public NoticeListResponse getGroupNotices(Long userId, int page, Long offset) {
+        LocalDateTime now = LocalDateTime.now();
         List<Notice> notices = new ArrayList<>();
         if (page > -1) {
             // page 기준으로 공지 조회
@@ -49,23 +51,16 @@ public class NoticeService {
         }
 
         // 공지 화면 접속 로그 저장
-        updateNoticeLog(userId);
+        NoticeLog noticeLog = noticeLogRepository.findByUserId(userId).orElse(null);
+        if (Objects.isNull(noticeLog)) {
+            noticeLog =  NoticeLog.create(userId, now);
+        }
+        noticeLog.update(now);
+        noticeLogRepository.save(noticeLog);
 
         return new NoticeListResponse(notices.stream()
                         .map(NoticeListResponse.NoticeInfo::fromEntity)
                         .collect(Collectors.toList()));
-    }
-
-    // 공지 화면 접속 기록 저장
-    private void updateNoticeLog(Long uid) {
-        LocalDateTime now = LocalDateTime.now();
-        NoticeLog noticeLog = noticeLogRepository.findByUserId(uid).orElse(null);
-        if (Objects.isNull(noticeLog)) {
-            NoticeLog newLog = NoticeLog.create(uid, now);
-            noticeLogRepository.save(newLog);
-            return;
-        }
-        noticeLog.update(now);
     }
 
     /**
@@ -102,6 +97,6 @@ public class NoticeService {
         LocalDateTime latestNoticeDt = latestNoticeOptional.get().getCreatedAt();
         NoticeLog log = noticeLogRepository.findByUserId(uid)
                 .orElseThrow(() -> new BlindCafeException(EMPTY_USER));
-        return latestNoticeDt.isAfter(log.getAccessDt());
+        return latestNoticeDt.isAfter(DateTimeUtil.fromString(log.getAccessDt()));
     }
 }

@@ -190,7 +190,7 @@ public class MatchingService {
             // 최근 메시지 내용, 시간 조회
             Message message = messageRepository.findFirstByMatchingIdOrderByCreatedAtDesc(mid);
             // 채팅방 접속 기록 조회
-            RoomLog log = roomLogRepository.findRoomLogByMatchingId(mid.toString()).orElse(null);
+            RoomLog log = roomLogRepository.findRoomLogByMatchingId(mid.toString());
             String access = null;
             if (log != null && log.getAccess().containsKey(userId.toString()))
                 access = log.getAccess().get(userId.toString());
@@ -384,7 +384,7 @@ public class MatchingService {
     public boolean isMatchingRequest(Long userId) {
         Optional<UserMatching> matchingRequest =
                 userMatchingRepository.findMatchingRequestByUserId(userId);
-        return !Objects.isNull(matchingRequest);
+        return matchingRequest.isPresent();
     }
 
     /**
