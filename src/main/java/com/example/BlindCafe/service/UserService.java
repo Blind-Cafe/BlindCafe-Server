@@ -46,7 +46,7 @@ public class UserService {
      */
     public Boolean isDuplicatedPhoneNumber(String phone) {
         Optional<User> userOptional = userRepository.findByPhone(phone);
-        return userOptional.isPresent();
+        return userOptional.isEmpty();
     }
 
     /**
