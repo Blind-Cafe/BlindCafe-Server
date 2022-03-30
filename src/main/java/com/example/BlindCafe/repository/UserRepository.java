@@ -15,6 +15,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     List<User> findByStatus(UserStatus status);
 
-    @Query(value = "SELECT u FROM user u WHERE u.status = 'NORMAL' AND u.platform = ?1", nativeQuery = true)
+    @Query(value = "SELECT * FROM user u WHERE u.status = 'NORMAL' AND u.platform = ?1", nativeQuery = true)
     List<User> findNormalUsersByPlatform(String platform);
 }
