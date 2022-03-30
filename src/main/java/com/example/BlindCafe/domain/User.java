@@ -69,7 +69,7 @@ public class User extends BaseTimeEntity {
     @JoinColumn(name = "ticket_id")
     private Ticket ticket;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "matching_history_id")
     private MatchingHistory history;
 
@@ -81,7 +81,7 @@ public class User extends BaseTimeEntity {
     @Enumerated(EnumType.STRING)
     private Platform platform;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "notification_setting_id")
     private NotificationSetting setting;
 
@@ -119,12 +119,12 @@ public class User extends BaseTimeEntity {
         ticket.setUser(this);
     }
 
-    public void setMatchingHistory(MatchingHistory history) {
+    public void setHistory(MatchingHistory history) {
         this.history = history;
         history.setUser(this);
     }
 
-    public void setNotificationSetting(NotificationSetting setting) {
+    public void setSetting(NotificationSetting setting) {
         this.setting = setting;
         setting.setUser(this);
     }
@@ -137,6 +137,7 @@ public class User extends BaseTimeEntity {
             Ticket ticket,
             MatchingHistory history,
             NotificationSetting setting
+
     ) {
         User user = new User();
         user.setSocialType(socialType);
@@ -144,8 +145,8 @@ public class User extends BaseTimeEntity {
         user.setPlatform(platform);
         user.setDeviceToken(deviceToken);
         user.setTicket(ticket);
-        user.setMatchingHistory(history);
-        user.setNotificationSetting(setting);
+        user.setHistory(history);
+        user.setSetting(setting);
         user.setAdmin(false);
         user.setStatus(UserStatus.NOT_YET);
         return user;
