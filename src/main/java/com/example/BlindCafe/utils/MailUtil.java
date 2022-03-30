@@ -18,10 +18,10 @@ import static com.example.BlindCafe.exception.CodeAndMessage.INTERNAL_SERVER_ERR
 @RequiredArgsConstructor
 public class MailUtil {
 
-    @Value("${mail.host}")
-    private String HOST;
+    @Value("${email.from}")
+    private String FROM;
 
-    @Value("${mail-destination}")
+    @Value("${email.to}")
     private String TO;
 
     private final JavaMailSender mailSender;
@@ -58,7 +58,7 @@ public class MailUtil {
                 msg.append("<img src=").append(image).append("><br>");
             msg.append("</div>");
             message.setText(msg.toString(), "utf-8", "html");
-            message.setFrom(new InternetAddress(HOST,"Heedong"));
+            message.setFrom(new InternetAddress(FROM,"Heedong"));
             return message;
         } catch (Exception e) {
             throw new BlindCafeException(EMAIL_SEND_ERROR);
