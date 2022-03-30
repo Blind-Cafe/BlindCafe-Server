@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
 @RestController
@@ -32,8 +33,13 @@ public class ChatController {
     @PostMapping("/api/chat/matching/{mid}")
     public ResponseEntity<Void> sendFileMessage(
             @PathVariable(value = "mid") String mid,
-            @RequestParam FileMessageDto fileMessage
+            @RequestParam String matchingId,
+            @RequestParam String senderId,
+            @RequestParam String senderName,
+            @RequestParam String type,
+            @RequestParam MultipartFile file
     ) {
+        FileMessageDto fileMessage = new FileMessageDto(matchingId, senderId, senderName, type, file);
         MessageDto message = chatService.upload(mid, fileMessage);
         chatService.publish(mid, message);
         return ResponseEntity.ok().build();

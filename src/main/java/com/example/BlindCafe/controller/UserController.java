@@ -9,8 +9,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
+
+import java.util.List;
 
 import static com.example.BlindCafe.config.SecurityConfig.getUid;
 
@@ -95,10 +98,11 @@ public class UserController {
     @PostMapping("/avatar")
     public ResponseEntity<Void> uploadAvatar(
             Authentication authentication,
-            @RequestParam UpdateAvatarRequest request
+            @RequestParam int sequence,
+            @RequestParam MultipartFile image
     ) {
         log.info("POST /api/user/avatar");
-        userService.updateAvatar(getUid(authentication), request);
+        userService.updateAvatar(getUid(authentication), sequence, image);
         return ResponseEntity.ok().build();
     }
 
@@ -121,10 +125,10 @@ public class UserController {
     @PostMapping("/voice")
     public ResponseEntity<Void> updateVoice(
             Authentication authentication,
-            @Valid @RequestBody UpdateVoiceRequest request
+            @RequestParam MultipartFile voice
     ) {
         log.info("POST /api/user/voice");
-        userService.updateVoice(getUid(authentication), request);
+        userService.updateVoice(getUid(authentication), voice);
         return ResponseEntity.ok().build();
     }
 
@@ -163,9 +167,13 @@ public class UserController {
      * 건의사항 작성하기
      */
     @PostMapping("/suggestion")
-    public ResponseEntity<Void> suggest(Authentication authentication, SuggestionRequest request) {
+    public ResponseEntity<Void> suggest(
+            Authentication authentication,
+            @RequestParam String content,
+            @RequestParam List<MultipartFile> images
+    ) {
         log.info("POST /api/user/suggestion");
-        userService.suggest(getUid(authentication), request);
+        userService.suggest(getUid(authentication), content, images);
         return ResponseEntity.ok().build();
     }
 

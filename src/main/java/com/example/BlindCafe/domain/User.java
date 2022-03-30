@@ -137,7 +137,6 @@ public class User extends BaseTimeEntity {
             Ticket ticket,
             MatchingHistory history,
             NotificationSetting setting
-
     ) {
         User user = new User();
         user.setSocialType(socialType);
@@ -176,7 +175,8 @@ public class User extends BaseTimeEntity {
 
     // 메인 프로필 이미지 1장 가져오기
     public String getMainAvatar() {
-        return Objects.requireNonNull(this.getAvatars().stream().findFirst().orElse(null)).getSrc();
+        this.getAvatars().stream().findFirst().ifPresent(Avatar::getSrc);
+        return null;
     }
 
     // 모든 프로필 이미지 가져오기
@@ -210,12 +210,8 @@ public class User extends BaseTimeEntity {
     }
 
     // 사용자 관심사 수정하기
-    public void updateInterest(List<Interest> interests) {
-        this.getInterests().forEach(UserInterest::remove);
-        interests.forEach(interest -> {
-            UserInterest userInterest = UserInterest.create(this, interest);
-            this.getInterests().add(userInterest);
-        });
+    public void updateInterest(List<UserInterest> interests) {
+        this.setInterests(interests);
     }
 
     // 사용자 프로필 수정하기

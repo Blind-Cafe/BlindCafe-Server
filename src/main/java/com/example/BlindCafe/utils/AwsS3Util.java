@@ -35,6 +35,7 @@ public class AwsS3Util {
     private final Tika tika = new Tika();
     private final String PROFILE_IMAGE_DIR = "users/profiles/";
     public final String SUGGESTION_IMAGE_DIR = "suggestion/";
+    private final String VOICE_DIR = "users/voice/";
     private final String MESSAGE_DIR = "chat/";
     private static String cloudfrontUrl;
 
@@ -62,12 +63,20 @@ public class AwsS3Util {
             File file = convertToFile(multipartFile);
             String fileName = SUGGESTION_IMAGE_DIR + suggestionId + "/" + index + extension(multipartFile);
             amazonS3Client.putObject(new PutObjectRequest(bucket, fileName, file));
-            sb.append(fileName + ",");
+            sb.append(cloudfrontUrl + fileName + ",");
             file.delete();
             index.getAndIncrement();
         });
         sb.deleteCharAt(sb.length() - 1);
         return sb.toString();
+    }
+
+    public String uploadVoice(MultipartFile multipartFile, Long userId) {
+        File file = convertToFile(multipartFile);
+        String fileName = VOICE_DIR + userId + "/" + UUID.randomUUID() + extension(multipartFile);
+        amazonS3Client.putObject(new PutObjectRequest(bucket, fileName, file));
+        file.delete();
+        return cloudfrontUrl + fileName;
     }
 
     public String uploadFileFromMessage(MultipartFile multipartFile, String mid) {
