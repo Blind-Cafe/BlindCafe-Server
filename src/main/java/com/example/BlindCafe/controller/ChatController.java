@@ -22,9 +22,9 @@ public class ChatController {
     /**
      * 텍스트 메시지 전송
      */
-    @MessageMapping("/chat/matching/{mid}")
-    public void sendTextMessage(@DestinationVariable String mid, MessageDto message) {
-        chatService.publish(mid, message);
+    @MessageMapping("/chat/message")
+    public void sendTextMessage(MessageDto message) {
+        chatService.publish(message.getMatchingId(), message);
     }
 
     /**
@@ -56,5 +56,4 @@ public class ChatController {
     ) {
         return ResponseEntity.ok(chatService.getMessages(mid, page, size));
     }
-
 }
