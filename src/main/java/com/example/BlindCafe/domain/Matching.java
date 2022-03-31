@@ -193,9 +193,19 @@ public class Matching extends BaseTimeEntity {
         return 0;
     }
 
+    public boolean sendFirstTopic(LocalDateTime now) {
+        if (!this.isActive) return false;
+        if (this.isContinuous) return false;
+        // 5분 지났는지 확인
+        if (this.beginTime.plusMinutes(5L).isBefore(now)) return false;
+        // 토픽 전송했는지 확인
+        if (this.topic.getLatestTopic() != null) return false;
+        return true;
+    }
+
     // 3일 채팅에서 종료 1시간 전인지 확인 -> 마감 임박 메시지 전송
     public boolean sendEndOfBasicMatching(LocalDateTime now) {
-        if(!this.isActive) return false;
+        if (!this.isActive) return false;
         if (this.isContinuous) return false;
         if (this.getPush().isEndOfOneHour()) return false;
 

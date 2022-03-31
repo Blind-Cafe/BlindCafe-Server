@@ -33,10 +33,10 @@ public class AwsS3Util {
 
     private final AmazonS3Client amazonS3Client;
     private final Tika tika = new Tika();
-    private final String PROFILE_IMAGE_DIR = "users/profiles/";
-    public final String SUGGESTION_IMAGE_DIR = "suggestion/";
-    private final String VOICE_DIR = "users/voice/";
-    private final String MESSAGE_DIR = "chat/";
+    private static final String PROFILE_IMAGE_DIR = "users/profiles/";
+    public static final String SUGGESTION_IMAGE_DIR = "suggestion/";
+    private static final String VOICE_DIR = "users/voice/";
+    private static final String MESSAGE_DIR = "chat/";
     private static String cloudfrontUrl;
 
     @Value("${cloud.aws.s3.bucket}")

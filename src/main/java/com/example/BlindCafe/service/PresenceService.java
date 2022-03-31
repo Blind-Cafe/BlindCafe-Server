@@ -21,10 +21,10 @@ public class PresenceService {
 
     private final RoomLogRepository roomLogRepository;
 
-    private final String SESSION_KEY = "p:session:";
-    private final String USER_KEY = "p:user:";
-    private final String LOBBY = "0";
-    private final String DISCONNECT = "off";
+    private static final String SESSION_KEY = "p:session:";
+    private static final String USER_KEY = "p:user:";
+    private static final String LOBBY = "0";
+    private static final String DISCONNECT = "off";
 
     /**
      * 연결

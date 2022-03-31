@@ -4,7 +4,6 @@ import com.example.BlindCafe.domain.Drink;
 import com.example.BlindCafe.domain.Matching;
 import com.example.BlindCafe.domain.User;
 import com.example.BlindCafe.domain.UserMatching;
-import com.example.BlindCafe.dto.request.PartnerDto;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -19,14 +18,15 @@ import java.time.LocalDateTime;
 public class MatchingDetailResponse {
 
     private Long matchingId;
-    private PartnerDto partner;
+    private PartnerResponse partner;
     private boolean isSelectedDrink;
     private LocalDateTime beginDt;
     private LocalDateTime expiredDt;
+    private TopicResponse topic;
     private boolean isContinuous;
     private boolean isActive;
 
-    public static MatchingDetailResponse fromEntity(Matching matching, Long userId) {
+    public static MatchingDetailResponse fromEntity(Matching matching, Long userId, TopicResponse topic) {
         User partner = matching.getUserMatchings().stream()
                 .filter(userMatching -> !userMatching.getUser().getId().equals(userId))
                 .findAny()
@@ -34,7 +34,7 @@ public class MatchingDetailResponse {
 
         MatchingDetailResponse response = new MatchingDetailResponse();
         response.setMatchingId(matching.getId());
-        response.setPartner(PartnerDto.fromEntity(partner));
+        response.setPartner(PartnerResponse.fromEntity(partner));
 
         boolean isSelectedDrink = false;
         Drink selectedDrink = matching.getUserMatchings().stream()
@@ -46,6 +46,7 @@ public class MatchingDetailResponse {
         response.setSelectedDrink(isSelectedDrink);
         response.setBeginDt(matching.getBeginTime());
         response.setExpiredDt(matching.getExpiredTime());
+        response.setTopic(topic);
         response.setContinuous(matching.getIsContinuous());
         response.setActive(matching.isActive());
         return response;

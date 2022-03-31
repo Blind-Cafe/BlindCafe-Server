@@ -34,7 +34,7 @@ public class NoticeService {
     private final NoticeRepository noticeRepository;
     private final NoticeLogRepository noticeLogRepository;
 
-    private final int NOTICE_PAGE_SIZE = 25;
+    private static final int NOTICE_PAGE_SIZE = 25;
 
     /**
      * 공지 조회하기 + 공지 화면 접속 로그 남기기

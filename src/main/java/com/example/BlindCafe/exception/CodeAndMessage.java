@@ -47,6 +47,7 @@ public enum CodeAndMessage {
     ALREADY_EXCHANGE_PROFILE("1314", "이미 프로필을 공개했습니다."),
     EXCEED_MATCHING_TOPIC("1315", "더 이상 존재하는 토픽이 없습니다."),
     EMPTY_TOPIC("1316", "현재 유효하지 않은 토픽입니다. "),
+    ALREADY_SEND_TOPIC("1317", "최근에 토픽이 전송되었습니다."),
 
     // CHAT
     INVALID_MESSAGE_TYPE("1400", "메시지 타입이 올바르지 않습니다."),
