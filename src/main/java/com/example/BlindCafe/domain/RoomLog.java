@@ -1,5 +1,6 @@
 package com.example.BlindCafe.domain;
 
+import com.example.BlindCafe.utils.DateTimeUtil;
 import lombok.*;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -20,11 +21,11 @@ public class RoomLog {
 
     private Map<String, String> access;
 
-    public static RoomLog create(String matchingId, String userId, String time) {
+    public static RoomLog create(String matchingId, String userId, LocalDateTime time) {
         RoomLog log = new RoomLog();
         log.setMatchingId(matchingId);
         Map<String, String> map = new HashMap<>();
-        map.put(userId, time);
+        map.put(userId, time.format(DateTimeUtil.formatter));
         log.setAccess(map);
         return log;
     }

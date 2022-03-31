@@ -12,6 +12,7 @@ import com.example.BlindCafe.utils.MailUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.*;
 import java.util.regex.Matcher;
@@ -30,6 +31,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final RetiredUserRepository retiredUserRepository;
     private final InterestRepository interestRepository;
+    private final UserInterestRepository userInterestRepository;
     private final ReasonRepository reasonRepository;
     private final CustomReasonRepository customReasonRepository;
     private final SuggestionRepository suggestionRepository;
@@ -40,6 +42,14 @@ public class UserService {
 
     private static final int USER_INTEREST_LENGTH = 3;
     private static final int USER_AVATAR_MAX_LENGTH = 3;
+
+    /**
+     * 전화번호 중복 검사
+     */
+    public Boolean isDuplicatedPhoneNumber(String phone) {
+        Optional<User> userOptional = userRepository.findByPhone(phone);
+        return userOptional.isEmpty();
+    }
 
     /**
      * 사용자 추가 정보 입력
@@ -119,11 +129,20 @@ public class UserService {
     }
 
     // 사용자 관심사 수정 - 중복코드 제거를 위해 함수 생성(addUserInfo(), editInterest())
-    private void updateInterest(User user, List<Long> interestIds) {
+    protected void updateInterest(User user, List<Long> interestIds) {
         List<Interest> interests = interestRepository.findByIdIn(interestIds);
         if (interests.size() != USER_INTEREST_LENGTH)
             throw new BlindCafeException(INVALID_MAIN_INTEREST);
-        user.updateInterest(interests);
+
+        List<UserInterest> oldInterests = userInterestRepository.findByUserAndActive(user, true);
+        for (UserInterest oldInterest: oldInterests)
+            oldInterest.remove();
+
+        List<UserInterest> userInterests = interests.stream()
+                .map(i -> UserInterest.create(user, i))
+                .collect(Collectors.toList());
+        userInterestRepository.saveAll(userInterests);
+        user.updateInterest(userInterests);
     }
 
     /**
@@ -139,14 +158,13 @@ public class UserService {
      * 프로필 이미지 업로드/수정
      */
     @Transactional
-    public void updateAvatar(Long userId, UpdateAvatarRequest request) {
-        int sequence = request.getSequence();
+    public void updateAvatar(Long userId, int sequence, MultipartFile image) {
         validateAvatarSequence(sequence);
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BlindCafeException(EMPTY_USER));
         
         // S3에 이미지 업로드
-        String src = awsS3Util.uploadAvatar(request.getImage(), userId);
+        String src = awsS3Util.uploadAvatar(image, userId);
         
         // 프로필 이미지 수정
         user.updateAvatar(src, sequence);
@@ -175,10 +193,14 @@ public class UserService {
      * 사용자 목소리 설정하기
      */
     @Transactional
-    public void updateVoice(Long userId, UpdateVoiceRequest request) {
+    public void updateVoice(Long userId, MultipartFile voice) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BlindCafeException(EMPTY_USER));
-        user.updateVoice(request.getVoice());
+        
+        // S3에 목소리 업로드
+        String src = awsS3Util.uploadVoice(voice, userId);
+
+        user.updateVoice(src);
     }
 
     /**
@@ -230,19 +252,18 @@ public class UserService {
      * 건의사항 접수하기
      */
     @Transactional
-    public void suggest(Long userId, SuggestionRequest request) {
+    public void suggest(Long userId, String content, List<MultipartFile> multipartFiles) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BlindCafeException(EMPTY_USER));
-        
+
         // 건의사항 저장하기
-        String content = request.getContent();
         Suggestion suggestion = Suggestion.create(user, content);
         suggestionRepository.save(suggestion);
 
         // 건의사항 첨부 이미지 저장
-        String images = awsS3Util.uploadSuggestion(request.getImages(), suggestion.getId());
+        String images = awsS3Util.uploadSuggestion(multipartFiles, suggestion.getId());
         suggestion.updateImage(images);
-        
+
         // 관리자에게 건의사항 이메일로 전송하기
         mailUtil.sendMail(user.getNickname(), user.getPhone(), content, images);
     }

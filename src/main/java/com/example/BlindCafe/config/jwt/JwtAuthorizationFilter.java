@@ -31,8 +31,6 @@ import static com.example.BlindCafe.exception.CodeAndMessage.*;
 @RequiredArgsConstructor
 public class JwtAuthorizationFilter extends OncePerRequestFilter {
 
-    public static final String UID = "UID";
-    public static final String ADMIN = "ADMIN";
     private final UserRepository userRepository;
 
     @Override
@@ -50,10 +48,6 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
         if (token != null) {
             Authentication authentication = getUsernamePasswordAuthenticationToken(token);
             SecurityContextHolder.getContext().setAuthentication(authentication);
-            User user = (User) authentication.getPrincipal();
-            response.setHeader(UID, user.getId().toString());
-            if (user.isAdmin())
-                response.setHeader(ADMIN, "admin");
         }
         chain.doFilter(request, response);
     }
@@ -79,4 +73,42 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
         }
         return null;
     }
+
+    // Custom HttpServletRequest
+    /**
+     * final class MutableHttpServletRequest extends HttpServletRequestWrapper {
+     *         private final Map<String, String> customHeaders;
+     *
+     *         public MutableHttpServletRequest(HttpServletRequest request) {
+     *             super(request);
+     *             this.customHeaders = new HashMap<String, String>();
+     *         }
+     *
+     *         public void putHeader(String name, String value) {
+     *             this.customHeaders.put(name, value);
+     *         }
+     *
+     *         public String getHeader(String name) {
+     *             String headerValue = customHeaders.get(name);
+     *
+     *             if (headerValue != null) {
+     *                 return headerValue;
+     *             }
+     *             return ((HttpServletRequest) getRequest()).getHeader(name);
+     *         }
+     *
+     *         public Enumeration<String> getHeaderNames() {
+     *             Set<String> set = new HashSet<String>(customHeaders.keySet());
+     *
+     *             @SuppressWarnings("unchecked")
+     *             Enumeration<String> e = ((HttpServletRequest) getRequest()).getHeaderNames();
+     *             while (e.hasMoreElements()) {
+     *                 String n = e.nextElement();
+     *                 set.add(n);
+     *             }
+     *
+     *             return Collections.enumeration(set);
+     *         }
+     *     }
+     */
 }

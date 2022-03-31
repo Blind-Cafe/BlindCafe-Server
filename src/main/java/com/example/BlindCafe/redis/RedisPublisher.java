@@ -9,9 +9,9 @@ import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
-
 
 @Slf4j
 @Component
@@ -21,14 +21,14 @@ public class RedisPublisher {
     private final RedisTemplate<String, Object> redisTemplate;
     private final RedisMessageListenerContainer redisMessageListener;
     private final RedisSubscriber redisSubscriber;
-    private ConcurrentHashMap<String, ChannelTopic> topics;
+    private Map<String, ChannelTopic> topics;
 
     private final String MATCHING_TOPIC_PREFIX = "m-";
     private final String USER_TOPIC_PREPIX = "u-";
 
     @PostConstruct
     private void init() {
-        topics = new ConcurrentHashMap<>();
+        topics = new HashMap<>();
     }
 
     public void publish(String id, MessageDto message, boolean isMatching) {
@@ -43,9 +43,9 @@ public class RedisPublisher {
 
         ChannelTopic topic = topics.get(key);
         if (Objects.isNull(topic)) {
-            topic = new ChannelTopic(id);
+            topic = new ChannelTopic(key);
             redisMessageListener.addMessageListener(redisSubscriber, topic);
-            topics.put(id, topic);
+            topics.put(key, topic);
         }
         return topic;
     }

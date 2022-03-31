@@ -190,7 +190,7 @@ public class MatchingService {
             // 최근 메시지 내용, 시간 조회
             Message message = messageRepository.findFirstByMatchingIdOrderByCreatedAtDesc(mid);
             // 채팅방 접속 기록 조회
-            RoomLog log = roomLogRepository.findRoomLogByMatchingId(mid.toString()).orElse(null);
+            RoomLog log = roomLogRepository.findRoomLogByMatchingId(mid.toString());
             String access = null;
             if (log != null && log.getAccess().containsKey(userId.toString()))
                 access = log.getAccess().get(userId.toString());
@@ -297,13 +297,13 @@ public class MatchingService {
     @Transactional
     public void exchangeProfile(Long userId, ExchangeProfileRequest request) {
 
-        // 사용자 프로필 작성 여부 확인
-        if (!isValidProfile(userId))
-            throw new BlindCafeException(NOT_REQUIRED_INFO_FOR_MATCHING);
-
         Matching matching = matchingRepository.findValidMatchingById(request.getMatchingId())
                 .orElseThrow(() -> new BlindCafeException(EMPTY_MATCHING));
+
         User user = matching.getUserMatchingById(userId).getUser();
+
+        // 사용자 프로필 작성 여부 확인
+        isValidProfile(user);
 
         boolean isBothAccept = matching.getUserMatchingById(userId).exchangeProfile();
 
@@ -328,13 +328,12 @@ public class MatchingService {
     }
 
     // 사용자 프로필 작성 여부 확인
-    private boolean isValidProfile(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new BlindCafeException(EMPTY_USER));
-        return user.getMainAvatar() != null
-                && user.getAddress() != null
-                && user.getVoice() != null
-                && user.getMbti() != null;
+    private void isValidProfile(User user) {
+        // "이 때 프로필에서 `사진`, `나이`, `성별`, `지역`이 필수설정되어야 전송가능하다.
+        if (user.getMainAvatar() == null)
+            throw new BlindCafeException(REQUIRED_AVATAR);
+        if (user.getAddress() == null)
+            throw new BlindCafeException(REQUIRED_ADDRESS);
     }
 
     /**
@@ -374,13 +373,6 @@ public class MatchingService {
     /**
      * 매칭권 관련
      */
-    // 매칭권 생성
-    @Transactional
-    public void createTickets(User user) {
-        Ticket newTicket = Ticket.create(user);
-        ticketRepository.save(newTicket);
-    }
-
     // 현재 가지고 있는 매칭권 수 조회
     public int getTicketCount(Long userId) {
         Ticket ticket = ticketRepository.findByUserId(userId)
@@ -392,13 +384,7 @@ public class MatchingService {
     public boolean isMatchingRequest(Long userId) {
         Optional<UserMatching> matchingRequest =
                 userMatchingRepository.findMatchingRequestByUserId(userId);
-        return !Objects.isNull(matchingRequest);
-    }
-
-    // 매칭 히스토리 테이블 만들기
-    public void createMatchingHistory(User user) {
-        MatchingHistory matchingHistory = MatchingHistory.create(user);
-        matchingHistoryRepository.save(matchingHistory);
+        return matchingRequest.isPresent();
     }
 
     /**

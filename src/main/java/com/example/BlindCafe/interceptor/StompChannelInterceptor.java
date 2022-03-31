@@ -28,13 +28,13 @@ public class StompChannelInterceptor implements ChannelInterceptor {
     private final String MATCHING = "matching";
 
     @Override
-    public Message<?> preSend(@NotNull Message<?> message, @NotNull MessageChannel channel) {
+    public Message<?> preSend(Message<?> message, MessageChannel channel) {
         LocalDateTime now = LocalDateTime.now();
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
         String sessionId = accessor.getSessionId();
         String destination = accessor.getDestination();
 
-        switch (Objects.requireNonNull(accessor.getCommand())) {
+        switch (accessor.getCommand()) {
             case CONNECT: // WebSocket 연결, Header 검증
                 // 최초 연결 시 Header 검증
                 String uid = JwtUtils.getUsedId(getHeaderValue(accessor, TOKEN));

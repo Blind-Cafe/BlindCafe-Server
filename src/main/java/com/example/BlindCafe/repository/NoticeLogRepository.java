@@ -1,10 +1,10 @@
 package com.example.BlindCafe.repository;
 
 import com.example.BlindCafe.domain.NoticeLog;
-import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.mongodb.repository.MongoRepository;
 
 import java.util.Optional;
 
-public interface NoticeLogRepository extends JpaRepository<NoticeLog, Long> {
+public interface NoticeLogRepository extends MongoRepository<NoticeLog, Long> {
     Optional<NoticeLog> findByUserId(Long userId);
 }

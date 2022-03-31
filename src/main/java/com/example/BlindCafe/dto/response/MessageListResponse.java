@@ -6,6 +6,7 @@ import lombok.*;
 import org.springframework.data.domain.Page;
 
 import java.time.LocalDateTime;
+
 @Getter
 @Setter
 @AllArgsConstructor
@@ -14,6 +15,10 @@ public class MessageListResponse {
 
     private Page<MessageDetail> messages;
 
+    @Getter
+    @Setter
+    @AllArgsConstructor
+    @NoArgsConstructor
     @Builder
     public static class MessageDetail {
         private String messageId;

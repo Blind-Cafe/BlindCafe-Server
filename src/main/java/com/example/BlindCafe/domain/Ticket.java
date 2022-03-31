@@ -27,14 +27,8 @@ public class Ticket {
 
     private int count;
 
-    public void setUser(User user) {
-        this.user = user;
-        user.setTicket(this);
-    }
-
-    public static Ticket create(User user) {
+    public static Ticket create() {
         Ticket ticket = new Ticket();
-        ticket.setUser(user);
         ticket.setCount(0);
         ticket.init();
         return ticket;

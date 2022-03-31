@@ -2,6 +2,7 @@ package com.example.BlindCafe.service;
 
 import com.example.BlindCafe.domain.RoomLog;
 import com.example.BlindCafe.repository.RoomLogRepository;
+import com.example.BlindCafe.utils.DateTimeUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
@@ -9,7 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -53,13 +54,13 @@ public class PresenceService {
         if (uid != null) {
             ValueOperations<String, String> valueOperations = redisTemplate.opsForValue();
             String mid = valueOperations.get(USER_KEY + uid);
-            Optional<RoomLog> roomLogOptional = roomLogRepository.findRoomLogByMatchingId(mid);
-            if (roomLogOptional.isEmpty()) {
-                RoomLog log = RoomLog.create(mid, uid, time.toString());
-                roomLogRepository.save(log);
+            RoomLog roomLog = roomLogRepository.findRoomLogByMatchingId(mid);
+            if (Objects.isNull(roomLog)) {
+                roomLog = RoomLog.create(mid, uid, time);
             } else {
-                roomLogOptional.get().update(uid, time.toString());
+                roomLog.update(uid, time.format(DateTimeUtil.formatter));
             }
+            roomLogRepository.save(roomLog);
             valueOperations.set(USER_KEY + uid, LOBBY);
         }
     }

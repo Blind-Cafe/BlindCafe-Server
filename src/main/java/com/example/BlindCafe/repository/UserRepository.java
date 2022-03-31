@@ -4,12 +4,10 @@ import com.example.BlindCafe.domain.User;
 import com.example.BlindCafe.domain.type.status.UserStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
 
-@Repository
 public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findBySocialId(String socialId);
 
@@ -17,6 +15,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     List<User> findByStatus(UserStatus status);
 
-    @Query(value = "SELECT u FROM user u WHERE u.status = 'NORMAL' AND u.platform = ?1", nativeQuery = true)
+    @Query(value = "SELECT * FROM user u WHERE u.status = 'NORMAL' AND u.platform = ?1", nativeQuery = true)
     List<User> findNormalUsersByPlatform(String platform);
 }

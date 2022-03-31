@@ -2,6 +2,9 @@ package com.example.BlindCafe.service;
 
 import com.example.BlindCafe.config.jwt.JwtProperties;
 import com.example.BlindCafe.config.jwt.JwtUtils;
+import com.example.BlindCafe.domain.MatchingHistory;
+import com.example.BlindCafe.domain.NotificationSetting;
+import com.example.BlindCafe.domain.Ticket;
 import com.example.BlindCafe.dto.request.LoginRequest;
 import com.example.BlindCafe.dto.request.RefreshTokenRequest;
 import com.example.BlindCafe.dto.response.LoginResponse;
@@ -55,9 +58,6 @@ public class AuthService {
     private final RedisTemplate redisTemplate;
     private final UserRepository userRepository;
 
-    private final MatchingService matchingService;
-    private final NotificationService notificationService;
-
     private final String KAKAO_AUTH = "https://kapi.kakao.com/v2/user/me";
     private final String APPLE_AUTH = "https://appleid.apple.com/auth/keys";
 
@@ -76,16 +76,16 @@ public class AuthService {
 
         // 회원가입
         if (!isRegistered) {
-            User newUser = User.create(request.getSocial(), socialId, platform, deviceToken);
+            // 티켓(매칭권) 생성
+            Ticket ticket = Ticket.create();
+            // 매칭 히스토리 생성
+            MatchingHistory history = MatchingHistory.create();
+            // 알림 설정
+            NotificationSetting setting = NotificationSetting.create();
+
+            User newUser = User.create(request.getSocial(), socialId, platform, deviceToken, ticket, history, setting);
             userRepository.save(newUser);
             Pair<String, String> tokens = getTokens(newUser);
-
-            // 티켓(매칭권) 생성
-            matchingService.createTickets(newUser);
-            // 매칭 히스토리 테이블 생성
-            matchingService.createMatchingHistory(newUser);
-            // 알림 설정
-            notificationService.createSetting(newUser);
 
             return Pair.of(
                     HttpStatus.CREATED,
@@ -208,16 +208,6 @@ public class AuthService {
                 TimeUnit.MILLISECONDS
         );
         return Pair.of(accessToken, refreshToken);
-    }
-
-    /**
-     * 전화번호 중복 검사
-     */
-    public Boolean isDuplicatedPhoneNumber(String phone) {
-        Optional<User> userOptional = userRepository.findByPhone(phone);
-        if (userOptional.isPresent())
-            return true;
-        return false;
     }
 
     /**

@@ -7,7 +7,6 @@ import com.example.BlindCafe.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -21,7 +20,6 @@ import org.springframework.security.web.authentication.www.BasicAuthenticationFi
 @RequiredArgsConstructor
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
-    private final RedisTemplate redisTemplate;
     private final UserRepository userRepository;
     private final ExceptionHandlerFilter exceptionHandlerFilter;
 
@@ -38,12 +36,12 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
         // authorization
         http.authorizeRequests()
-                .antMatchers("/", "/api/auth/login", "/api/auth/phone-check").permitAll();
+                .antMatchers("/", "/api/auth/login", "/api/auth/refresh").permitAll();
         // jwt filter
         http.addFilterBefore(
-                new JwtAuthorizationFilter(userRepository),
-                BasicAuthenticationFilter.class
-        ).addFilterBefore(exceptionHandlerFilter, JwtAuthorizationFilter.class);;
+               new JwtAuthorizationFilter(userRepository),
+               BasicAuthenticationFilter.class
+        ).addFilterBefore(exceptionHandlerFilter, JwtAuthorizationFilter.class);
     }
 
     @Override
@@ -52,7 +50,13 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         web.ignoring().requestMatchers(PathRequest.toStaticResources().atCommonLocations());
     }
 
-    public static User getUser(Authentication authentication) {
-        return (User) authentication.getPrincipal();
+    public static Long getUid(Authentication authentication) {
+        User user = (User) authentication.getPrincipal();
+        return user.getId();
+    }
+
+    public static boolean isAdmin(Authentication authentication) {
+        User user = (User) authentication.getPrincipal();
+        return user.isAdmin();
     }
 }

@@ -7,11 +7,15 @@ import com.example.BlindCafe.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
 
-import static com.example.BlindCafe.config.jwt.JwtAuthorizationFilter.UID;
+import java.util.List;
+
+import static com.example.BlindCafe.config.SecurityConfig.getUid;
 
 @Slf4j
 @RestController
@@ -23,15 +27,25 @@ public class UserController {
     private final MatchingService matchingService;
 
     /**
+     * 전화번호 중복 확인
+     */
+    @PostMapping("/phone-check")
+    public ResponseEntity<PhoneCheckResponse> isDuplicatedPhoneNumber(@Valid @RequestBody PhoneCheckRequest request) {
+        log.info("POST /api/auth/phone-check");
+        boolean status = userService.isDuplicatedPhoneNumber(request.getPhone());
+        return ResponseEntity.ok(new PhoneCheckResponse(status));
+    }
+
+    /**
      * 유저 정보 추가 입력(온보딩)
      */
     @PostMapping
     public ResponseEntity<Void> addUserInfo(
-            @RequestHeader(value = UID) String uid,
+            Authentication authentication,
             @Valid @RequestBody AddUserInfoRequest request
     ) {
         log.info("POST /api/user");
-        userService.addUserInfo(Long.parseLong(uid), request);
+        userService.addUserInfo(getUid(authentication), request);
         return ResponseEntity.ok().build();
     }
 
@@ -39,9 +53,9 @@ public class UserController {
      * 마이페이지 (유저 정보 조회)
      */
     @GetMapping
-    public ResponseEntity<UserDetailResponse> getUser(@RequestHeader(value = UID) String uid) {
+    public ResponseEntity<UserDetailResponse> getUser(Authentication authentication) {
         log.info("GET /api/user");
-        return ResponseEntity.ok(userService.getUser(Long.parseLong(uid)));
+        return ResponseEntity.ok(userService.getUser(getUid(authentication)));
     }
 
     /**
@@ -49,11 +63,11 @@ public class UserController {
      */
     @PutMapping
     public ResponseEntity<UserDetailResponse> editProfile(
-            @RequestHeader(value = UID) String uid,
+            Authentication authentication,
             @Valid @RequestBody UpdateProfileRequest request
     ) {
         log.info("PUT /api/user");
-        return ResponseEntity.ok(userService.editProfile(Long.parseLong(uid), request));
+        return ResponseEntity.ok(userService.editProfile(getUid(authentication), request));
     }
 
     /**
@@ -61,11 +75,11 @@ public class UserController {
      */
     @PutMapping("/interest")
     public ResponseEntity<Void> editInterest(
-            @RequestHeader(value = UID) String uid,
+            Authentication authentication,
             @Valid @RequestBody UpdateInterestRequest request
     ) {
         log.info("PUT /api/user/interest");
-        userService.editInterest(Long.parseLong(uid), request);
+        userService.editInterest(getUid(authentication), request);
         return ResponseEntity.ok().build();
     }
 
@@ -83,11 +97,12 @@ public class UserController {
      */
     @PostMapping("/avatar")
     public ResponseEntity<Void> uploadAvatar(
-            @RequestHeader(value = UID) String uid,
-            @RequestParam UpdateAvatarRequest request
+            Authentication authentication,
+            @RequestParam int sequence,
+            @RequestParam MultipartFile image
     ) {
         log.info("POST /api/user/avatar");
-        userService.updateAvatar(Long.parseLong(uid), request);
+        userService.updateAvatar(getUid(authentication), sequence, image);
         return ResponseEntity.ok().build();
     }
 
@@ -96,11 +111,11 @@ public class UserController {
      */
     @DeleteMapping("/avatar")
     public ResponseEntity<Void> deleteAvatar(
-            @RequestHeader(value = UID) String uid,
+            Authentication authentication,
             @RequestParam(name = "seq") int sequence
     ) {
         log.info("DELETE /api/user/avatar");
-        userService.deleteAvatar(Long.parseLong(uid), sequence);
+        userService.deleteAvatar(getUid(authentication), sequence);
         return ResponseEntity.ok().build();
     }
 
@@ -109,11 +124,11 @@ public class UserController {
      */
     @PostMapping("/voice")
     public ResponseEntity<Void> updateVoice(
-            @RequestHeader(value = UID) String uid,
-            @Valid @RequestBody UpdateVoiceRequest request
+            Authentication authentication,
+            @RequestParam MultipartFile voice
     ) {
         log.info("POST /api/user/voice");
-        userService.updateVoice(Long.parseLong(uid), request);
+        userService.updateVoice(getUid(authentication), voice);
         return ResponseEntity.ok().build();
     }
 
@@ -121,9 +136,9 @@ public class UserController {
      * 사용자 목소리 삭제하기
      */
     @DeleteMapping("/voice")
-    public ResponseEntity<Void> deleteVoice(@RequestHeader(value = UID) String uid) {
+    public ResponseEntity<Void> deleteVoice(Authentication authentication) {
         log.info("DELETE /api/user/voice");
-        userService.deleteVoice(Long.parseLong(uid));
+        userService.deleteVoice(getUid(authentication));
         return ResponseEntity.ok().build();
     }
 
@@ -132,11 +147,11 @@ public class UserController {
      */
     @DeleteMapping
     public ResponseEntity<DeleteUserResponse> deleteUser(
-            @RequestHeader(value = UID) String uid,
+            Authentication authentication,
             @RequestParam(value="reason", defaultValue="1") Long reasonId
     ) {
         log.info("DELETE /api/user");
-        return ResponseEntity.ok(userService.deleteUser(Long.parseLong(uid), reasonId));
+        return ResponseEntity.ok(userService.deleteUser(getUid(authentication), reasonId));
     }
 
     /**
@@ -152,9 +167,13 @@ public class UserController {
      * 건의사항 작성하기
      */
     @PostMapping("/suggestion")
-    public ResponseEntity<Void> suggest(@RequestHeader(value = UID) String uid, SuggestionRequest request) {
+    public ResponseEntity<Void> suggest(
+            Authentication authentication,
+            @RequestParam String content,
+            @RequestParam List<MultipartFile> images
+    ) {
         log.info("POST /api/user/suggestion");
-        userService.suggest(Long.parseLong(uid), request);
+        userService.suggest(getUid(authentication), content, images);
         return ResponseEntity.ok().build();
     }
 
@@ -163,14 +182,14 @@ public class UserController {
      */
     @PostMapping("/report")
     public ResponseEntity<Void> report(
-            @RequestHeader(value = UID) String uid,
+            Authentication authentication,
             @Valid @RequestBody ReportRequest request
     ) {
         log.info("POST /api/user/report");
         // 신고하기
-        userService.report(Long.parseLong(uid), request);
+        userService.report(getUid(authentication), request);
         // 방 나가기 처리 - 나가기 사유는 5번으로 고정
-        matchingService.leaveMatching(Long.parseLong(uid), request.getMatchingId(), 5L);
+        matchingService.leaveMatching(getUid(authentication), request.getMatchingId(), 5L);
         return ResponseEntity.ok().build();
     }
 
@@ -178,8 +197,8 @@ public class UserController {
      * 신고 내역 조회하기
      */
     @GetMapping("/report")
-    public ResponseEntity<ReportListResponse> getReports(@RequestHeader(value = UID) String uid) {
+    public ResponseEntity<ReportListResponse> getReports(Authentication authentication) {
         log.info("GET /api/user/report");
-        return ResponseEntity.ok(userService.getReports(Long.parseLong(uid)));
+        return ResponseEntity.ok(userService.getReports(getUid(authentication)));
     }
 }

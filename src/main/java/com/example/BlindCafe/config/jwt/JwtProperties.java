@@ -10,17 +10,17 @@ public class JwtProperties {
     public static String key2;
     public static String key3;
 
-    @Value("${secret.key1")
+    @Value("${secret.key1}")
     public void setKey1(String value) {
         key1 = value;
     }
 
-    @Value("${secret.key2")
+    @Value("${secret.key2}")
     public void setKey2(String value) {
         key2 = value;
     }
 
-    @Value("${secret.key3")
+    @Value("${secret.key3}")
     public void setKey3(String value) {
         key3 = value;
     }

@@ -17,13 +17,4 @@ public class Interest {
 
     @Column(length = 10, nullable = false)
     private String name;
-
-    private Boolean isMain;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "main_interest_id")
-    private Interest main;
-
-    @OneToMany(mappedBy = "main")
-    private List<Interest> child = new ArrayList<>();
 }

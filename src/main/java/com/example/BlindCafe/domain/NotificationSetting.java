@@ -21,21 +21,15 @@ public class NotificationSetting {
     private Long id;
 
     @JsonIgnore
-    @OneToOne(mappedBy = "notification_setting", fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "setting", fetch = FetchType.LAZY)
     private User user;
 
     private boolean isAll;
 
     private String off;
 
-    public void setUser(User user) {
-        this.user = user;
-        user.setNotificationSetting(this);
-    }
-
-    public static NotificationSetting create(User user) {
+    public static NotificationSetting create() {
         NotificationSetting setting = new NotificationSetting();
-        setting.setUser(user);
         setting.setAll(true);
         setting.setOff("");
         return setting;

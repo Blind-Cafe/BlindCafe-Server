@@ -7,7 +7,6 @@ import com.example.BlindCafe.domain.type.Platform;
 import com.example.BlindCafe.dto.chat.MessageDto;
 import com.example.BlindCafe.dto.request.NotificationSettingRequest;
 import com.example.BlindCafe.exception.BlindCafeException;
-import com.example.BlindCafe.repository.NotificationSettingRepository;
 import com.example.BlindCafe.repository.UserRepository;
 import com.example.BlindCafe.utils.FcmUtil;
 import com.google.firebase.messaging.*;
@@ -39,7 +38,6 @@ public class NotificationService {
     private final FcmUtil fcmUtil;
 
     private final UserRepository userRepository;
-    private final NotificationSettingRepository notificationSettingRepository;
 
     private static final String NOTICE = "N";
     private static final String CHAT = "C";
@@ -75,8 +73,9 @@ public class NotificationService {
         if (result == EITHER_FALSE) return; 
         // 전체 또는 채팅방 중 하나라도 정보를 모르는 경우
         if (result != BOTH_TRUE) {
-            NotificationSetting setting = notificationSettingRepository.findByUserId(userId)
+            User user = userRepository.findById(userId)
                     .orElseThrow(() -> new BlindCafeException(EMPTY_USER));
+            NotificationSetting setting = user.getSetting();
             entireNotificationSettingInMemory.put(userId, setting.isAll());
             roomNotificationOffInMemory.put(userId, setting.getInactivateRooms());
             // 다시 검사해서 둘 중 하나라도 OFF인 경우 처리
@@ -153,24 +152,18 @@ public class NotificationService {
     @Transactional
     public void update(Long userId, NotificationSettingRequest request) {
 
-        NotificationSetting setting = notificationSettingRepository.findByUserId(userId)
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BlindCafeException(EMPTY_USER));
+        NotificationSetting setting = user.getSetting();
 
         if (request.getTarget().equals(ALL)) {
-            setting.setAll(request.isActivate());
-            entireNotificationSettingInMemory.put(userId, request.isActivate());
+            setting.setAll(request.isActive());
+            entireNotificationSettingInMemory.put(userId, request.isActive());
             return;
         }
 
-        setting.setRoom(String.valueOf(request.getTarget()), request.isActivate());
+        setting.setRoom(String.valueOf(request.getTarget()), request.isActive());
         roomNotificationOffInMemory.put(userId, setting.getInactivateRooms());
-    }
-
-    // 알림 설정 초기화
-    @Transactional
-    public void createSetting(User newUser) {
-        NotificationSetting setting = NotificationSetting.create(newUser);
-        notificationSettingRepository.save(setting);
     }
 
     private int isActivate(Long userId, String mid) {

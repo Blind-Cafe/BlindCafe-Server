@@ -71,7 +71,7 @@ public class User extends BaseTimeEntity {
 
     @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "matching_history_id")
-    private MatchingHistory matchingHistory;
+    private MatchingHistory history;
 
     @Embedded
     private Address address;
@@ -83,7 +83,7 @@ public class User extends BaseTimeEntity {
 
     @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "notification_setting_id")
-    private NotificationSetting notificationSetting;
+    private NotificationSetting setting;
 
     @Enumerated(EnumType.STRING)
     private Mbti mbti;
@@ -95,6 +95,7 @@ public class User extends BaseTimeEntity {
 
     @Enumerated(EnumType.STRING)
     private UserStatus status;
+
 
     public List<Avatar> getAvatars() {
         return this.avatars.stream()
@@ -113,17 +114,38 @@ public class User extends BaseTimeEntity {
         return this.address != null ? this.address.toString() : null;
     }
 
+    public void setTicket(Ticket ticket) {
+        this.ticket = ticket;
+        ticket.setUser(this);
+    }
+
+    public void setHistory(MatchingHistory history) {
+        this.history = history;
+        history.setUser(this);
+    }
+
+    public void setSetting(NotificationSetting setting) {
+        this.setting = setting;
+        setting.setUser(this);
+    }
+
     public static User create(
             Social socialType,
             String socialId,
             Platform platform,
-            String deviceToken
+            String deviceToken,
+            Ticket ticket,
+            MatchingHistory history,
+            NotificationSetting setting
     ) {
         User user = new User();
         user.setSocialType(socialType);
         user.setSocialId(socialId);
         user.setPlatform(platform);
         user.setDeviceToken(deviceToken);
+        user.setTicket(ticket);
+        user.setHistory(history);
+        user.setSetting(setting);
         user.setAdmin(false);
         user.setStatus(UserStatus.NOT_YET);
         return user;
@@ -153,7 +175,8 @@ public class User extends BaseTimeEntity {
 
     // 메인 프로필 이미지 1장 가져오기
     public String getMainAvatar() {
-        return Objects.requireNonNull(this.getAvatars().stream().findFirst().orElse(null)).getSrc();
+        this.getAvatars().stream().findFirst().ifPresent(Avatar::getSrc);
+        return null;
     }
 
     // 모든 프로필 이미지 가져오기
@@ -183,17 +206,12 @@ public class User extends BaseTimeEntity {
     public List<Interest> getMainInterests() {
         return this.getInterests().stream()
                 .map(UserInterest::getInterest)
-                .filter(Interest::getIsMain)
                 .collect(Collectors.toList());
     }
 
     // 사용자 관심사 수정하기
-    public void updateInterest(List<Interest> interests) {
-        this.getInterests().forEach(UserInterest::remove);
-        interests.forEach(interest -> {
-            UserInterest userInterest = UserInterest.create(this, interest);
-            this.getInterests().add(userInterest);
-        });
+    public void updateInterest(List<UserInterest> interests) {
+        this.setInterests(interests);
     }
 
     // 사용자 프로필 수정하기
@@ -236,7 +254,7 @@ public class User extends BaseTimeEntity {
 
     // 매칭 히스토리 업데이트
     public void updateMatchingHistory(Long partnerId) {
-        this.matchingHistory.update(partnerId);
+        this.history.update(partnerId);
     }
 
     // 정지

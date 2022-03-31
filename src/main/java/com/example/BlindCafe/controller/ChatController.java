@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
 @RestController
@@ -21,9 +22,9 @@ public class ChatController {
     /**
      * 텍스트 메시지 전송
      */
-    @MessageMapping("/chat/matching/{mid}")
-    public void sendTextMessage(@DestinationVariable String mid, MessageDto message) {
-        chatService.publish(mid, message);
+    @MessageMapping("/chat/message")
+    public void sendTextMessage(MessageDto message) {
+        chatService.publish(message.getMatchingId(), message);
     }
 
     /**
@@ -32,8 +33,13 @@ public class ChatController {
     @PostMapping("/api/chat/matching/{mid}")
     public ResponseEntity<Void> sendFileMessage(
             @PathVariable(value = "mid") String mid,
-            @RequestParam FileMessageDto fileMessage
+            @RequestParam String matchingId,
+            @RequestParam String senderId,
+            @RequestParam String senderName,
+            @RequestParam String type,
+            @RequestParam MultipartFile file
     ) {
+        FileMessageDto fileMessage = new FileMessageDto(matchingId, senderId, senderName, type, file);
         MessageDto message = chatService.upload(mid, fileMessage);
         chatService.publish(mid, message);
         return ResponseEntity.ok().build();
@@ -45,10 +51,9 @@ public class ChatController {
     @GetMapping("/api/chat/matching/{mid}")
     public ResponseEntity<MessageListResponse> getMessages(
             @PathVariable(value = "mid") String mid,
-            @RequestParam(value = "page") int page,
+            @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "50") int size
     ) {
         return ResponseEntity.ok(chatService.getMessages(mid, page, size));
     }
-
 }

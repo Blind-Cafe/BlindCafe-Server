@@ -1,5 +1,6 @@
 package com.example.BlindCafe.domain;
 
+import com.example.BlindCafe.utils.DateTimeUtil;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -8,6 +9,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 @Document(collection = "notice_log")
 @Getter
@@ -16,20 +18,20 @@ import java.time.LocalDateTime;
 public class NoticeLog {
 
     @Id
-    private Long id;
+    private String id;
 
     private Long userId;
 
-    private LocalDateTime accessDt;
+    private String accessDt;
 
     public static NoticeLog create(Long uid, LocalDateTime accessDt) {
         NoticeLog log = new NoticeLog();
         log.setUserId(uid);
-        log.setAccessDt(accessDt);
+        log.setAccessDt(accessDt.format(DateTimeUtil.formatter));
         return log;
     }
 
     public void update(LocalDateTime accessDt) {
-        this.setAccessDt(accessDt);
+        this.accessDt = accessDt.format(DateTimeUtil.formatter);
     }
 }

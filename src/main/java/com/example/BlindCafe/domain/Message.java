@@ -1,11 +1,13 @@
 package com.example.BlindCafe.domain;
 
 import com.example.BlindCafe.domain.type.MessageType;
+import com.example.BlindCafe.utils.DateTimeUtil;
 import lombok.*;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 @Document(collection = "message")
 @Getter
@@ -37,7 +39,7 @@ public class Message {
         message.setUsername(username);
         message.setContent(content);
         message.setType(type);
-        message.setCreatedAt(createdAt.toString());
+        message.setCreatedAt(createdAt.format(DateTimeUtil.formatter));
         return message;
     }
 }

@@ -28,6 +28,11 @@ public class UserInterest extends BaseTimeEntity {
 
     private boolean active;
 
+    public void setUser(User user) {
+        this.user = user;
+        user.getInterests().add(this);
+    }
+
     public static UserInterest create(User user, Interest interest) {
         UserInterest userInterest = new UserInterest();
         userInterest.setUser(user);
