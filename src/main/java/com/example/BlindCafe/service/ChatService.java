@@ -44,15 +44,19 @@ public class ChatService {
     public void publish(String mid, MessageDto message) {
         String uid = message.getSenderId();
         boolean isNotification = isNotification(message.getType());
+        boolean isPublish = isPublish(message.getType());
+        MessageDto savedMessage = null;
+        
+        if (isPublish) {
+            // 메세지 저장
+            Message newMessage = Message.create(mid, uid, message.getSenderName(), message.getContent(), getSavedType(message.getType()));
+            newMessage = messageRepository.save(newMessage);
+            savedMessage = MessageDto.fromCollection(newMessage);
+            message.setMessageId(savedMessage.getMessageId());
 
-        // 메세지 저장
-        Message newMessage = Message.create(mid, uid, message.getSenderName(), message.getContent(), getSavedType(message.getType()));
-        newMessage = messageRepository.save(newMessage);
-        MessageDto savedMessage = MessageDto.fromCollection(newMessage);
-        message.setMessageId(savedMessage.getMessageId());
-
-        // 메시지 퍼블리싱
-        redisPublisher.publish(mid, savedMessage, true);
+            // 메시지 퍼블리싱
+            redisPublisher.publish(mid, savedMessage, true);
+        }
 
         // 채팅방 외부에 있을 경우 알림을 받을 필요 없는 메시지 (ex. 방 나가기)
         if (!isNotification)
@@ -74,6 +78,11 @@ public class ChatService {
         // 메시지를 받아야 하는 사용자들이 접속해있는지 확인 후
         // 접속 유무에 따라 채팅방 리스트 정렬을 위한 퍼블리싱 또는 알림 전송
         for (String target: targets) {
+            if (!isPublish) {
+                notificationService.sendPushMessage(Long.parseLong(target), message);
+                continue;
+            }
+
             // 사용자가 접속해있는지 확인
             String currentPosition = presenceService.isCurrentPosition(target);
 
@@ -112,6 +121,16 @@ public class ChatService {
         for (MessageType messageType: MessageType.values()) {
             if (messageType.getType().equals(type)) {
                 return messageType.isNotification();
+            }
+        }
+        throw new BlindCafeException(INVALID_MESSAGE_TYPE);
+    }
+
+    // 메시지는 보내지 않고 알림만 전송
+    private boolean isPublish(String type) {
+        for (MessageType messageType: MessageType.values()) {
+            if (messageType.getType().equals(type)) {
+                return messageType.isPublish();
             }
         }
         throw new BlindCafeException(INVALID_MESSAGE_TYPE);
