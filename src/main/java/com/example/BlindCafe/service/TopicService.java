@@ -1,16 +1,22 @@
 package com.example.BlindCafe.service;
 
+import com.example.BlindCafe.domain.Matching;
 import com.example.BlindCafe.domain.MatchingTopic;
 import com.example.BlindCafe.domain.topic.Audio;
 import com.example.BlindCafe.domain.topic.Image;
 import com.example.BlindCafe.domain.topic.Subject;
 import com.example.BlindCafe.domain.topic.Topic;
+import com.example.BlindCafe.domain.type.MessageType;
+import com.example.BlindCafe.dto.chat.MessageDto;
+import com.example.BlindCafe.dto.response.TopicResponse;
 import com.example.BlindCafe.exception.BlindCafeException;
 import com.example.BlindCafe.repository.TopicRepository;
+import com.example.BlindCafe.utils.MatchingMessageUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.*;
 
 import static com.example.BlindCafe.exception.CodeAndMessage.EMPTY_TOPIC;
@@ -21,6 +27,8 @@ import static com.example.BlindCafe.exception.CodeAndMessage.EMPTY_TOPIC;
 public class TopicService {
 
     private final TopicRepository topicRepository;
+
+    private final MatchingMessageUtil matchingMessageUtil;
 
     private static final int TOPIC_COMMON_QUANTITY = 10;
     private static final int TOPIC_OTHER_QUANTITY = 2;
@@ -114,7 +122,48 @@ public class TopicService {
         Collections.shuffle(topics);
         return topics.subList(0, quantity);
     }
-    
+
+    /**
+     * 가장 최근에 조회한 토픽 가져오기
+     */
+    public TopicResponse getTopic(Matching matching) {
+        Long topicId = matching.getTopic().getLatestTopic();
+        if (topicId == null) return null;
+
+        LocalDateTime access = matching.getTopic().getAccess();
+
+        int topicType = getTopicType(topicId);
+        switch (topicType) {
+            case 0:
+                Subject subject = getSubject(topicId);
+                return TopicResponse.fromSubject(subject, MessageType.TEXT_TOPIC, access);
+            case 1:
+                Audio audio = getAudio(topicId);
+                return TopicResponse.fromAudio(audio, MessageType.AUDIO_TOPIC, access);
+            default:
+                Image image = getImage(topicId);
+                return TopicResponse.fromImage(image, MessageType.IMAGE_TOPIC, access);
+        }
+    }
+
+    /**
+     * 다음 토픽 가져와서 메시지폼으로 만들기
+     */
+    public MessageDto getNextTopic(Long mid, Long topicId) {
+        int topicType = getTopicType(topicId);
+        switch (topicType) {
+            case 0:
+                Subject subject = getSubject(topicId);
+                return matchingMessageUtil.sendTopic(mid, MessageType.TEXT_TOPIC, subject.getSubject());
+            case 1:
+                Audio audio = getAudio(topicId);
+                return matchingMessageUtil.sendTopic(mid, MessageType.AUDIO_TOPIC, audio.getSrc());
+            default:
+                Image image = getImage(topicId);
+                return matchingMessageUtil.sendTopic(mid, MessageType.IMAGE_TOPIC, image.getSrc());
+        }
+    }
+
     // 토픽 ID로 토픽 종류 확인
     public int getTopicType(Long topicId) {
         if (topicId <= SUBJECT_LIMIT) return 0;

@@ -10,6 +10,7 @@ import com.example.BlindCafe.dto.request.ExchangeProfileRequest;
 import com.example.BlindCafe.dto.request.SelectDrinkRequest;
 import com.example.BlindCafe.dto.response.MatchingDetailResponse;
 import com.example.BlindCafe.dto.response.MatchingListResponse;
+import com.example.BlindCafe.dto.response.TopicResponse;
 import com.example.BlindCafe.exception.BlindCafeException;
 import com.example.BlindCafe.repository.*;
 import com.example.BlindCafe.domain.type.Gender;
@@ -229,8 +230,11 @@ public class MatchingService {
         // 채팅방 정보 조회 시 3일 채팅에서 72시간 넘은 경우 프로필 교환 메시지 전송
         // (배치 작업으로 채팅방 상태를 업데이트해주지만 배치 텀으로 인해 최신화 안된 경우를 해결하기 위해)
         checkMatchingTime(matching, LocalDateTime.now());
+        
+        // 가장 최근에 조회한 토픽 확인
+        TopicResponse topic = topicService.getTopic(matching);
 
-        return MatchingDetailResponse.fromEntity(matching, userId);
+        return MatchingDetailResponse.fromEntity(matching, userId, topic);
     }
 
     /**
@@ -272,23 +276,8 @@ public class MatchingService {
         Long topicId = matching.getNextTopic();
 
         // 토픽 전송 퍼블리싱
-        MessageDto message = makeMessageDtoByTopic(matchingId, topicId);
+        MessageDto message = topicService.getNextTopic(matchingId, topicId);
         chatService.publish(String.valueOf(matching.getId()), message);
-    }
-
-    private MessageDto makeMessageDtoByTopic(Long mid, Long topicId) {
-        int topicType = topicService.getTopicType(topicId);
-        switch (topicType) {
-            case 0:
-                Subject subject = topicService.getSubject(topicId);
-                return matchingMessageUtil.sendTopic(mid, MessageType.TEXT_TOPIC, subject.getSubject());
-            case 1:
-                Audio audio = topicService.getAudio(topicId);
-                return matchingMessageUtil.sendTopic(mid, MessageType.AUDIO_TOPIC, audio.getSrc());
-            default:
-                Image image = topicService.getImage(topicId);
-                return matchingMessageUtil.sendTopic(mid, MessageType.IMAGE_TOPIC, image.getSrc());
-        }
     }
 
     /**

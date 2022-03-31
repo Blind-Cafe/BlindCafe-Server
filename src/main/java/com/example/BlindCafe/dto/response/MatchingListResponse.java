@@ -2,7 +2,6 @@ package com.example.BlindCafe.dto.response;
 
 import com.example.BlindCafe.domain.*;
 import com.example.BlindCafe.domain.type.MessageType;
-import com.example.BlindCafe.dto.request.PartnerDto;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -26,7 +25,7 @@ public class MatchingListResponse {
     @NoArgsConstructor
     public static class MatchingInfo {
         private Long matchingId;
-        private PartnerDto partner;
+        private PartnerResponse partner;
         private String latestMessage;
         private boolean received;
         private boolean blind;
@@ -40,7 +39,7 @@ public class MatchingListResponse {
 
             MatchingInfo info = new MatchingInfo();
             info.setMatchingId(matching.getId());
-            info.setPartner(PartnerDto.fromEntity(partner));
+            info.setPartner(PartnerResponse.fromEntity(partner));
             info.setBlind(!matching.getIsContinuous());
             info.setExpiredDt(matching.getExpiredTime());
             return info;
@@ -72,10 +71,6 @@ public class MatchingListResponse {
                 content = "사진이 전송되었습니다.";
             } else if (message.getType().equals(MessageType.AUDIO)) {
                 content = "음성메시지가 전송되었습니다.";
-            } else if (message.getType().equals(MessageType.TEXT_TOPIC)
-                    || message.getType().equals(MessageType.AUDIO_TOPIC)
-                    || message.getType().equals(MessageType.IMAGE_TOPIC)) {
-                content = "토픽이 전송되었습니다.";
             } else {
                 content = "메시지가 전송되었습니다.";
             }

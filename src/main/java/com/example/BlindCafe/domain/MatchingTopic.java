@@ -6,9 +6,11 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 
 import javax.persistence.*;
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 
+import static com.example.BlindCafe.exception.CodeAndMessage.ALREADY_SEND_TOPIC;
 import static com.example.BlindCafe.exception.CodeAndMessage.EXCEED_MATCHING_TOPIC;
 
 @Entity
@@ -29,6 +31,9 @@ public class MatchingTopic {
 
     private String entire;
     private String remain;
+    private String latest;
+
+    private LocalDateTime access;
 
     public static MatchingTopic create(List<Topic> topics) {
         MatchingTopic topic = new MatchingTopic();
@@ -41,18 +46,33 @@ public class MatchingTopic {
         }
         topic.setEntire(sb.toString());
         topic.setRemain(sb.toString());
+        topic.setLatest(null);
+        topic.setAccess(LocalDateTime.now());
         return topic;
     }
 
     public Long getTopic() {
+        LocalDateTime now = LocalDateTime.now();
         String topicList = this.remain;
         int index = topicList.indexOf(",");
-        
+
         // 더 이상 토픽이 없는 경우
         if (index == -1)
             throw new BlindCafeException(EXCEED_MATCHING_TOPIC);
 
+        // 최근에 토픽을 조회한 경우
+        if (this.getAccess().plusMinutes(5L).isAfter(now))
+            throw new BlindCafeException(ALREADY_SEND_TOPIC);
+
         this.remain = topicList.substring(index+1);
-        return Long.parseLong(topicList.substring(0, index));
+        this.latest = topicList.substring(0, index);
+        this.access = now;
+
+        return this.getLatestTopic();
+    }
+
+    public Long getLatestTopic() {
+        if (this.latest != null) return Long.parseLong(this.latest);
+        else return null;
     }
 }
