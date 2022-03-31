@@ -2,6 +2,7 @@ package com.example.BlindCafe.service;
 
 import com.example.BlindCafe.domain.RoomLog;
 import com.example.BlindCafe.repository.RoomLogRepository;
+import com.example.BlindCafe.utils.DateTimeUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
@@ -55,9 +56,9 @@ public class PresenceService {
             String mid = valueOperations.get(USER_KEY + uid);
             RoomLog roomLog = roomLogRepository.findRoomLogByMatchingId(mid);
             if (Objects.isNull(roomLog)) {
-                roomLog = RoomLog.create(mid, uid, time.toString());
+                roomLog = RoomLog.create(mid, uid, time);
             } else {
-                roomLog.update(uid, time.toString());
+                roomLog.update(uid, time.format(DateTimeUtil.formatter));
             }
             roomLogRepository.save(roomLog);
             valueOperations.set(USER_KEY + uid, LOBBY);

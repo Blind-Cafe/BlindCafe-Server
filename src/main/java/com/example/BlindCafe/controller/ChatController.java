@@ -51,7 +51,7 @@ public class ChatController {
     @GetMapping("/api/chat/matching/{mid}")
     public ResponseEntity<MessageListResponse> getMessages(
             @PathVariable(value = "mid") String mid,
-            @RequestParam(value = "page") int page,
+            @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "50") int size
     ) {
         return ResponseEntity.ok(chatService.getMessages(mid, page, size));
