@@ -8,6 +8,7 @@ import org.springframework.data.util.Pair;
 import java.security.Key;
 import java.util.Date;
 
+import static com.example.BlindCafe.config.jwt.JwtProperties.AUTHORIZATION_TYPE;
 import static com.example.BlindCafe.exception.CodeAndMessage.*;
 
 public class JwtUtils {
@@ -41,6 +42,10 @@ public class JwtUtils {
     }
 
     public static String getUsedId(String token) {
+        String[] split = token.split(AUTHORIZATION_TYPE);
+        if (split.length < 2)
+            throw new BlindCafeException(FAILED_AUTHORIZATION);
+        token = split[1];
         try {
             return Jwts.parserBuilder()
                     .setSigningKeyResolver(SigningKeyResolver.instance)
