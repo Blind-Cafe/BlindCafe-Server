@@ -1,10 +1,6 @@
 package com.example.BlindCafe.service;
 
 import com.example.BlindCafe.domain.*;
-import com.example.BlindCafe.domain.topic.Audio;
-import com.example.BlindCafe.domain.topic.Image;
-import com.example.BlindCafe.domain.topic.Subject;
-import com.example.BlindCafe.domain.type.MessageType;
 import com.example.BlindCafe.dto.chat.MessageDto;
 import com.example.BlindCafe.dto.request.ExchangeProfileRequest;
 import com.example.BlindCafe.dto.request.SelectDrinkRequest;
@@ -389,6 +385,7 @@ public class MatchingService {
             checkMatchingFunction(matching, time); // 24,48시간 기능 해제 메시지
             checkEndOfBasicMatching(matching, time); // 3일 채팅 종료 1시간 메시지
             checkExchangeProfile(matching, time); // 프로필 교환 메시지
+            checkSendFirstTopic(matching, time); // 채팅방 생성 후 5분간 토픽이 없는 경우 자동 전송
             return;
         }
         
@@ -419,6 +416,14 @@ public class MatchingService {
         if (matching.sendExchangeProfile(time)) {
             MessageDto message = matchingMessageUtil.sendExchangeProfile(matching.getId());
             chatService.publish(String.valueOf(matching.getId()), message);
+        }
+    }
+
+    // 채팅방 생성 후 5분간 토픽이 없는 경우 자동 전송
+    private void checkSendFirstTopic(Matching matching, LocalDateTime time) {
+        if (matching.sendFirstTopic(time)) {
+            // 토픽 전송
+            getTopic(matching.getId());
         }
     }
 

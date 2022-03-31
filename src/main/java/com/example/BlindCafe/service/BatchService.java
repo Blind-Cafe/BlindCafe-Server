@@ -24,7 +24,7 @@ import static com.example.BlindCafe.service.NotificationService.*;
  * 배치 작업을 위한 서비스
  *
  * Job 1 - 10분 단위 작업
- * - Step 1 : 3일 채팅 확인 : 24,48시간 기능 해제 메시지, 3일 채팅 종료 1시간 마감 임박 메시지, 72시간 경과 시 프로필 교환 메시지
+ * - Step 1 : 3일 채팅 확인 : 24,48시간 기능 해제 메시지, 3일 채팅 종료 1시간 마감 임박 메시지, 72시간 경과 시 프로필 교환 메시지, 채팅방 생성 후 5분간 토픽이 없는 경우 자동 전송
  * - Step 2 : 7일 채팅 확인 : 만료 시간이 지난 경우 채팅방 비활성화
  * 
  * Job 2  - 1시간 단위 작업
@@ -121,7 +121,7 @@ public class BatchService {
     /**
      * Step
      */
-    // Step 1 : 3일 채팅 확인 : 24,48시간 기능 해제 메시지, 3일 채팅 종료 1시간 마감 임박 메시지, 72시간 경과 시 프로필 교환 메시지
+    // Step 1 : 3일 채팅 확인 : 24,48시간 기능 해제 메시지, 3일 채팅 종료 1시간 마감 임박 메시지, 72시간 경과 시 프로필 교환 메시지, 채팅방 생성 후 5분간 토픽이 없는 경우 자동 전송
     private void checkBasicMatching(LocalDateTime time, List<Matching> matchings) {
         matchings = matchings.stream()
                 .filter(m -> !m.getIsContinuous())
