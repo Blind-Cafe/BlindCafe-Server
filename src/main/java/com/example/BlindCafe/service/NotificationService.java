@@ -41,11 +41,11 @@ public class NotificationService {
 
     private static final String NOTICE = "N";
     private static final String CHAT = "C";
-    private final Long ALL = 0L;
+    private static final Long ALL = 0L;
 
-    private final int EITHER_FALSE = 0;
-    private final int BOTH_TRUE = 1;
-    private final int EITHER_NULL = 2;
+    private static final int EITHER_FALSE = 0;
+    private static final int BOTH_TRUE = 1;
+    private static final int EITHER_NULL = 2;
 
     /**
      * 사용자 ID를 기준으로 매번 DB를 조회하는 건 비효율적

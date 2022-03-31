@@ -50,11 +50,10 @@ public class BatchService {
     private final UserMatchingRepository userMatchingRepository;
     private final UserRepository userRepository;
 
-    private final static int DELAY_TEN_MIN = 1000 * 60 * 10;
-    private final static int DELAY_ONE_HOUR = 1000 * 60 * 60;
-    private final static int DELAY_ONE_DAY = 1000 * 60 * 60 * 24;
-
-    private final int UNIT = 100;
+    private static final int DELAY_TEN_MIN = 1000 * 60 * 10;
+    private static final int DELAY_ONE_HOUR = 1000 * 60 * 60;
+    private static final int DELAY_ONE_DAY = 1000 * 60 * 60 * 24;
+    private static final int UNIT = 100;
 
     /**
      * Name : Job 1 - 10분 단위 작업

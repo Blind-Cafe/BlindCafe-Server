@@ -30,10 +30,12 @@ public class RedisSubscriber implements MessageListener {
         try {
             String publishMessage = getPublishMessage(message);
             MessageDto messageDto = objectMapper.readValue(publishMessage, MessageDto.class);
-            if (messageDto.getDestination().equals("0"))
+
+            if (messageDto.getDestination().equals("0")) {
                 messageTemplate.convertAndSend(MATCHING_TOPIC + messageDto.getMatchingId(), messageDto);
-            else
+            } else {
                 messageTemplate.convertAndSend(USER_TOPIC + messageDto.getDestination(), messageDto);
+            }
         } catch (Exception e) {
             throw new BlindCafeException(SEND_MESSAGE_ERROR);
         }

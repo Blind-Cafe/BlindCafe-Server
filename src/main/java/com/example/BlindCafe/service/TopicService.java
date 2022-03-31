@@ -20,18 +20,18 @@ import static com.example.BlindCafe.exception.CodeAndMessage.EMPTY_TOPIC;
 @Transactional(readOnly = true)
 public class TopicService {
 
+    private final TopicRepository topicRepository;
+
     private static final int TOPIC_COMMON_QUANTITY = 10;
     private static final int TOPIC_OTHER_QUANTITY = 2;
     private static final int TOPIC_DIFF_QUANTITY = 6;
     private static final int TOPIC_IMAGE_QUANTITY = 5;
     private static final int TOPIC_AUDIO_QUANTITY = 4;
 
-    private final static Long SUBJECT_LIMIT = 1000L;
-    private final static Long AUDIO_LIMIT = 2000L;
+    private static final Long SUBJECT_LIMIT = 1000L;
+    private static final Long AUDIO_LIMIT = 2000L;
 
     public static final Long PUBLIC_INTEREST_ID = 0L;
-
-    private final TopicRepository topicRepository;
 
     // 관심사 기반으로 토픽 생성 - 공통 관심사
     // 일상 질문 10개, 공통관심사 10개, 그 외 관심사 각 2개, 이미지 5개, 오디오 4개
