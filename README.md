@@ -7,11 +7,11 @@
 </div>
 
 ## 프로젝트 개요
-|구분|내용|
+| 구분 |내용|
 |:------:|-------|
-|기간|2021.09. ~ 2021.12. / 현재 업데이트 진행 중|
-|구성|Planner 1명, Designer 1명, Backend 1명, Frontend(AOS, iOS) 2명 中 **Backend** 참여|
-|소개|상대방의 정보를 알지 못한 채 관심사를 바탕으로 매칭된 상대방과 3일간 채팅을 진행하는 데이트 매칭 애플리케이션|
+| 기간 |2021.09. ~ 2021.12. / 현재 업데이트 진행 중|
+| 구성 |Planner 1명, Designer 1명, Backend 1명, Frontend(AOS, iOS) 2명<br>中 **Backend** 참여|
+| 소개 |상대방의 정보를 알지 못한 채 관심사를 바탕으로<br>매칭된 상대방과 3일간 채팅을 진행하는 데이트 매칭 애플리케이션|
 <br>
 
 ## 프로젝트 소개
@@ -59,7 +59,7 @@
 - SpringBoot 2.5.5
 
 ### 추가 설정
-- `/src/main/resources`위치에 `application.yml`파일을 아래 양식을 이용하여 작성합니다.
+- `/src/main/resources`에 아래 양식을 이용하여 `application.yml`파일을 작성합니다.
     <details>
     <summary>Sample</summary>
     <div markdown="1">  
@@ -180,6 +180,8 @@
     ```
 </div>
 </details>
+
+- `/src/main/resources/firebase`에 Firebase Key 파일 `blind-cafe-firebase-key.json`을 추가합니다.
 <br>
 
 ## 결과물
@@ -188,6 +190,7 @@
 
 ## 회고
 > *작성 중입니다.*
+<br>
 
 ## 관련
 ### Team
