@@ -1,0 +1,86 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko" class="no-js">
+
+<th:block th:fragment="content">
+
+    <div class="container">
+        <div class="col-6">
+            <h1>Room 1</h1>
+        </div>
+        <div>
+            <div id="msgArea" class="col"></div>
+            <div class="col-6">
+                <div class="input-group mb-3">
+                    <input type="text" id="msg" class="form-control">
+                    <div class="input-group-append">
+                        <button class="btn btn-outline-secondary" type="button" id="button-send">전송</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6"></div>
+    </div>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+
+</th:block>
+<script th:inline="javascript">
+    $(document).ready(function(){
+
+        var matchingId = "1";
+        var senderId = "1";
+        var senderName = "user";
+        var type = "1";
+
+        var sockJs = new SockJS("/ws");
+        //1. SockJS를 내부에 들고있는 stomp를 내어줌
+        var stomp = Stomp.over(sockJs);
+
+        //2. connection이 맺어지면 실행
+        stomp.connect({}, function (){
+            console.log("STOMP Connection")
+
+            //4. subscribe(path, callback)으로 메세지를 받을 수 있음
+            var sub = stomp.subscribe("/topic/chat/matching/1", function (chat) {
+                var content = JSON.parse(chat.body);
+
+                var writer = content.senderName;
+                var message = content.content;
+                var str = '';
+
+                if(writer === senderName){
+                    str = "<div class='col-6'>";
+                    str += "<div class='alert alert-secondary'>";
+                    str += "<b>" + writer + " : " + message + "</b>";
+                    str += "</div></div>";
+                } else{
+                    str = "<div class='col-6'>";
+                    str += "<div class='alert alert-warning'>";
+                    str += "<b>" + writer + " : " + message + "</b>";
+                    str += "</div></div>";
+                }
+
+                $("#msgArea").append(str);
+            });
+            // sub.unsubscribe();
+        });
+
+        $("#button-send").on("click", function(e){
+            var msg = document.getElementById("msg");
+
+            console.log(senderName + ":" + msg.value);
+            stomp.send('/app/chat/message', {}, JSON.stringify({
+                matchingId: matchingId,
+                content: msg.value,
+                senderId: senderId,
+                senderName: senderName,
+                type: type
+            }));
+            msg.value = '';
+        });
+    });
+</script>
+
+</html>

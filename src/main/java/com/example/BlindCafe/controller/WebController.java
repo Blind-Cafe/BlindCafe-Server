@@ -23,4 +23,10 @@ public class WebController {
         return "policy/usage";
     }
 
+    @GetMapping("/chatting")
+    public String chatting() {return "chatting"; }
+
+    // API Docs
+    @GetMapping("/docs")
+    public String docs() { return "docs/index"; }
 }
