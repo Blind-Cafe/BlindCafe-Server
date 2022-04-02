@@ -175,8 +175,9 @@ public class User extends BaseTimeEntity {
 
     // 메인 프로필 이미지 1장 가져오기
     public String getMainAvatar() {
-        this.getAvatars().stream().findFirst().ifPresent(Avatar::getSrc);
-        return null;
+        if (this.getAvatars().size() == 0)
+            return null;
+        return this.getAvatars().get(0).getSrc();
     }
 
     // 모든 프로필 이미지 가져오기

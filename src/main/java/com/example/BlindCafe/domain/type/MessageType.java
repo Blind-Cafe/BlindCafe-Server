@@ -25,9 +25,9 @@ public enum MessageType {
     TAKE_DRINK(false, "18", null, "음료수 뱃지를 획득했습니다.", false, false, false),
     LEAVE(false, "19", null, "방을 나가셨습니다.", false, false, false),
 
-    TEXT_TOPIC(true, "20", "토픽 전송", "토픽이 전송되었습니다.", false, true, false),
-    IMAGE_TOPIC(true, "21", "토픽 전송", "토픽이 전송되었습니다.", false, true, false),
-    AUDIO_TOPIC(true, "22", "토픽 전송", "토픽이 전송되었습니다.", false, true, false);
+    TEXT_TOPIC(true, "20", "💌토픽 전송💌", "토픽이 전송되었습니다.", false, true, false),
+    IMAGE_TOPIC(true, "21", "💌토픽 전송💌", "토픽이 전송되었습니다.", false, true, false),
+    AUDIO_TOPIC(true, "22", "💌토픽 전송💌", "토픽이 전송되었습니다.", false, true, false);
 
     private final boolean inChat;
     private final String type;

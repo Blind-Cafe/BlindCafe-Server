@@ -201,7 +201,8 @@ public class MatchingService {
         List<MatchingListResponse.RoomHistory> sortedMatchingList = new ArrayList<>();
         for (Long mid: matchingIds) {
             // 최근 메시지 내용, 시간 조회
-            Message message = messageRepository.findFirstByMatchingIdOrderByCreatedAtDesc(mid);
+            Message message = messageRepository.findFirstByMatchingIdOrderByCreatedAtDesc(mid.toString());
+
             // 채팅방 접속 기록 조회
             RoomLog log = roomLogRepository.findRoomLogByMatchingId(mid.toString());
             String access = null;

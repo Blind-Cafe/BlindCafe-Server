@@ -2,6 +2,7 @@ package com.example.BlindCafe.dto.response;
 
 import com.example.BlindCafe.domain.notice.Notice;
 import lombok.*;
+import org.springframework.data.domain.Page;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -12,8 +13,12 @@ import java.util.List;
 @NoArgsConstructor
 public class NoticeListResponse {
 
-    private List<NoticeInfo> notices;
+    private Page<NoticeInfo> notices;
 
+    @Getter
+    @Setter
+    @AllArgsConstructor
+    @NoArgsConstructor
     @Builder
     public static class NoticeInfo {
         private Long noticeId;

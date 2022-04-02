@@ -33,7 +33,7 @@ test {
 
 asciidoctor {
 	inputs.dir snippetsDir	// snippets 디렉토리를 입력으로 함
-	dependsOn test			// test task를 의존, 문서 생성 전에 test를 수행
+	// dependsOn test			// test task를 의존, 문서 생성 전에 test를 수행
 }
 
 asciidoctor.doFirst {

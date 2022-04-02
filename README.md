@@ -1,9 +1,9 @@
-# Blind Cafe Server
+# <img height="23px" width="23px" src="https://user-images.githubusercontent.com/59307414/161243663-3b7e20ac-a485-4ce0-9b25-6f636d180b0e.png"> Blind Cafe Server
 
 <div align="center">
 <img src="https://user-images.githubusercontent.com/59307414/161209758-c93ed073-0c40-479f-ada5-5f417ed4ff83.png" width="300" />
 <br>
-<a href="www.blindcafe.me/" target="_blank">www.blindcafe.me</a>
+<a href="https://www.blindcafe.me/" target="_blank">https://www.blindcafe.me</a>
 </div>
 
 ## 프로젝트 개요
@@ -12,6 +12,7 @@
 | 기간 |2021.09. ~ 2021.12. / 현재 업데이트 진행 중|
 | 구성 |Planner 1명, Designer 1명, Backend 1명, Frontend(AOS, iOS) 2명<br>中 **Backend** 참여|
 | 소개 |상대방의 정보를 알지 못한 채 관심사를 바탕으로<br>매칭된 상대방과 3일간 채팅을 진행하는 데이트 매칭 애플리케이션|
+
 <br>
 
 ## 프로젝트 소개
@@ -25,7 +26,8 @@
 > - 3일 간의 대화가 즐거웠거나 상대방이 더욱 궁금하다면 자신의 프로필을 공개하고 상대방과 프로필을 교환하세요. 프로필 교환에 성공하면 추가적인 대화를 이어 할 수 있습니다.
 > - 프로필 교환에 성공할 경우 입장 시 선택했던 음료수의 뱃지를 획득할 수 있습니다.
 > - 상대방과 인연이 아니라고 생각이 드시나요? '그만 연락하고 싶어요'란 말을 하지 못해 애매하게 대화를 이어간 적 있나요? 저희 카페에서는 대화를 끝내고 싶은 이유를 선택하고 방을 나가기만 하면 됩니다.
-    <br>
+
+<br>
 
 ## 사용 기술
 ### Application
@@ -42,14 +44,17 @@
 - Mongo DB Atlas
 - Firebase Cloud Messaging
 - Nginx
-  <br>
+
+<br>
 
 ## 구성도
 > *작성 중입니다.*
+
 <br>
 
 ## 기능 설명
 > *작성 중입니다.*
+
 <br>
 
 ## 배포
@@ -75,6 +80,7 @@
       profiles:
         group:
           "local": "local, common"
+          "dev": "dev, common"
           "prod": "prod, common"
     
     ---
@@ -94,6 +100,24 @@
       data:
         mongodb:
           uri: {Local Mongo DB URL}
+    
+    ---
+  
+    spring:
+      config:
+        activate:
+          on-profile: dev
+      datasource:
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        url: {Dev RDBMS(MySQL) URL}
+        username: {Dev RDBMS(MySQL) Username}
+        password: {Dev RDBMS(MySQL) 비밀번호}
+      redis:
+        host: {Dev Redis URL}
+        port: {Dev Redis PORT}
+      data:
+        mongodb:
+          uri: {Dev Mongo DB URL}
     
     ---
     
@@ -177,19 +201,25 @@
       key1: {JWT 시그니처 1}
       key2: {JWT 시그니처 2}
       key3: {JWT 시그니처 3}
+      sample-token: {Security 필터 적용 후 테스트할 경우 Access token}
     ```
 </div>
 </details>
 
 - `/src/main/resources/firebase`에 Firebase Key 파일 `blind-cafe-firebase-key.json`을 추가합니다.
+
 <br>
 
 ## 결과물
-> *작성 중입니다.*
+### API
+- [API 명세서](https://www.blindcafe.me/docs)
+
+
 <br>
 
 ## 회고
 > *작성 중입니다.*
+
 <br>
 
 ## 관련

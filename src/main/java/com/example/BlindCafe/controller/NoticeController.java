@@ -30,11 +30,11 @@ public class NoticeController {
     @GetMapping()
     public ResponseEntity<NoticeListResponse> getGroupNotices(
             Authentication authentication,
-            @RequestParam(value = "page", defaultValue = "-1") int page,
-            @RequestParam(value = "offset", defaultValue = "0") Long offset
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "50") int size
     ) {
         log.info("GET /api/notice");
-        return ResponseEntity.ok(noticeService.getGroupNotices(getUid(authentication), page, offset));
+        return ResponseEntity.ok(noticeService.getGroupNotices(getUid(authentication), page, size));
     }
 
     /**
