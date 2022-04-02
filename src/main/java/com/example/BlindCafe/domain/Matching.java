@@ -133,7 +133,7 @@ public class Matching extends BaseTimeEntity {
     public boolean exchangeProfile() {
         AtomicBoolean status = new AtomicBoolean(true);
         this.getUserMatchings().forEach(um -> {
-            if (!um.getIsAcceptExchangeProfile())
+            if (um.getIsAcceptExchangeProfile() == null || !um.getIsAcceptExchangeProfile())
                 status.set(false);
         });
         this.isExchangeProfile = status.get();

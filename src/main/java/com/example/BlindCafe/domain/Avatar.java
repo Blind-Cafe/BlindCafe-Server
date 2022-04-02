@@ -12,12 +12,12 @@ import static javax.persistence.FetchType.*;
 @Getter
 @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "profile_image")
+@Table(name = "avatar")
 public class Avatar extends BaseTimeEntity {
 
     @Id
     @GeneratedValue
-    @Column(name = "profile_image_id")
+    @Column(name = "avatar_id")
     private Long id;
 
     @ManyToOne(fetch = LAZY)

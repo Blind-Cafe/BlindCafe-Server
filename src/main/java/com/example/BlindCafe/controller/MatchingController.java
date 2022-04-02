@@ -2,6 +2,7 @@ package com.example.BlindCafe.controller;
 
 import com.example.BlindCafe.dto.request.ExchangeProfileRequest;
 import com.example.BlindCafe.dto.request.SelectDrinkRequest;
+import com.example.BlindCafe.dto.request.TopicRequest;
 import com.example.BlindCafe.dto.response.MatchingDetailResponse;
 import com.example.BlindCafe.dto.response.MatchingListResponse;
 import com.example.BlindCafe.service.MatchingService;
@@ -80,10 +81,10 @@ public class MatchingController {
     /**
      * 토픽 가져오기
      */
-    @GetMapping("/{matchingId}/topic")
-    public ResponseEntity<Void> getTopic(@PathVariable Long matchingId) {
-        log.info("GET /api/matching/{}/topic", matchingId);
-        matchingService.getTopic(matchingId);
+    @PostMapping("/topic")
+    public ResponseEntity<Void> getTopic(@Valid @RequestBody TopicRequest request) {
+        log.info("POST /api/matching/topic");
+        matchingService.getTopic(request.getMatchingId());
         return ResponseEntity.ok().build();
     }
 
