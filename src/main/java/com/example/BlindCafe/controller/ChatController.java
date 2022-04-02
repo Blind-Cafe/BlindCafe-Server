@@ -7,7 +7,6 @@ import com.example.BlindCafe.service.ChatService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -30,9 +29,8 @@ public class ChatController {
     /**
      * 이미지, 비디오, 오디오 파일 전송
      */
-    @PostMapping("/api/chat/matching/{mid}")
+    @PostMapping("/api/chat/matching")
     public ResponseEntity<Void> sendFileMessage(
-            @PathVariable(value = "mid") String mid,
             @RequestParam String matchingId,
             @RequestParam String senderId,
             @RequestParam String senderName,
@@ -40,8 +38,8 @@ public class ChatController {
             @RequestParam MultipartFile file
     ) {
         FileMessageDto fileMessage = new FileMessageDto(matchingId, senderId, senderName, type, file);
-        MessageDto message = chatService.upload(mid, fileMessage);
-        chatService.publish(mid, message);
+        MessageDto message = chatService.upload(matchingId, fileMessage);
+        chatService.publish(matchingId, message);
         return ResponseEntity.ok().build();
     }
 

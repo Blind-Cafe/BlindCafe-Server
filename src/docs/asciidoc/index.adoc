@@ -16,9 +16,10 @@ creadted by Heedong Kim;
 == Auth (인증)
 [[회원가입]]
 === 회원가입
-- 로그인과 동일하게 `api/auth/login`에 요청하지만 `HTTP status code`가  `201`입니다.
-- 온보딩을 거치지 않은 경우 또한 `201`로 리턴됩니다.
+- 로그인과 동일하게 `api/auth/login` 에 요청하지만 `HTTP status code` 가  `201` 입니다.
+- 온보딩을 거치지 않은 경우 또한 `201` 로 리턴됩니다.
 
+==== URI : `POST /api/auth/login`
 
 operation::auth/join[snippets='request-fields,http-request,response-fields,response-body,http-response']
 
@@ -27,10 +28,15 @@ operation::auth/join[snippets='request-fields,http-request,response-fields,respo
 === 로그인
 - 회원가입과 동일하게 `api/auth/login`에 요청하지만 `HTTP status code`가  `200`입니다.
 
+==== URI : `POST /api/auth/login`
+
 operation::auth/login[snippets='request-fields,http-request,response-fields,response-body,http-response']
 
 [[토큰-갱신]]
 === 엑세스 토큰 갱신
+
+==== URI : `POST /api/auth/refresh`
+
 operation::auth/refresh[snippets='request-fields,request-body,http-request,response-fields,response-body,http-response']
 
 
@@ -38,90 +44,263 @@ operation::auth/refresh[snippets='request-fields,request-body,http-request,respo
 
 [[전화번호-중복-확인]]
 === 전화번호 중복 확인
+
+==== URI : `POST /api/user/phone-check`
+
 operation::user/duplicate-phone[snippets='request-headers,request-fields,request-body,http-request,response-fields,response-body,http-response']
 
 
 [[유저-추가-정보-입력]]
 === 유저 추가 정보 입력 - 온보딩
+
+==== URI : `POST /api/user`
+
 operation::user/add-user-info[snippets='request-headers,request-fields,request-body,http-request,response-fields,response-body,http-response']
 
 
 [[마이페이지]]
 === 마이페이지 - 사용자 정보 조회
+
+==== URI : `GET /api/user`
+
 operation::user/my-page[snippets='request-headers,request-body,http-request,response-fields,response-body,http-response']
 
 [[프로필-수정]]
 === 사용자 프로필 수정
+
+==== URI : `PUT /api/user`
+
 operation::user/edit-profile[snippets='request-headers,request-fields,request-body,http-request,response-fields,response-body,http-response']
 
 [[관심사-수정]]
 === 관심사 수정
+
+==== URI : `PUT /api/user/interest`
+
 operation::user/edit-interest[snippets='request-headers,request-fields,request-body,http-request,response-body,http-response']
 
 [[프로필-이미지-조회]]
 === 프로필 이미지 리스트 조회
-operation::user/avatar-list[snippets='request-headers,request-body,http-request,response-fields,response-body,http-response']
+
+==== URI : `GET /api/user/{id}/avatar`
+
+operation::user/avatar-list[snippets='request-headers,path-parameters,request-body,http-request,response-fields,response-body,http-response']
 
 [[프로필-이미지-수정]]
 === 프로필 이미지 업로드/수정
-operation::user/avatar-upload[snippets='request-headers,request-parameters,request-parts,http-request,response-body,http-response']
 
+==== URI : `POST /api/user/avatar`
+
+operation::user/avatar-upload[snippets='request-headers,request-parameters,request-parts,http-request,response-body,http-response']
 
 [[프로필-이미지-삭제]]
 === 프로필 이미지 삭제
-operation::user/avatar-delete[snippets='request-headers,request-parameters,request-body,http-request,response-fields,response-body,http-response']
 
+==== URI : `DELETE /api/user/avatar?seq={sequence}`
+
+operation::user/avatar-delete[snippets='request-headers,request-parameters,request-body,http-request,response-fields,response-body,http-response']
 
 [[목소리-설정]]
 === 사용자 목소리 설정
+
+==== URI : `POST /api/user/voice`
+
 operation::user/voice-upload[snippets='request-headers,request-parts,request-body,http-request,response-body,http-response']
 
 [[목소리-삭제]]
 === 사용자 목소리 삭제
-operation::user/voice-delete[snippets='request-headers,request-body,http-request,response-body,http-response']
 
+==== URI : `DELETE /api/user/voice`
+
+operation::user/voice-delete[snippets='request-headers,request-body,http-request,response-body,http-response']
 
 [[탈퇴]]
 === 탈퇴
+
+==== URI : `DELETE /api/user?reason={id}`
+
 operation::user/retire[snippets='request-headers,request-body,http-request,response-fields,response-body,http-response']
 
 [[상대방-조회]]
 === 상대방 프로필 조회
-operation::user/profile[snippets='request-headers,request-body,http-request,response-fields,response-body,http-response']
+
+==== URI : `GET /api/user/{id}/profile`
+
+operation::user/profile[snippets='request-headers,path-parameters,request-body,http-request,response-fields,response-body,http-response']
 
 [[건의사항-작성]]
 === 건의사항 작성하기
+
+==== URI : `POST /api/user/suggestion`
+
 operation::user/suggestion[snippets='request-headers,request-parameters,request-parts,request-body,http-request,response-body,http-response']
 
 [[신고하기]]
 === 신고하기
+
+==== URI : `POST /api/user/report`
+
 operation::user/report-create[snippets='request-headers,request-fields,request-body,http-request,response-body,http-response']
 
 
 [[신고-조회]]
 === 신고내역 조회하기
+
+==== URI : `GET /api/user/report?page=0&size=50`
+
 operation::user/report-select[snippets='request-headers,request-parameters,request-body,http-request,response-fields,response-body,http-response']
 
 == Home (홈)
 [[홈]]
-=== 홈 - 메인페이지
+=== 홈
+
+==== URI : `GET /api/main`
+
+operation::main/home[snippets='request-headers,request-body,http-request,response-fields,response-body,http-response']
 
 == Matching (매칭)
 [[매칭-요청]]
 === 매칭 요청
 
+==== URI : `POST /api/matching`
+
+operation::matching/request[snippets='request-headers,request-body,http-request,response-body,http-response']
+
 [[매칭-요청-취소]]
 === 매칭 요청 취소
 
+==== URI : `DELETE /api/matching`
+
+operation::matching/cancel[snippets='request-headers,request-body,http-request,response-body,http-response']
+
+[[채팅방-리스트-조회]]
+=== 채팅방 리스트 조회
+- `blind` : 3일 채팅방
+- `bright` : 7일 채팅방
+- `blind`와 `bright`의 fields type은 동일하고, 내부에 존재하는 `blind`필드만 3일 채팅의 경우 `true`, 7일 채팅의 경우 `false` 입니다.
+
+==== URI : `GET /api/matching`
+
+operation::matching/list[snippets='request-headers,request-body,http-request,response-fields,response-body,http-response']
+
+[[채팅방-정보-조회]]
+=== 채팅방 정보 조회
+
+==== URI : `GET /api/matching/2`
+
+operation::matching/info[snippets='request-headers,request-body,http-request,response-fields,response-body,http-response']
+
+[[음료수-선택]]
+=== 음료수 선택
+
+==== URI : `POST /api/matching/drink`
+
+operation::matching/drink[snippets='request-headers,request-body,http-request,response-body,http-response']
+
+
+[[토픽-조회]]
+=== 토픽 가져오기
+
+==== URI : `POST /api/matching/topic`
+
+operation::matching/topic[snippets='request-headers,request-body,http-request,response-body,http-response']
+
+[[프로필-교환]]
+=== 프로필 교환
+
+==== URI : `POST /api/matching/exchange`
+
+operation::matching/exchange[snippets='request-headers,request-body,http-request,response-body,http-response']
+
+[[채팅방-나가기]]
+=== 채팅방 나가기
+
+==== URI : `DELETE /api/matching/2?reason=1`
+
+operation::matching/leave[snippets='request-headers,path-parameters,request-parameters,request-body,http-request,response-body,http-response']
+
 == Chat (채팅)
+[[웹소켓 연결]]
+
+- WebSokcet Connect Address : `https://www.blindcafe.me/ws`
+- 웹소켓 연결 시 Header에 `token`이라는 이름으로 본인의 엑세스 토큰을 포함시킵니다.
+- token의 엑세스 토큰 값이 비어있거나 유효하지 않은 경우 웹소켓 연결에 실패합니다.
+
+[[메시지-구독]]
+=== 메시지 구독
+- 채팅방 Subscribe : `/topic/chat/matching/{matchingId}`
+- 사용자 Subscribe : `/topic/chat/user/{userId}`
+- 접속 시 WebSocket을 연결하고, 가지고 있는 본인의 사용자 ID를 사용하여 사용자 토픽(`/topic/chat/user/{userId}`)을 구독합니다.
+- 채팅방 입장 시 채팅방 토픽(`/topic/chat/matching/{matchingId}`)에 대해 subscribe를 진행합니다.
+- 채팅방 퇴장 시 채팅방 토픽에 대해 unsubscribe와 함께 Header에 `matching`이라는 이름으로 구독 해제한 `매칭 ID`를 포함합니다. (세션을 통해 어떤 사용자가 구독을 해제한지 알 수 있지만 사용자 토픽에 대해 구독이 해제되었는지, 채팅방 토피에 대해 구독을 해제했는지 구분하기 위해 클라이언트 측에서 header에 값을 포함해줘야 합니다.)
+- 모든 토픽에 대해 구독/발행되는 메시지 타입은 아래와 같습니다.
+
+==== 메시지 타입
+- `messageId` : 메시지 ID
+- `matchingId` : 매칭 ID
+- `senderId`: 사용자 ID (관리자의 경우 `0`)
+- `senderName`: 사용자 닉네임 (관리자의 경우 `admin`)
+- `type`: 메시지 타입
+```
+- "1" : 텍스트
+- "2" : 사진
+- "3" : 오디오
+- "4" : 비디오
+- "5" : 프로필 교환 질문 템플릿
+- "6" : 사용자 프로필 전송 템플릿
+```
+- `content`: 메시지 내용
+- `destination`: 목적지, 0이 아닌 경우 숫자의 경우 해당 숫자를 ID로 가진 사용자에게 직접 전송하는 메시지입니다.
+
+- 유의사항
+```
+- type에 맞게 메시지를 수신 또는 전송하면 됩니다.
+- 미디어 파일의 경우 별도의 메시지 전송 API가 있기 때문에 전송은 해당 API를 통해 하시면 됩니다.
+- 메시지의 모든 필드는 문자열(String)으로 작성합니다.
+```
+
+- example
+```json
+{
+    "messageId": "62444fc42398330f597d3681",
+    "matchingId": "2",
+    "senderId": "1",
+    "senderName": "골목대장김희동",
+    "type": "1",
+    "content": "안녕하세요.",
+    "destination": "0"
+}
+```
+
 [[메시지-전송]]
 === 메시지 전송 - 텍스트
+- STOMP `send`(publish) method를 이용하여 메시지를 전송합니다.
+- 메시지 Publish : `/app/chat/message`
+
+```json
+{
+    "matchingId": "2",
+    "senderId": "1",
+    "senderName": "골목대장김희동",
+    "content": "안녕하세요.",
+    "type": "1"
+}
+```
+
 
 [[메시지-전송-미디어]]
 === 메시지 전송 - 미디어 파일
 
+==== URI : `POST /api/chat/matching`
+
+operation::chat/send-file[snippets='request-headers,request-parameters,request-parts,http-request,response-body,http-response']
+
 [[메시지-조회]]
 === 채팅방 메시지 조회
+
+==== URI : `GET /api/chat/matching/2?page=0&size=50`
+
+operation::chat/message[snippets='request-headers,request-parameters,request-body,http-request,response-fields,response-body,http-response']
 
 == Notification (알림)
 [[알림-설정]]

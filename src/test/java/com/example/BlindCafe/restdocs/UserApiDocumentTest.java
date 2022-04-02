@@ -207,7 +207,7 @@ public class UserApiDocumentTest extends ApiDocumentTest {
         mockMvc.perform(
                 delete("/api/user/avatar")
                         .header("Authorization", token)
-                        .param("seq", "1")
+                        .param("seq", "3")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andDo(print())
