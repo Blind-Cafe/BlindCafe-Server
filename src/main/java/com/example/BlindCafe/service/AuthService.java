@@ -216,7 +216,7 @@ public class AuthService {
     public RefreshTokenResponse refresh(RefreshTokenRequest request) {
         String uid;
         try {
-            uid = JwtUtils.getUsedId(request.getRefreshToken());
+            uid = JwtUtils.getUsedId("Bearer " + request.getRefreshToken());
             ValueOperations<String, String> valueOperations = redisTemplate.opsForValue();
             String refreshToken = valueOperations.get(JwtProperties.REFRESH_TOKEN_PREFIX + uid);
             if (!request.getRefreshToken().equals(refreshToken))
