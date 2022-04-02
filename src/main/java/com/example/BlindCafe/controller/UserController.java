@@ -188,8 +188,8 @@ public class UserController {
         log.info("POST /api/user/report");
         // 신고하기
         userService.report(getUid(authentication), request);
-        // 방 나가기 처리 - 나가기 사유는 5번으로 고정
-        matchingService.leaveMatching(getUid(authentication), request.getMatchingId(), 5L);
+        // 방 나가기 처리 - 나가기 사유는 4번으로 고정
+        matchingService.leaveMatching(getUid(authentication), request.getMatchingId(), 4L);
         return ResponseEntity.ok().build();
     }
 
