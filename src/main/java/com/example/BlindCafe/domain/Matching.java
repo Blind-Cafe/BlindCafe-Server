@@ -221,7 +221,7 @@ public class Matching extends BaseTimeEntity {
     // 프로필 교환 템플릿 전송
     public boolean sendExchangeProfile(LocalDateTime now) {
         if (this.isContinuous) return false;
-        if (this.expiredTime.isBefore(now)) return false;
+        if (this.expiredTime.isAfter(now)) return false;
         if (this.getPush().isThreeDays()) return false;
         if (!this.isActive) return false;
 

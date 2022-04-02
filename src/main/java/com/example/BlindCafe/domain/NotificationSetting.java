@@ -62,6 +62,7 @@ public class NotificationSetting {
     }
 
     public String getInactivateRooms() {
+        if (this.off == null || this.off.equals("")) return "";
         return this.off.substring(0, this.off.length()-1);
     }
 }
