@@ -5,16 +5,16 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.data.domain.Page;
 
 import java.time.format.DateTimeFormatter;
-import java.util.List;
 
 @Getter
 @Setter
 @AllArgsConstructor
 public class ReportListResponse {
 
-    private List<ReportDto> reports;
+    private Page<ReportDto> reports;
 
     @Getter
     @Setter
@@ -26,7 +26,7 @@ public class ReportListResponse {
 
         public static ReportDto fromEntity(Report report) {
             ReportDto reportDto = new ReportDto();
-            reportDto.setDate(report.getCreatedAt().format(DateTimeFormatter.ofPattern("yyyyMMdd")));
+            reportDto.setDate(report.getCreatedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
             reportDto.setTarget(report.getReported().getNickname());
             reportDto.setReason(report.getReason().getText());
             return reportDto;

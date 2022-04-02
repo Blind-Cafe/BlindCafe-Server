@@ -197,8 +197,12 @@ public class UserController {
      * 신고 내역 조회하기
      */
     @GetMapping("/report")
-    public ResponseEntity<ReportListResponse> getReports(Authentication authentication) {
+    public ResponseEntity<ReportListResponse> getReports(
+            Authentication authentication,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "50") int size
+    ) {
         log.info("GET /api/user/report");
-        return ResponseEntity.ok(userService.getReports(getUid(authentication)));
+        return ResponseEntity.ok(userService.getReports(getUid(authentication), page, size));
     }
 }
