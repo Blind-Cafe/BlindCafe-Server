@@ -1,0 +1,132 @@
+ifndef::snippets[]
+:snippets: ./build/generated-snippets
+endif::[]
+
+# Blind Cafe API Document
+creadted by Heedong Kim;
+:doctype: book
+:icons: font
+:source-highlighter: hightlightjs
+:toc: left
+:toclevels: 2
+:sectlinks:
+:operation-curl-request-title: Example request
+:operation-http-response-title: Example response
+
+== Auth (인증)
+[[회원가입]]
+=== 회원가입
+- 로그인과 동일하게 `api/auth/login`에 요청하지만 `HTTP status code`가  `201`입니다.
+- 온보딩을 거치지 않은 경우 또한 `201`로 리턴됩니다.
+
+
+operation::auth/join[snippets='request-fields,http-request,response-fields,response-body,http-response']
+
+
+[[로그인]]
+=== 로그인
+- 회원가입과 동일하게 `api/auth/login`에 요청하지만 `HTTP status code`가  `200`입니다.
+
+operation::auth/login[snippets='request-fields,http-request,response-fields,response-body,http-response']
+
+[[토큰-갱신]]
+=== 엑세스 토큰 갱신
+operation::auth/refresh[snippets='request-fields,request-body,http-request,response-fields,response-body,http-response']
+
+
+== User (사용자)
+
+[[전화번호-중복-확인]]
+=== 전화번호 중복 확인
+operation::user/duplicate-phone[snippets='request-headers,request-fields,request-body,http-request,response-fields,response-body,http-response']
+
+
+[[유저-추가-정보-입력]]
+=== 유저 추가 정보 입력 - 온보딩
+operation::user/add-user-info[snippets='request-headers,request-fields,request-body,http-request,response-fields,response-body,http-response']
+
+
+[[마이페이지]]
+=== 마이페이지 - 사용자 정보 조회
+operation::user/my-page[snippets='request-headers,request-body,http-request,response-fields,response-body,http-response']
+
+[[프로필-수정]]
+=== 사용자 프로필 수정
+operation::user/edit-profile[snippets='request-headers,request-fields,request-body,http-request,response-fields,response-body,http-response']
+
+[[관심사-수정]]
+=== 관심사 수정
+operation::user/edit-interest[snippets='request-headers,request-fields,request-body,http-request,response-body,http-response']
+
+[[프로필-이미지-조회]]
+=== 프로필 이미지 리스트 조회
+operation::user/avatar-list[snippets='request-headers,request-body,http-request,response-fields,response-body,http-response']
+
+[[프로필-이미지-수정]]
+=== 프로필 이미지 업로드/수정
+operation::user/avatar-upload[snippets='request-headers,request-parameters,request-parts,http-request,response-body,http-response']
+
+
+[[프로필-이미지-삭제]]
+=== 프로필 이미지 삭제
+operation::user/avatar-delete[snippets='request-headers,request-parameters,request-body,http-request,response-fields,response-body,http-response']
+
+
+[[목소리-설정]]
+=== 사용자 목소리 설정
+operation::user/voice-upload[snippets='request-headers,request-parts,request-body,http-request,response-body,http-response']
+
+[[목소리-삭제]]
+=== 사용자 목소리 삭제
+operation::user/voice-delete[snippets='request-headers,request-body,http-request,response-body,http-response']
+
+
+[[탈퇴]]
+=== 탈퇴
+operation::user/retire[snippets='request-headers,request-body,http-request,response-fields,response-body,http-response']
+
+[[상대방-조회]]
+=== 상대방 프로필 조회
+operation::user/profile[snippets='request-headers,request-body,http-request,response-fields,response-body,http-response']
+
+[[건의사항-작성]]
+=== 건의사항 작성하기
+operation::user/suggestion[snippets='request-headers,request-parameters,request-parts,request-body,http-request,response-body,http-response']
+
+[[신고하기]]
+=== 신고하기
+operation::user/report-create[snippets='request-headers,request-fields,request-body,http-request,response-body,http-response']
+
+
+[[신고-조회]]
+=== 신고내역 조회하기
+operation::user/report-select[snippets='request-headers,request-parameters,request-body,http-request,response-fields,response-body,http-response']
+
+== Home (홈)
+[[홈]]
+=== 홈 - 메인페이지
+
+== Matching (매칭)
+[[매칭-요청]]
+=== 매칭 요청
+
+[[매칭-요청-취소]]
+=== 매칭 요청 취소
+
+== Chat (채팅)
+[[메시지-전송]]
+=== 메시지 전송 - 텍스트
+
+[[메시지-전송-미디어]]
+=== 메시지 전송 - 미디어 파일
+
+[[메시지-조회]]
+=== 채팅방 메시지 조회
+
+== Notification (알림)
+[[알림-설정]]
+=== 알림 설정 변경
+
+== Notice (공지)
+[[공지-조회]]
+=== 공지 조회
