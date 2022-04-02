@@ -1,4 +1,4 @@
-create table blindcafe.custom_reason
+create table custom_reason
 (
     custom_reason_id bigint auto_increment primary key,
     created_at datetime not null,
@@ -13,33 +13,33 @@ create table blindcafe.custom_reason
     user_id bigint null
 );
 
-create table blindcafe.drink
+create table drink
 (
     drink_id bigint not null
         primary key,
     name varchar(20) not null
 );
 
-create table blindcafe.hibernate_sequence
+create table hibernate_sequence
 (
     next_val bigint null
 );
 
-create table blindcafe.interest
+create table interest
 (
     interest_id bigint not null
         primary key,
     name varchar(10) not null
 );
 
-create table blindcafe.matching_history
+create table matching_history
 (
     matching_history_id bigint auto_increment
         primary key,
     partners varchar(255) null
 );
 
-create table blindcafe.matching_topic
+create table matching_topic
 (
     matching_topic_id bigint auto_increment
         primary key,
@@ -47,7 +47,7 @@ create table blindcafe.matching_topic
     remain varchar(255) null
 );
 
-create table blindcafe.matching
+create table matching
 (
     matching_id bigint auto_increment
         primary key,
@@ -64,12 +64,12 @@ create table blindcafe.matching
     matching_push_id bigint null,
     matching_topic_id bigint null,
     constraint FK5gxcuypd0waf54i853dfnkjwx
-        foreign key (matching_topic_id) references blindcafe.matching_topic (matching_topic_id),
+        foreign key (matching_topic_id) references matching_topic (matching_topic_id),
     constraint FK6fyxljib734j2m5rek59xp47y
-        foreign key (interest_id) references blindcafe.interest (interest_id)
+        foreign key (interest_id) references interest (interest_id)
 );
 
-create table blindcafe.matching_push
+create table matching_push
 (
     matching_push_id bigint auto_increment
         primary key,
@@ -82,14 +82,14 @@ create table blindcafe.matching_push
     two_days bit not null,
     matching_id bigint null,
     constraint FKjiqkpcxxlmbmaruccuf861iia
-        foreign key (matching_id) references blindcafe.matching (matching_id)
+        foreign key (matching_id) references matching (matching_id)
 );
 
-alter table blindcafe.matching
+alter table matching
     add constraint FK4x12bub76jivgxv5dcn1g358j
-        foreign key (matching_push_id) references blindcafe.matching_push (matching_push_id);
+        foreign key (matching_push_id) references matching_push (matching_push_id);
 
-create table blindcafe.notification_setting
+create table notification_setting
 (
     notification_setting_id bigint auto_increment
         primary key,
@@ -97,7 +97,7 @@ create table blindcafe.notification_setting
     off varchar(255) null
 );
 
-create table blindcafe.reason
+create table reason
 (
     reason_id bigint auto_increment
         primary key,
@@ -106,7 +106,7 @@ create table blindcafe.reason
     text varchar(255) null
 );
 
-create table blindcafe.retired_user
+create table retired_user
 (
     retired_user_id bigint not null
         primary key,
@@ -124,7 +124,7 @@ create table blindcafe.retired_user
     social_type varchar(10) not null
 );
 
-create table blindcafe.suggestion
+create table suggestion
 (
     suggestion_id bigint auto_increment
         primary key,
@@ -136,14 +136,14 @@ create table blindcafe.suggestion
     user_id bigint null
 );
 
-create table blindcafe.ticket
+create table ticket
 (
     ticket_id bigint auto_increment
         primary key,
     count int not null
 );
 
-create table blindcafe.topic
+create table topic
 (
     dtype varchar(31) not null,
     topic_id bigint not null
@@ -154,7 +154,7 @@ create table blindcafe.topic
     subject varchar(255) null
 );
 
-create table blindcafe.user
+create table user
 (
     user_id bigint auto_increment
         primary key,
@@ -183,14 +183,14 @@ create table blindcafe.user
     constraint UK_m3tiv2iugdximo00e50thjcbh
         unique (social_id),
     constraint FK6r48iqeribkca61g52v7jj4xm
-        foreign key (ticket_id) references blindcafe.ticket (ticket_id),
+        foreign key (ticket_id) references ticket (ticket_id),
     constraint FKejlkvmtwoa97dsrn3u15865o8
-        foreign key (matching_history_id) references blindcafe.matching_history (matching_history_id),
+        foreign key (matching_history_id) references matching_history (matching_history_id),
     constraint FKnxr20l3vgstqcw9o1afvdm1l6
-        foreign key (notification_setting_id) references blindcafe.notification_setting (notification_setting_id)
+        foreign key (notification_setting_id) references notification_setting (notification_setting_id)
 );
 
-create table blindcafe.notice
+create table notice
 (
     dtype varchar(31) not null,
     notice_id bigint auto_increment
@@ -201,10 +201,10 @@ create table blindcafe.notice
     title varchar(255) null,
     user_id bigint null,
     constraint FKcvf4mh5se36inrxn7xlh2brfv
-        foreign key (user_id) references blindcafe.user (user_id)
+        foreign key (user_id) references user (user_id)
 );
 
-create table blindcafe.profile_image
+create table profile_image
 (
     profile_image_id bigint not null
         primary key,
@@ -215,10 +215,10 @@ create table blindcafe.profile_image
     status varchar(255) null,
     user_id bigint null,
     constraint FK7c5ge678vgxydo2sepdmrj6ge
-        foreign key (user_id) references blindcafe.user (user_id)
+        foreign key (user_id) references user (user_id)
 );
 
-create table blindcafe.report
+create table report
 (
     report_id bigint auto_increment
         primary key,
@@ -229,14 +229,14 @@ create table blindcafe.report
     reported bigint null,
     reporter bigint null,
     constraint FK7ak4xcyfux0igvm1j5cqud5d8
-        foreign key (reason_id) references blindcafe.reason (reason_id),
+        foreign key (reason_id) references reason (reason_id),
     constraint FKf57jf06r4tjpacaou1uue4xgd
-        foreign key (reported) references blindcafe.user (user_id),
+        foreign key (reported) references user (user_id),
     constraint FKq4q3ntts6prfw5n852srs70bn
-        foreign key (reporter) references blindcafe.user (user_id)
+        foreign key (reporter) references user (user_id)
 );
 
-create table blindcafe.user_drink
+create table user_drink
 (
     user_drink_id bigint not null
         primary key,
@@ -245,12 +245,12 @@ create table blindcafe.user_drink
     drink_id bigint null,
     user_id bigint null,
     constraint FKerb2327ue72hwui86fkehj500
-        foreign key (drink_id) references blindcafe.drink (drink_id),
+        foreign key (drink_id) references drink (drink_id),
     constraint FKp6qtsfb41er7yppx5w8hetwlu
-        foreign key (user_id) references blindcafe.user (user_id)
+        foreign key (user_id) references user (user_id)
 );
 
-create table blindcafe.user_interest
+create table user_interest
 (
     user_interest_id bigint not null
         primary key,
@@ -260,12 +260,12 @@ create table blindcafe.user_interest
     interest_id bigint null,
     user_id bigint null,
     constraint FKb2c20k2dqknrm5t337typ3s1b
-        foreign key (interest_id) references blindcafe.interest (interest_id),
+        foreign key (interest_id) references interest (interest_id),
     constraint FKdi9smphhv09dottb2sc1j3k64
-        foreign key (user_id) references blindcafe.user (user_id)
+        foreign key (user_id) references user (user_id)
 );
 
-create table blindcafe.user_matching
+create table user_matching
 (
     user_matching_id bigint auto_increment
         primary key,
@@ -278,9 +278,9 @@ create table blindcafe.user_matching
     matching_id bigint null,
     user_id bigint null,
     constraint FKj3q8ldn7yinpnhmn4qh3b8tiv
-        foreign key (drink_id) references blindcafe.drink (drink_id),
+        foreign key (drink_id) references drink (drink_id),
     constraint FKl7gejlkdtjoe3p2n18i9rv9pk
-        foreign key (user_id) references blindcafe.user (user_id),
+        foreign key (user_id) references user (user_id),
     constraint FKmvmym7ftbi2j5eabgul9xuiqc
-        foreign key (matching_id) references blindcafe.matching (matching_id)
+        foreign key (matching_id) references matching (matching_id)
 );

@@ -1,4 +1,4 @@
-package com.example.BlindCafe;
+package com.example.BlindCafe.restdocs.utils;
 
 import org.springframework.restdocs.operation.preprocess.OperationRequestPreprocessor;
 import org.springframework.restdocs.operation.preprocess.OperationResponsePreprocessor;

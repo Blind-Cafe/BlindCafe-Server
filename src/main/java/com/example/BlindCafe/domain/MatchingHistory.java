@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import javax.persistence.*;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -42,6 +43,7 @@ public class MatchingHistory {
 
     // 매칭 히스토리 불러오기
     public List<Long> getMatchingPartners() {
+        if (this.partners.equals("")) return new ArrayList<>();
         return Arrays.stream(this.partners.split(","))
                 .map(Long::parseLong)
                 .collect(Collectors.toList());

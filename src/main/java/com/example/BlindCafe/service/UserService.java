@@ -10,6 +10,10 @@ import com.example.BlindCafe.repository.*;
 import com.example.BlindCafe.utils.AwsS3Util;
 import com.example.BlindCafe.utils.MailUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -297,14 +301,13 @@ public class UserService {
     /**
      * 신고 내역 조회하기
      */
-    public ReportListResponse getReports(Long userId) {
+    public ReportListResponse getReports(Long userId, int page, int size) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BlindCafeException(EMPTY_USER));
 
-        return new ReportListResponse(
-                user.getMyReport().stream()
-                    .sorted(Comparator.comparing(Report::getCreatedAt).reversed())
-                    .map(ReportListResponse.ReportDto::fromEntity)
-                    .collect(Collectors.toList()));
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Page<Report> pages = reportRepository.findByReporter(user, pageable);
+
+        return new ReportListResponse(pages.map(ReportListResponse.ReportDto::fromEntity));
     }
 }

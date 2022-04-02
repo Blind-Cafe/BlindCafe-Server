@@ -2,7 +2,7 @@ plugins {
 	id 'org.springframework.boot' version '2.5.5'
 	id 'io.spring.dependency-management' version '1.0.11.RELEASE'
 	id 'java'
-	id "org.asciidoctor.jvm.convert" version "3.3.2"
+	id "org.asciidoctor.jvm.convert" version "3.3.2"	//asciidoctor plugin 추가
 }
 
 group = 'com.example'
@@ -23,15 +23,43 @@ repositories {
 }
 
 ext {
-	snippetsDir = file('build/generated-snippets')
+	snippetsDir = file('build/generated-snippets')	// snippets 파일을 저장할 디렉토리 생성
+}
+
+test {
+	useJUnitPlatform()
+	outputs.dir snippetsDir	// 생성된 파일을 미리 생성한 디렉토리(build/generated-snippets)에 저장
+}
+
+asciidoctor {
+	inputs.dir snippetsDir	// snippets 디렉토리를 입력으로 함
+	dependsOn test			// test task를 의존, 문서 생성 전에 test를 수행
+}
+
+asciidoctor.doFirst {
+	delete file('src/main/resources/templates/docs')	// 기존 파일 삭제
 }
 
 bootJar {
-	dependsOn asciidoctor
-	copy {
-		from "${asciidoctor.outputDir}"
+	// processResources { duplicatesStrategy = org.gradle.api.file.DuplicatesStrategy.INCLUDE }
+	dependsOn asciidoctor						// asciidoctor를 의존, bootJar 생성 전에 asciidoctor task를 수행
+	from("build/docs/asciidoc"){ 	// 문서 생성 시, Jar 파일 내 static/docs에 복사되도록 함
 		into 'BOOT-INF/classes/static/docs'
 	}
+}
+
+task copyDocument(type: Copy) {
+	dependsOn asciidoctor
+	from file("build/docs/asciidoc")
+	into file("src/main/resources/templates/docs")
+}
+
+build {
+	dependsOn copyDocument
+}
+
+clean {
+	delete file('src/main/generated')
 }
 
 dependencies {
@@ -89,32 +117,4 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'
 	testImplementation 'org.springframework.security:spring-security-test'
-}
-
-test {
-	useJUnitPlatform()
-	outputs.dir snippetsDir
-}
-
-asciidoctor {
-	inputs.dir snippetsDir
-	dependsOn test
-}
-
-asciidoctor.doFirst {
-	delete file('src/main/resources/static/docs')
-}
-
-task copyDocument(type: Copy) {
-	dependsOn asciidoctor
-	from file("build/docs/asciidoc")
-	into file("src/main/resources/static/docs")
-}
-
-build {
-	dependsOn copyDocument
-}
-
-clean {
-	delete file('src/main/generated')
 }

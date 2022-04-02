@@ -16,7 +16,7 @@ public interface TopicRepository extends JpaRepository<Topic, Long> {
     List<Topic> findSubjectByInterestId(@Param("interestId") Long interestId);
 
     @Query("SELECT s FROM Subject s WHERE s.interestId NOT IN ?1")
-    List<Topic> findSubjectByInterestIdNotIN(List<Long> ids);
+    List<Subject> findSubjectByInterestIdNotIN(List<Long> ids);
 
     @Query(value = "SELECT * FROM topic WHERE dtype = 'I'", nativeQuery = true)
     List<Topic> findImages();
