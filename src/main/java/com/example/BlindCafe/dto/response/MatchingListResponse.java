@@ -65,15 +65,10 @@ public class MatchingListResponse {
             RoomHistory history = new RoomHistory();
             history.setMatchingId(Long.parseLong(message.getMatchingId()));
             String content;
-            if (message.getType().equals(MessageType.TEXT)) {
+            if (message.getType().getBody() != null)
                 content = message.getContent();
-            } else if (message.getType().equals(MessageType.IMAGE)) {
-                content = "사진이 전송되었습니다.";
-            } else if (message.getType().equals(MessageType.AUDIO)) {
-                content = "음성메시지가 전송되었습니다.";
-            } else {
-                content = "메시지가 전송되었습니다.";
-            }
+            else
+                content = message.getType().getBody();
             history.setLatestMessage(content);
             boolean received = false;
             if (access != null) {

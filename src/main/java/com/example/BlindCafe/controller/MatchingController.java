@@ -36,7 +36,7 @@ public class MatchingController {
     /**
      * 매칭 취소하기
      */
-    @PostMapping("/cancel")
+    @DeleteMapping()
     public ResponseEntity<Void> cancelMatching(Authentication authentication) {
         log.info("POST /api/matching/cancel");
         matchingService.cancelMatching(getUid(authentication));

@@ -32,7 +32,7 @@ public class MatchingHistory {
 
     public static MatchingHistory create() {
         MatchingHistory history = new MatchingHistory();
-        history.setPartners("");
+        history.setPartners("0");
         return history;
     }
 
@@ -43,7 +43,7 @@ public class MatchingHistory {
 
     // 매칭 히스토리 불러오기
     public List<Long> getMatchingPartners() {
-        if (this.partners.equals("")) return new ArrayList<>();
+        if (this.partners.equals("0")) return new ArrayList<>();
         return Arrays.stream(this.partners.split(","))
                 .map(Long::parseLong)
                 .collect(Collectors.toList());
