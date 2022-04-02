@@ -91,19 +91,20 @@ public class TopicService {
     // 나머지 관심사에서 섞어서 뽑기
     private List<Topic> getTopicByInterestNotIn(List<Long> ids) {
         List<Topic> topics = new ArrayList<>();
-        Map<Long, List<Topic>> topicMap = new HashMap<>();
+        Map<Long, List<Subject>> topicMap = new HashMap<>();
 
-        List<Topic> findTopics = topicRepository.findSubjectByInterestIdNotIN(ids);
+        List<Subject> findTopics = topicRepository.findSubjectByInterestIdNotIN(ids);
         // 관심사 id 기준으로 map에 저장
         findTopics.forEach(ft -> {
-            List<Topic> tempTopicList = topicMap.getOrDefault(ft.getId(), new ArrayList<>());
+            List<Subject> tempTopicList = topicMap.getOrDefault(ft.getInterestId(), new ArrayList<>());
             tempTopicList.add(ft);
-            topicMap.put(ft.getId(), tempTopicList);
+            topicMap.put(ft.getInterestId(), tempTopicList);
         });
 
         // 관심사 id 기준으로 섞어서 입력받은 수만큼 추출
         topicMap.keySet().forEach(key ->
                 topics.addAll(getTopicsWithShuffle(topicMap.get(key), TOPIC_OTHER_QUANTITY)));
+
         return topics;
     }
 
@@ -118,9 +119,10 @@ public class TopicService {
     }
 
     // 셔플 후 원하는 수량만큼 뽑기
-    private List<Topic> getTopicsWithShuffle(List<Topic> topics, int quantity) {
-        Collections.shuffle(topics);
-        return topics.subList(0, quantity);
+    private List<Topic> getTopicsWithShuffle(Collection<? extends Topic> topics, int quantity) {
+        List<Topic> topicList = new ArrayList<>(topics);
+        Collections.shuffle(topicList);
+        return topicList.subList(0, quantity);
     }
 
     /**

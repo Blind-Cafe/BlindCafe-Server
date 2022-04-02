@@ -50,13 +50,13 @@ public class MatchingService {
      */
     @Transactional
     public void createMatching(Long userId) {
-        
-        // 매칭 요청 중인 경우 핸들링
-        if (isMatchingRequest(userId))
-            throw new BlindCafeException(ALREADY_MATCHING_REQUEST);
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BlindCafeException(EMPTY_USER));
+
+        // 매칭 요청 중인 경우 핸들링
+        if (isMatchingRequest(user))
+            throw new BlindCafeException(ALREADY_MATCHING_REQUEST);
 
         // 사용자 관심사 조회
         List<Long> interests = user.getMainInterests().stream()
@@ -70,8 +70,9 @@ public class MatchingService {
         List<Long> partners = matchingHistoryRepository.findByUserId(userId).getMatchingPartners();
 
         // 매칭 풀에서 매칭 전적이 없는 사용자들의 매칭 요청 조회
+        String partnerIds = stringFromList(partners);
         List<UserMatching> ableMatchingRequests =
-                userMatchingRepository.findAbleMatchingRequests(partners).stream()
+                userMatchingRepository.findAbleMatchingRequests(partnerIds).stream()
                     .filter(um -> isValidGender(um, user)) // 성별 필터링
                     .collect(Collectors.toList());
 
@@ -107,6 +108,7 @@ public class MatchingService {
         if (similarInterest != null) {
             // 공통 관심사가 있는 경우
             topic = topicService.makeTopicBySimilarInterest(similarInterest.getId());
+            // 공통 관심사명
             interestName = similarInterest.getName();
         } else {
             // 관심사가 다른 경우
@@ -116,12 +118,23 @@ public class MatchingService {
         }
 
         // 매칭 생성
-        Matching matching = Matching.create(userMatchings, similarInterest, topic);
+        MatchingPush push = MatchingPush.create();
+        Matching matching = Matching.create(userMatchings, similarInterest, topic, push);
         matching = matchingRepository.save(matching);
 
         // 매칭 성공 이벤트 Publish
         MessageDto message = matchingMessageUtil.successMatching(matching.getId(), interestName);
         chatService.publish(String.valueOf(matching.getId()), message);
+    }
+    
+    // 리스트 -> 문자열 변환
+    private String stringFromList(List<Long> ids) {
+        if (ids.size() == 0) return "";
+        StringBuilder sb = new StringBuilder();
+        for (Long id: ids)
+            sb.append(id).append(",");
+        String result = sb.toString();
+        return result.substring(0, result.length()-1);
     }
 
     // 관심사가 일치하는 요청있는지 확인
@@ -162,9 +175,12 @@ public class MatchingService {
      * 채팅방 리스트 조회
      */
     public MatchingListResponse getMatchings(Long userId) {
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BlindCafeException(EMPTY_USER));
         
         // 요청중인 매칭 조회
-        boolean request = isMatchingRequest(userId);
+        boolean request = isMatchingRequest(user);
 
         // 존재하는 매칭 조회
         List<Matching> matchings = userMatchingRepository.findMatchingByUserId(userId).stream()
@@ -359,16 +375,16 @@ public class MatchingService {
      * 매칭권 관련
      */
     // 현재 가지고 있는 매칭권 수 조회
-    public int getTicketCount(Long userId) {
-        Ticket ticket = ticketRepository.findByUserId(userId)
+    public int getTicketCount(User user) {
+        Ticket ticket = ticketRepository.findByUser(user)
                 .orElseThrow(() -> new BlindCafeException(EMPTY_USER));
         return ticket.getCount();
     }
 
     // 현재 요청 중인 매칭이 있는지 조회
-    public boolean isMatchingRequest(Long userId) {
+    public boolean isMatchingRequest(User user) {
         Optional<UserMatching> matchingRequest =
-                userMatchingRepository.findMatchingRequestByUserId(userId);
+                userMatchingRepository.findMatchingRequestByUserId(user.getId());
         return matchingRequest.isPresent();
     }
 

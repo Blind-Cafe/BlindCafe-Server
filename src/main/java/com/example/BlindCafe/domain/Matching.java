@@ -32,11 +32,11 @@ public class Matching extends BaseTimeEntity {
     @JoinColumn(name = "interest_id")
     private Interest interest;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "matching_push_id")
     private MatchingPush push;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "matching_topic_id")
     private MatchingTopic topic;
 
@@ -79,14 +79,14 @@ public class Matching extends BaseTimeEntity {
     public static Matching create(
             List<UserMatching> userMatchings,
             Interest interest,
-            MatchingTopic topic
+            MatchingTopic topic,
+            MatchingPush push
     ) {
         LocalDateTime now = LocalDateTime.now();
         Matching matching = new Matching();
         matching.setUserMatchings(userMatchings);
         matching.setInterest(interest);
         // 푸시
-        MatchingPush push = new MatchingPush();
         matching.setPush(push);
         // 토픽 생성
         matching.setTopic(topic);
@@ -94,6 +94,7 @@ public class Matching extends BaseTimeEntity {
         matching.setBeginTime(now);
         matching.setExpiredTime(now.plusDays(3));
         matching.setIsContinuous(false);
+        matching.setIsOpenProfile(false);
         matching.setIsExchangeProfile(false);
         matching.setActive(true);
         matching.setStatus(MatchingStatus.MATCHING);

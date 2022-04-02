@@ -40,7 +40,7 @@ public class MatchingTopic {
         Collections.shuffle(topics);
         StringBuilder sb = new StringBuilder();
         for (int i=0; i<topics.size(); i++) {
-            sb.append(topics.get(i).toString());
+            sb.append(topics.get(i).getId().toString());
             if (i != topics.size()-1)
                 sb.append(",");
         }
