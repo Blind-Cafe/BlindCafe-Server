@@ -14,31 +14,52 @@ creadted by Heedong Kim;
 :operation-http-response-title: Example response
 
 == Auth (인증)
-[[회원가입]]
-=== 회원가입
+[[회원가입-로그인]]
+=== 회원가입&로그인
 - 로그인과 동일하게 `api/auth/login` 에 요청하지만 `HTTP status code` 가  `201` 입니다.
 - 온보딩을 거치지 않은 경우 또한 `201` 로 리턴됩니다.
+- 회원가입과 동일하게 `api/auth/login`에 요청하지만 `HTTP status code`가  `200` 입니다.
 
 ==== URI : `POST /api/auth/login`
 
-operation::auth/join[snippets='request-fields,http-request,response-fields,response-body,http-response']
+===== Request Fields
+include::{snippets}/auth/login/request-fields.adoc[]
 
+===== HTTP Request
+include::{snippets}/auth/login/http-request.adoc[]
 
-[[로그인]]
-=== 로그인
-- 회원가입과 동일하게 `api/auth/login`에 요청하지만 `HTTP status code`가  `200`입니다.
+===== Response Fields
+include::{snippets}/auth/login/response-fields.adoc[]
 
-==== URI : `POST /api/auth/login`
+===== Response Body
+include::{snippets}/auth/login/response-body.adoc[]
 
-operation::auth/login[snippets='request-fields,http-request,response-fields,response-body,http-response']
+===== HTTP Response
+include::{snippets}/auth/login/http-response.adoc[]
+
 
 [[토큰-갱신]]
 === 엑세스 토큰 갱신
 
 ==== URI : `POST /api/auth/refresh`
 
-operation::auth/refresh[snippets='request-fields,request-body,http-request,response-fields,response-body,http-response']
+===== Request Fields
+include::{snippets}/auth/refresh/request-fields.adoc[]
 
+===== Request Body
+include::{snippets}/auth/refresh/request-body.adoc[]
+
+===== HTTP Request
+include::{snippets}/auth/refresh/http-request.adoc[]
+
+===== Response Fields
+include::{snippets}/auth/refresh/response-fields.adoc[]
+
+===== Response Body
+include::{snippets}/auth/refresh/response-body.adoc[]
+
+===== HTTP Response
+include::{snippets}/auth/refresh/http-response.adoc[]
 
 == User (사용자)
 
@@ -47,58 +68,194 @@ operation::auth/refresh[snippets='request-fields,request-body,http-request,respo
 
 ==== URI : `POST /api/user/phone-check`
 
-operation::user/duplicate-phone[snippets='request-headers,request-fields,request-body,http-request,response-fields,response-body,http-response']
+===== Request Header
+include::{snippets}/user/duplicate-phone/request-headers.adoc[]
 
+===== Request Fields
+include::{snippets}/user/duplicate-phone/request-fields.adoc[]
+
+===== Request Body
+include::{snippets}/user/duplicate-phone/request-body.adoc[]
+
+===== HTTP Request
+include::{snippets}/user/duplicate-phone/http-request.adoc[]
+
+===== Response Fields
+include::{snippets}/user/duplicate-phone/response-fields.adoc[]
+
+===== Response Body
+include::{snippets}/user/duplicate-phone/response-body.adoc[]
+
+===== HTTP Response
+include::{snippets}/user/duplicate-phone/http-response.adoc[]
 
 [[유저-추가-정보-입력]]
 === 유저 추가 정보 입력 - 온보딩
 
 ==== URI : `POST /api/user`
 
-operation::user/add-user-info[snippets='request-headers,request-fields,request-body,http-request,response-fields,response-body,http-response']
+===== Request Header
+include::{snippets}/user/add-user-info/request-headers.adoc[]
 
+===== Request Fields
+include::{snippets}/user/add-user-info/request-fields.adoc[]
+
+===== Request Body
+include::{snippets}/user/add-user-info/request-body.adoc[]
+
+===== HTTP Request
+include::{snippets}/user/add-user-info/http-request.adoc[]
+
+===== Response Body
+include::{snippets}/user/add-user-info/response-body.adoc[]
+
+===== HTTP Response
+include::{snippets}/user/add-user-info/http-response.adoc[]
 
 [[마이페이지]]
 === 마이페이지 - 사용자 정보 조회
 
 ==== URI : `GET /api/user`
 
-operation::user/my-page[snippets='request-headers,request-body,http-request,response-fields,response-body,http-response']
+===== Request Header
+include::{snippets}/user/my-page/request-headers.adoc[]
+
+===== Request Body
+include::{snippets}/user/my-page/request-body.adoc[]
+
+===== HTTP Request
+include::{snippets}/user/my-page/http-request.adoc[]
+
+===== Response Fields
+include::{snippets}/user/my-page/response-fields.adoc[]
+
+===== Response Body
+include::{snippets}/user/my-page/response-body.adoc[]
+
+===== HTTP Response
+include::{snippets}/user/my-page/http-response.adoc[]
 
 [[프로필-수정]]
 === 사용자 프로필 수정
 
 ==== URI : `PUT /api/user`
 
-operation::user/edit-profile[snippets='request-headers,request-fields,request-body,http-request,response-fields,response-body,http-response']
+===== Request Header
+include::{snippets}/user/edit-profile/request-headers.adoc[]
+
+===== Request Fields
+include::{snippets}/user/edit-profile/request-fields.adoc[]
+
+===== Request Body
+include::{snippets}/user/edit-profile/request-body.adoc[]
+
+===== HTTP Request
+include::{snippets}/user/edit-profile/http-request.adoc[]
+
+===== Response Fields
+include::{snippets}/user/edit-profile/response-fields.adoc[]
+
+===== Response Body
+include::{snippets}/user/edit-profile/response-body.adoc[]
+
+===== HTTP Response
+include::{snippets}/user/edit-profile/http-response.adoc[]
 
 [[관심사-수정]]
 === 관심사 수정
 
 ==== URI : `PUT /api/user/interest`
 
-operation::user/edit-interest[snippets='request-headers,request-fields,request-body,http-request,response-body,http-response']
+===== Request Header
+include::{snippets}/user/edit-interest/request-headers.adoc[]
+
+===== Request Fields
+include::{snippets}/user/edit-interest/request-fields.adoc[]
+
+===== Request Body
+include::{snippets}/user/edit-interest/request-body.adoc[]
+
+===== HTTP Request
+include::{snippets}/user/edit-interest/http-request.adoc[]
+
+===== Response Body
+include::{snippets}/user/edit-interest/response-body.adoc[]
+
+===== HTTP Response
+include::{snippets}/user/edit-interest/http-response.adoc[]
+
 
 [[프로필-이미지-조회]]
 === 프로필 이미지 리스트 조회
 
 ==== URI : `GET /api/user/{id}/avatar`
 
-operation::user/avatar-list[snippets='request-headers,path-parameters,request-body,http-request,response-fields,response-body,http-response']
+===== Request Header
+include::{snippets}/user/avatar-list/request-headers.adoc[]
+
+===== Request Body
+include::{snippets}/user/avatar-list/request-body.adoc[]
+
+===== HTTP Request
+include::{snippets}/user/avatar-list/http-request.adoc[]
+
+===== Response Fields
+include::{snippets}/user/avatar-list/response-fields.adoc[]
+
+===== Response Body
+include::{snippets}/user/avatar-list/response-body.adoc[]
+
+===== HTTP Response
+include::{snippets}/user/avatar-list/http-response.adoc[]
 
 [[프로필-이미지-수정]]
 === 프로필 이미지 업로드/수정
 
 ==== URI : `POST /api/user/avatar`
 
-operation::user/avatar-upload[snippets='request-headers,request-parameters,request-parts,http-request,response-body,http-response']
+===== Request Header
+include::{snippets}/user/avatar-upload/request-headers.adoc[]
+
+===== Request Parameters
+include::{snippets}/user/avatar-upload/request-parameters.adoc[]
+
+===== Request Parts
+include::{snippets}/user/avatar-upload/request-parts.adoc[]
+
+===== Request Body
+include::{snippets}/user/avatar-upload/request-body.adoc[]
+
+===== HTTP Request
+include::{snippets}/user/avatar-upload/http-request.adoc[]
+
+===== Response Body
+include::{snippets}/user/avatar-upload/response-body.adoc[]
+
+===== HTTP Response
+include::{snippets}/user/avatar-upload/http-response.adoc[]
 
 [[프로필-이미지-삭제]]
 === 프로필 이미지 삭제
 
 ==== URI : `DELETE /api/user/avatar?seq={sequence}`
 
-operation::user/avatar-delete[snippets='request-headers,request-parameters,request-body,http-request,response-fields,response-body,http-response']
+===== Request Header
+include::{snippets}/user/avatar-delete/request-headers.adoc[]
+
+===== Request Body
+include::{snippets}/user/avatar-delete/request-body.adoc[]
+
+===== HTTP Request
+include::{snippets}/user/avatar-delete/http-request.adoc[]
+
+===== Response Fields
+include::{snippets}/user/avatar-delete/response-fields.adoc[]
+
+===== Response Body
+include::{snippets}/user/avatar-delete/response-body.adoc[]
+
+===== HTTP Response
+include::{snippets}/user/avatar-delete/http-response.adoc[]
 
 [[목소리-설정]]
 === 사용자 목소리 설정
@@ -107,12 +264,43 @@ operation::user/avatar-delete[snippets='request-headers,request-parameters,reque
 
 operation::user/voice-upload[snippets='request-headers,request-parts,request-body,http-request,response-body,http-response']
 
+===== Request Header
+include::{snippets}/user/voice-upload/request-headers.adoc[]
+
+===== Request Parts
+include::{snippets}/user/voice-upload/request-parts.adoc[]
+
+===== Request Body
+include::{snippets}/user/voice-upload/request-body.adoc[]
+
+===== HTTP Request
+include::{snippets}/user/voice-upload/http-request.adoc[]
+
+===== Response Body
+include::{snippets}/user/voice-upload/response-body.adoc[]
+
+===== HTTP Response
+include::{snippets}/user/voice-upload/http-response.adoc[]
+
 [[목소리-삭제]]
 === 사용자 목소리 삭제
 
 ==== URI : `DELETE /api/user/voice`
 
-operation::user/voice-delete[snippets='request-headers,request-body,http-request,response-body,http-response']
+===== Request Header
+include::{snippets}/user/voice-delete/request-headers.adoc[]
+
+===== Request Body
+include::{snippets}/user/voice-delete/request-body.adoc[]
+
+===== HTTP Request
+include::{snippets}/user/voice-delete/http-request.adoc[]
+
+===== Response Body
+include::{snippets}/user/voice-delete/response-body.adoc[]
+
+===== HTTP Response
+include::{snippets}/user/voice-delete/http-response.adoc[]
 
 [[탈퇴]]
 === 탈퇴
@@ -121,26 +309,95 @@ operation::user/voice-delete[snippets='request-headers,request-body,http-request
 
 operation::user/retire[snippets='request-headers,request-body,http-request,response-fields,response-body,http-response']
 
+===== Request Header
+include::{snippets}/user/retire/request-headers.adoc[]
+
+===== Request Body
+include::{snippets}/user/retire/request-body.adoc[]
+
+===== HTTP Request
+include::{snippets}/user/retire/http-request.adoc[]
+
+===== Response Fields
+include::{snippets}/user/retire/response-fields.adoc[]
+
+===== Response Body
+include::{snippets}/user/retire/response-body.adoc[]
+
+===== HTTP Response
+include::{snippets}/user/retire/http-response.adoc[]
+
 [[상대방-조회]]
 === 상대방 프로필 조회
 
 ==== URI : `GET /api/user/{id}/profile`
 
-operation::user/profile[snippets='request-headers,path-parameters,request-body,http-request,response-fields,response-body,http-response']
+===== Request Header
+include::{snippets}/user/profile/request-headers.adoc[]
+
+===== Request Body
+include::{snippets}/user/profile/request-body.adoc[]
+
+===== HTTP Request
+include::{snippets}/user/profile/http-request.adoc[]
+
+===== Response Fields
+include::{snippets}/user/profile/response-fields.adoc[]
+
+===== Response Body
+include::{snippets}/user/profile/response-body.adoc[]
+
+===== HTTP Response
+include::{snippets}/user/profile/http-response.adoc[]
 
 [[건의사항-작성]]
 === 건의사항 작성하기
 
 ==== URI : `POST /api/user/suggestion`
 
-operation::user/suggestion[snippets='request-headers,request-parameters,request-parts,request-body,http-request,response-body,http-response']
+===== Request Header
+include::{snippets}/user/suggestion/request-headers.adoc[]
+
+===== Request Parameters
+include::{snippets}/user/suggestion/request-parameters.adoc[]
+
+===== Request Parts
+include::{snippets}/user/suggestion/request-parts.adoc[]
+
+===== Request Body
+include::{snippets}/user/suggestion/request-body.adoc[]
+
+===== HTTP Request
+include::{snippets}/user/suggestion/http-request.adoc[]
+
+===== Response Body
+include::{snippets}/user/suggestion/response-body.adoc[]
+
+===== HTTP Response
+include::{snippets}/user/suggestion/http-response.adoc[]
 
 [[신고하기]]
 === 신고하기
 
 ==== URI : `POST /api/user/report`
 
-operation::user/report-create[snippets='request-headers,request-fields,request-body,http-request,response-body,http-response']
+===== Request Header
+include::{snippets}/user/report-create/request-headers.adoc[]
+
+===== Request Fields
+include::{snippets}/user/report-create/request-fields.adoc[]
+
+===== Request Body
+include::{snippets}/user/report-create/request-body.adoc[]
+
+===== HTTP Request
+include::{snippets}/user/report-create/http-request.adoc[]
+
+===== Response Body
+include::{snippets}/user/report-create/response-body.adoc[]
+
+===== HTTP Response
+include::{snippets}/user/report-create/http-response.adoc[]
 
 
 [[신고-조회]]
@@ -148,7 +405,26 @@ operation::user/report-create[snippets='request-headers,request-fields,request-b
 
 ==== URI : `GET /api/user/report?page=0&size=50`
 
-operation::user/report-select[snippets='request-headers,request-parameters,request-body,http-request,response-fields,response-body,http-response']
+===== Request Header
+include::{snippets}/user/report-select/request-headers.adoc[]
+
+===== Request Parameters
+include::{snippets}/user/report-select/request-parameters.adoc[]
+
+===== Request Body
+include::{snippets}/user/report-select/request-body.adoc[]
+
+===== HTTP Request
+include::{snippets}/user/report-select/http-request.adoc[]
+
+===== Response Fields
+include::{snippets}/user/report-select/response-fields.adoc[]
+
+===== Response Body
+include::{snippets}/user/report-select/response-body.adoc[]
+
+===== HTTP Response
+include::{snippets}/user/report-select/http-response.adoc[]
 
 == Home (홈)
 [[홈]]
@@ -156,7 +432,23 @@ operation::user/report-select[snippets='request-headers,request-parameters,reque
 
 ==== URI : `GET /api/main`
 
-operation::main/home[snippets='request-headers,request-body,http-request,response-fields,response-body,http-response']
+===== Request Header
+include::{snippets}/main/home/request-headers.adoc[]
+
+===== Request Body
+include::{snippets}/main/home/request-body.adoc[]
+
+===== HTTP Request
+include::{snippets}/main/home/http-request.adoc[]
+
+===== Response Fields
+include::{snippets}/main/home/response-fields.adoc[]
+
+===== Response Body
+include::{snippets}/main/home/response-body.adoc[]
+
+===== HTTP Response
+include::{snippets}/main/home/http-response.adoc[]
 
 == Matching (매칭)
 [[매칭-요청]]
@@ -164,14 +456,40 @@ operation::main/home[snippets='request-headers,request-body,http-request,respons
 
 ==== URI : `POST /api/matching`
 
-operation::matching/request[snippets='request-headers,request-body,http-request,response-body,http-response']
+===== Request Header
+include::{snippets}/matching/request/request-headers.adoc[]
+
+===== Request Body
+include::{snippets}/matching/request/request-body.adoc[]
+
+===== HTTP Request
+include::{snippets}/matching/request/http-request.adoc[]
+
+===== Response Body
+include::{snippets}/matching/request/response-body.adoc[]
+
+===== HTTP Response
+include::{snippets}/matching/request/http-response.adoc[]
 
 [[매칭-요청-취소]]
 === 매칭 요청 취소
 
 ==== URI : `DELETE /api/matching`
 
-operation::matching/cancel[snippets='request-headers,request-body,http-request,response-body,http-response']
+===== Request Header
+include::{snippets}/matching/cancel/request-headers.adoc[]
+
+===== Request Body
+include::{snippets}/matching/cancel/request-body.adoc[]
+
+===== HTTP Request
+include::{snippets}/matching/cancel/http-request.adoc[]
+
+===== Response Body
+include::{snippets}/matching/cancel/response-body.adoc[]
+
+===== HTTP Response
+include::{snippets}/matching/cancel/http-response.adoc[]
 
 [[채팅방-리스트-조회]]
 === 채팅방 리스트 조회
@@ -181,47 +499,142 @@ operation::matching/cancel[snippets='request-headers,request-body,http-request,r
 
 ==== URI : `GET /api/matching`
 
-operation::matching/list[snippets='request-headers,request-body,http-request,response-fields,response-body,http-response']
+===== Request Header
+include::{snippets}/matching/list/request-headers.adoc[]
+
+===== Request Body
+include::{snippets}/matching/list/request-body.adoc[]
+
+===== HTTP Request
+include::{snippets}/matching/list/http-request.adoc[]
+
+===== Response Fields
+include::{snippets}/matching/list/response-fields.adoc[]
+
+===== Response Body
+include::{snippets}/matching/list/response-body.adoc[]
+
+===== HTTP Response
+include::{snippets}/matching/list/http-response.adoc[]
 
 [[채팅방-정보-조회]]
 === 채팅방 정보 조회
 
 ==== URI : `GET /api/matching/2`
 
-operation::matching/info[snippets='request-headers,request-body,http-request,response-fields,response-body,http-response']
+===== Request Header
+include::{snippets}/matching/info/request-headers.adoc[]
+
+===== Request Body
+include::{snippets}/matching/info/request-body.adoc[]
+
+===== HTTP Request
+include::{snippets}/matching/info/http-request.adoc[]
+
+===== Response Fields
+include::{snippets}/matching/info/response-fields.adoc[]
+
+===== Response Body
+include::{snippets}/matching/info/response-body.adoc[]
+
+===== HTTP Response
+include::{snippets}/matching/info/http-response.adoc[]
 
 [[음료수-선택]]
 === 음료수 선택
 
 ==== URI : `POST /api/matching/drink`
 
-operation::matching/drink[snippets='request-headers,request-body,http-request,response-body,http-response']
+===== Request Header
+include::{snippets}/matching/drink/request-headers.adoc[]
 
+===== Request Fields
+include::{snippets}/matching/drink/request-fields.adoc[]
+
+===== Request Body
+include::{snippets}/matching/drink/request-body.adoc[]
+
+===== HTTP Request
+include::{snippets}/matching/drink/http-request.adoc[]
+
+===== Response Body
+include::{snippets}/matching/drink/response-body.adoc[]
+
+===== HTTP Response
+include::{snippets}/matching/drink/http-response.adoc[]
 
 [[토픽-조회]]
 === 토픽 가져오기
 
 ==== URI : `POST /api/matching/topic`
 
-operation::matching/topic[snippets='request-headers,request-body,http-request,response-body,http-response']
+===== Request Header
+include::{snippets}/matching/topic/request-headers.adoc[]
+
+===== Request Fields
+include::{snippets}/matching/topic/request-fields.adoc[]
+
+===== Request Body
+include::{snippets}/matching/topic/request-body.adoc[]
+
+===== HTTP Request
+include::{snippets}/matching/topic/http-request.adoc[]
+
+===== Response Body
+include::{snippets}/matching/topic/response-body.adoc[]
+
+===== HTTP Response
+include::{snippets}/matching/topic/http-response.adoc[]
 
 [[프로필-교환]]
 === 프로필 교환
 
 ==== URI : `POST /api/matching/exchange`
 
-operation::matching/exchange[snippets='request-headers,request-body,http-request,response-body,http-response']
+===== Request Header
+include::{snippets}/matching/exchange/request-headers.adoc[]
+
+===== Request Fields
+include::{snippets}/matching/exchange/request-fields.adoc[]
+
+===== Request Body
+include::{snippets}/matching/exchange/request-body.adoc[]
+
+===== HTTP Request
+include::{snippets}/matching/exchange/http-request.adoc[]
+
+===== Response Body
+include::{snippets}/matching/exchange/response-body.adoc[]
+
+===== HTTP Response
+include::{snippets}/matching/exchange/http-response.adoc[]
 
 [[채팅방-나가기]]
 === 채팅방 나가기
 
 ==== URI : `DELETE /api/matching/2?reason=1`
 
-operation::matching/leave[snippets='request-headers,path-parameters,request-parameters,request-body,http-request,response-body,http-response']
+===== Request Header
+include::{snippets}/matching/leave/request-headers.adoc[]
+
+===== Request Parameters
+include::{snippets}/matching/leave/request-parameters.adoc[]
+
+===== Request Body
+include::{snippets}/matching/leave/request-body.adoc[]
+
+===== HTTP Request
+include::{snippets}/matching/leave/http-request.adoc[]
+
+===== Response Body
+include::{snippets}/matching/leave/response-body.adoc[]
+
+===== HTTP Response
+include::{snippets}/matching/leave/http-response.adoc[]
 
 == Chat (채팅)
-[[웹소켓 연결]]
-
+[[웹소켓-연결]]
+=== 웹소켓 연결
 - WebSokcet Connect Address : `https://www.blindcafe.me/ws`
 - 웹소켓 연결 시 Header에 `token`이라는 이름으로 본인의 엑세스 토큰을 포함시킵니다.
 - token의 엑세스 토큰 값이 비어있거나 유효하지 않은 경우 웹소켓 연결에 실패합니다.
@@ -293,19 +706,166 @@ operation::matching/leave[snippets='request-headers,path-parameters,request-para
 
 ==== URI : `POST /api/chat/matching`
 
-operation::chat/send-file[snippets='request-headers,request-parameters,request-parts,http-request,response-body,http-response']
+===== Request Header
+include::{snippets}/chat/send-file/request-headers.adoc[]
+
+===== Request Parameters
+include::{snippets}/chat/send-file/request-parameters.adoc[]
+
+===== Request Parts
+include::{snippets}/chat/send-file/request-parts.adoc[]
+
+===== Request Body
+include::{snippets}/chat/send-file/request-body.adoc[]
+
+===== HTTP Request
+include::{snippets}/chat/send-file/http-request.adoc[]
+
+===== Response Body
+include::{snippets}/chat/send-file/response-body.adoc[]
+
+===== HTTP Response
+include::{snippets}/chat/send-file/http-response.adoc[]
 
 [[메시지-조회]]
 === 채팅방 메시지 조회
 
 ==== URI : `GET /api/chat/matching/2?page=0&size=50`
 
-operation::chat/message[snippets='request-headers,request-parameters,request-body,http-request,response-fields,response-body,http-response']
+===== Request Header
+include::{snippets}/chat/message/request-headers.adoc[]
+
+===== Request Parameters
+include::{snippets}/chat/message/request-parameters.adoc[]
+
+===== Request Body
+include::{snippets}/chat/message/request-body.adoc[]
+
+===== HTTP Request
+include::{snippets}/chat/message/http-request.adoc[]
+
+===== Response Fields
+include::{snippets}/chat/message/response-fields.adoc[]
+
+===== Response Body
+include::{snippets}/chat/message/response-body.adoc[]
+
+===== HTTP Response
+include::{snippets}/chat/message/http-response.adoc[]
 
 == Notification (알림)
 [[알림-설정]]
 === 알림 설정 변경
 
+==== `PUT /api/notification`
+
+===== Request Header
+include::{snippets}/notification/setting/request-headers.adoc[]
+
+===== Request Fields
+include::{snippets}/notification/setting/request-fields.adoc[]
+
+===== Request Body
+include::{snippets}/notification/setting/request-body.adoc[]
+
+===== HTTP Request
+include::{snippets}/notification/setting/http-request.adoc[]
+
+===== Response Body
+include::{snippets}/notification/setting/response-body.adoc[]
+
+===== HTTP Response
+include::{snippets}/notification/setting/http-response.adoc[]
+
 == Notice (공지)
 [[공지-조회]]
 === 공지 조회
+
+==== `GET /api/notice`
+
+operation::notice/list[snippets='request-headers,request-parameters,request-body,http-request,response-fields,response-body,http-response']
+
+===== Request Header
+include::{snippets}/notice/list/request-headers.adoc[]
+
+===== Request Parameters
+include::{snippets}/notice/list/request-parameters.adoc[]
+
+===== Request Body
+include::{snippets}/notice/list/request-body.adoc[]
+
+===== HTTP Request
+include::{snippets}/notice/list/http-request.adoc[]
+
+===== Response Fields
+include::{snippets}/notice/list/response-fields.adoc[]
+
+===== Response Body
+include::{snippets}/notice/list/response-body.adoc[]
+
+===== HTTP Response
+include::{snippets}/notice/list/http-response.adoc[]
+
+== 에러 코드
+```
+// Auth
+INVALID_SOCIAL_PLATFORM("1001", "소셜 플랫폼이 유효하지 않습니다"),
+INVALID_KAKAO_ACCESS("1002", "카카오 로그인 서버에 접근 중 예외가 발생했습니다."),
+INVALID_KAKAO_TOKEN("1003", "카카오 Access Token이 유효하지 않습니다."),
+FAILED_TO_FIND_AVAILABLE_RSA("1004", "사용 가능한 키가 없습니다."),
+INVALID_APPLE_ACCESS("1005", "애플 로그인 서버에 접근 중 예외가 발생했습니다."),
+INVALID_APPLE_TOKEN("1006", "애플 Identity Token이 유효하지 않습니다."),
+
+// User
+SUSPENDED_USER("1100", "신고로 정지된 유저입니다."),
+EMPTY_USER("1101", "해당되는 유저가 없습니다."),
+RETIRED_USER("1102", "탈퇴한 유저입니다."),
+ALREADY_REQUIRED_INFO("1103", "이미 추가 정보를 입력받았습니다."),
+DUPLICATED_PHONE_NUMBER("1104", "전화번호가 중복됩니다."),
+INVALID_PHONE_NUMBER("1105", "전화번호 형식이 올바르지 않습니다."),
+INVALID_NICKNAME("1106", "'관리자' 또는 '매니저' 키워드를 포함하는 닉네임을 사용할 수 없습니다."),
+INVALID_MAIN_INTEREST("1107", "메인 관심사가 유효하지 않습니다."),
+
+// S3 Util
+FILE_CONVERT_ERROR("1200", "파일 변환에 실패했습니다."),
+FILE_EXTENSION_ERROR("1201", "파일 확장자 인식에 실패했습니다."),
+
+// Matching
+EMPTY_DRINK("1300", "해당되는 음료가 없습니다."),
+ALREADY_SELECT_DRINK("1301", "이미 음료를 선택했습니다."),
+EMPTY_MATCHING("1302", "해당되는 매칭이 없습니다."),
+NON_AUTHORIZATION_MATCHING("1303", "권한이 없는 매칭입니다."),
+ALREADY_MATCHING_REQUEST("1304", "이미 매칭 요청 중입니다."),
+LACK_OF_TICKET("1305", "매칭권이 부족합니다."),
+EMPTY_MATCHING_REQUEST("1306", "현재 요청하고 있는 매칭이 없습니다."),
+EMPTY_PARTNER_INFO("1307", "상대방을 조회하는 도중 에러가 발생했습니다."),
+REQUIRED_AVATAR("1308", "프로필을 공개하기 위해서는 프로필 이미지를 설정해야 합니다."),
+REQUIRED_ADDRESS("1309", "프로필을 공개하기 위해서는 주소를 설정해야 합니다."),
+EMPTY_REASON("1310", "유효하지 않은 이유입니다."),
+REQUIRED_REASON("1311", "사유를 입력해야 합니다."),
+INVALID_PROFILE_IMAGE_SEQUENCE("1312", "유효하지 않은 우선순위입니다."),
+NOT_YET_EXCHANGE_PROFILE("1313", "아직 프로필을 공개할 수 없습니다."),
+ALREADY_EXCHANGE_PROFILE("1314", "이미 프로필을 공개했습니다."),
+EXCEED_MATCHING_TOPIC("1315", "더 이상 존재하는 토픽이 없습니다."),
+EMPTY_TOPIC("1316", "현재 유효하지 않은 토픽입니다. "),
+ALREADY_SEND_TOPIC("1317", "최근에 토픽이 전송되었습니다."),
+
+// CHAT
+INVALID_MESSAGE_TYPE("1400", "메시지 타입이 올바르지 않습니다."),
+SEND_MESSAGE_ERROR("1401", "메시지 전송 도중 에러가 발생했습니다."),
+
+// FCM util
+FIREBASE_CREDENTIALS_ERROR("1500", "Firebase 인증 에러"),
+FIREBASE_INSERT_ERROR("1501", "Firebase 데이터 저장 에러" ),
+FIREBASE_BUILD_MESSAGE_ERROR("1502", "FCM 메시지 생성 중 발생했습니다."),
+FIREBASE_SEND_MESSAGE_ERROR("1503", "FCM 전송 중 에러가 발생했습니다."),
+
+// Mail Util
+EMAIL_SEND_ERROR("1600", "이메일 전송 중 에러가 발생했습니다."),
+
+BAD_REQUEST("4000", "잘못된 요청입니다."),
+FAILED_AUTHORIZATION("4001", "검증에 실패했습니다."),
+EXPIRED_TOKEN("4002", "토큰의 기한이 만료되었습니다."),
+FORBIDDEN_AUTHORIZATION("4003", "권한이 없습니다."),
+INTERNAL_SERVER_ERROR("5000", "서버에 오류가 발생했습니다.");
+```
