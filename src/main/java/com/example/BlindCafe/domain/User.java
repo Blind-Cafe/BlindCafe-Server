@@ -223,12 +223,12 @@ public class User extends BaseTimeEntity {
     
     // 사용자 목소리 설정하기
     public void updateVoice(String voice) {
-        this.setVoice(voice);
+        this.voice = voice;
     }
 
     // 사용자 목소리 삭제하기
     public void deleteVoice() {
-        this.setVoice(null);
+        this.voice = null;
     }
 
     // 매칭 시 음료수 뱃지 추가하기

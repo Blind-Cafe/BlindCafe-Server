@@ -19,8 +19,8 @@ public interface UserMatchingRepository extends JpaRepository<UserMatching, Long
     Optional<UserMatching> findMatchingRequestByUserId(Long userId);
     
     // 매칭 풀에서 매칭 전적이 없는 사용자 조회
-    @Query(value = "SELECT * FROM user_matching um WHERE um.status = 'WAIT' AND um.user_id NOT IN ?1", nativeQuery = true)
-    List<UserMatching> findAbleMatchingRequests(List<Long> ids);
+    @Query(value = "SELECT * FROM user_matching um WHERE um.status = 'WAIT' AND um.user_id NOT IN (?1)", nativeQuery = true)
+    List<UserMatching> findAbleMatchingRequests(String ids);
     
     // 사용자의 유효한 매칭 조회
     @Query(value = "SELECT * FROM user_matching um WHERE um.status = 'MATCHING' AND um.user_id = ?1", nativeQuery = true)

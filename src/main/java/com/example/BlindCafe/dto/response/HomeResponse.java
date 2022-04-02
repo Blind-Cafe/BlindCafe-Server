@@ -8,7 +8,7 @@ import lombok.*;
 @NoArgsConstructor
 @Builder
 public class HomeResponse {
-    private boolean status;
+    private boolean request;
     private int tickets;
     private boolean notice;
 }
