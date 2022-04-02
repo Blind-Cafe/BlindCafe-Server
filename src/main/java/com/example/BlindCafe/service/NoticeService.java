@@ -13,6 +13,10 @@ import com.example.BlindCafe.repository.NoticeRepository;
 import com.example.BlindCafe.repository.UserRepository;
 import com.example.BlindCafe.utils.DateTimeUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,21 +38,15 @@ public class NoticeService {
     private final NoticeRepository noticeRepository;
     private final NoticeLogRepository noticeLogRepository;
 
-    private static final int NOTICE_PAGE_SIZE = 25;
-
     /**
      * 공지 조회하기 + 공지 화면 접속 로그 남기기
      */
     @Transactional
-    public NoticeListResponse getGroupNotices(Long userId, int page, Long offset) {
+    public NoticeListResponse getGroupNotices(Long userId, int page, int size) {
         LocalDateTime now = LocalDateTime.now();
-        List<Notice> notices = new ArrayList<>();
-        if (page > -1) {
-            // page 기준으로 공지 조회
-            notices = noticeRepository.findGroupNoticeByPage(NOTICE_PAGE_SIZE, page * NOTICE_PAGE_SIZE);
-        } else {
-            notices = noticeRepository.findGroupNoticeByOffset(NOTICE_PAGE_SIZE, offset);
-        }
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Page<Notice> pages = noticeRepository.findBy(pageable);
 
         // 공지 화면 접속 로그 저장
         NoticeLog noticeLog = noticeLogRepository.findByUserId(userId).orElse(null);
@@ -58,9 +56,7 @@ public class NoticeService {
         noticeLog.update(now);
         noticeLogRepository.save(noticeLog);
 
-        return new NoticeListResponse(notices.stream()
-                        .map(NoticeListResponse.NoticeInfo::fromEntity)
-                        .collect(Collectors.toList()));
+        return new NoticeListResponse(pages.map(NoticeListResponse.NoticeInfo::fromEntity));
     }
 
     /**
