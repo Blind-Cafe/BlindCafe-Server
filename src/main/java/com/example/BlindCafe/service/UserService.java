@@ -310,4 +310,22 @@ public class UserService {
 
         return new ReportListResponse(pages.map(ReportListResponse.ReportDto::fromEntity));
     }
+
+    /**
+     * 전체 사용자 수 조회
+     */
+    public Long getEntireMemberCount() {
+        return userRepository.countMember();
+    }
+
+
+    /**
+     * 사용자 목록 조회
+     */
+    public List<MemberResponse> getMembers(int page) {
+        Pageable pageable = PageRequest.of(page, 100, Sort.by("createdAt").descending());
+        Page<User> pages = userRepository.findByAdmin(false, pageable);
+        List<User> users = pages.getContent();
+        return users.stream().map(MemberResponse::fromEntity).collect(Collectors.toList());
+    }
 }

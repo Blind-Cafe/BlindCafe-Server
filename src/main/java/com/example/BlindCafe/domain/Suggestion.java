@@ -1,17 +1,15 @@
 package com.example.BlindCafe.domain;
 
 import lombok.*;
-import org.springframework.data.annotation.CreatedDate;
 
 import javax.persistence.*;
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "suggestion")
 @Getter
 @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Suggestion {
+public class Suggestion extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -28,8 +26,7 @@ public class Suggestion {
 
     private String image;
 
-    @CreatedDate
-    private LocalDateTime createdAt;
+    private boolean check;
 
     public static Suggestion create(User user, String content) {
         Suggestion suggestion = new Suggestion();
@@ -37,6 +34,7 @@ public class Suggestion {
         suggestion.setNickname(user.getNickname());
         suggestion.setPhone(user.getPhone());
         suggestion.setContent(content);
+        suggestion.setCheck(false);
         return suggestion;
     }
 

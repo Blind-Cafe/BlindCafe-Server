@@ -1,13 +1,11 @@
 package com.example.BlindCafe.service;
 
-import com.example.BlindCafe.domain.Matching;
-import com.example.BlindCafe.domain.User;
-import com.example.BlindCafe.domain.UserMatching;
+import com.example.BlindCafe.domain.*;
+import com.example.BlindCafe.domain.type.Gender;
 import com.example.BlindCafe.domain.type.status.MatchingStatus;
 import com.example.BlindCafe.domain.type.status.UserStatus;
-import com.example.BlindCafe.repository.MatchingRepository;
-import com.example.BlindCafe.repository.UserMatchingRepository;
-import com.example.BlindCafe.repository.UserRepository;
+import com.example.BlindCafe.repository.*;
+import com.example.BlindCafe.utils.DateTimeUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -36,7 +34,9 @@ import static com.example.BlindCafe.service.NotificationService.*;
  *
  * Job 4 - 매일 자정(밤 12시) 작업
  * - Step 6 : 매칭권 갯수 리셋
- * 
+ *
+ * Job 5 - 매일 밤 (새벽 2시) 작업
+ * - Step 7 : 전날 하루동안 접속한 사용자 수 및 접속 비율 저장
  */
 
 @Slf4j
@@ -49,6 +49,8 @@ public class BatchService {
     private final MatchingRepository matchingRepository;
     private final UserMatchingRepository userMatchingRepository;
     private final UserRepository userRepository;
+    private final ConnectLogRepository connectLogRepository;
+    private final DailyConnectRepository dailyConnectRepository;
 
     private static final int DELAY_TEN_MIN = 1000 * 60 * 10;
     private static final int DELAY_ONE_HOUR = 1000 * 60 * 60;
@@ -101,13 +103,15 @@ public class BatchService {
     /**
      * Name : Job 4 - 매일 밤 12시 작업
      * Allocation : Step 6
-     * TODO 사용자가 많아질수록 작업 시간이 길어지기 때문에 멀티쓰레드로 작업 필요
-     * 현재는 모든 사용자에서 Unit size 단위로 Transaction 단위만 줄여서 작업 실행
+     * Step 6
+     * - 사용자가 많아질수록 작업 시간이 길어지기 때문에 멀티쓰레드로 작업 필요
+     * - 현재는 모든 사용자에서 Unit size 단위로 Transaction 단위만 줄여서 작업 실행
      */
     @Scheduled(cron="0 0 00 * * ?")
-    public void processEveryMidnight() {
+    public void processEveryMidnight1() {
         log.info("[BEGIN] Do Step 6 at Everyday Midnight");
         List<User> users = userRepository.findByStatus(UserStatus.NORMAL);
+        users = users.stream().filter(u -> !u.isAdmin()).collect(Collectors.toList());
         int size = users.size();
         int iteration = size / UNIT;
         if (size % UNIT != 0) iteration++;
@@ -116,6 +120,13 @@ public class BatchService {
             else resetTicket(users.subList(i * UNIT, (i+1) * UNIT));
         }
         log.info("[END] Do Step 6 at Everyday Midnight");
+    }
+
+    @Scheduled(cron="0 0 02 * * ?")
+    public void processEveryMidnight2() {
+        log.info("[BEGIN] Do Step 7 at Everyday Midnight");
+        saveDailyConnect();
+        log.info("[END] Do Step 7 at Everyday Midnight");
     }
 
     /**
@@ -172,5 +183,29 @@ public class BatchService {
     protected void resetTicket(List<User> users) {
         for (User user: users)
             user.getTicket().init();
+    }
+    
+    // Step 7 : 매일 밤 12시 하루동안 접속한 사용자 수 및 접속 비율 저장
+    @Transactional
+    protected void saveDailyConnect() {
+        LocalDateTime yesterday = LocalDateTime.now().minusDays(1L);
+
+        // 어제 전체 접속 사용자 수 조회
+        List<ConnectLog> connects =
+                connectLogRepository.findByAccessDay(yesterday.format(DateTimeUtil.dateFormatter));
+
+        List<Long> ids = connects.stream()
+                .map(ConnectLog::getUserId)
+                .collect(Collectors.toList());
+        
+        List<User> users = userRepository.findAllById(ids);
+        Long entire = (long) users.size();
+        // 성별 구분
+        Long male = users.stream()
+                .filter(u -> u.getMyGender().equals(Gender.M))
+                .count();
+
+        DailyConnect dailyConnect = DailyConnect.create(yesterday, entire, male);
+        dailyConnectRepository.save(dailyConnect);
     }
 }

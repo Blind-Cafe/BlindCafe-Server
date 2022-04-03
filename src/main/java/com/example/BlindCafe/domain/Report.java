@@ -30,6 +30,8 @@ public class Report extends BaseTimeEntity {
     @JoinColumn(name = "reason_id")
     private Reason reason;
 
+    private boolean check;
+
     public void setReporter(User reporter) {
         this.reporter = reporter;
         reporter.getMyReport().add(this);
@@ -48,6 +50,7 @@ public class Report extends BaseTimeEntity {
         report.setReported(reported);
         report.setMatchingId(matchingId);
         report.setReason(reason);
+        report.setCheck(false);
         return report;
     }
 }
