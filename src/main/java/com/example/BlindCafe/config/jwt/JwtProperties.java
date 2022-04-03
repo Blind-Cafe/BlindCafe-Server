@@ -27,6 +27,7 @@ public class JwtProperties {
 
     public static final String HEADER_NAME = "Authorization";
     public static final String AUTHORIZATION_TYPE = "Bearer ";
+    public static final long WEB_ACCESS_EXPIRED_TIME = 3 * 60 * 60 * 1000L;
     public static final long ACCESS_EXPIRED_TIME = 14 * 24 * 60 * 60 * 1000L;
     public static final long REFRESH_EXPIRED_TIME = 6 * 30 * 24 * 60 * 60 * 1000L;
 
