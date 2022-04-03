@@ -1,11 +1,13 @@
 package com.example.BlindCafe.service;
 
+import com.example.BlindCafe.domain.ConnectLog;
 import com.example.BlindCafe.domain.RoomLog;
+import com.example.BlindCafe.repository.ConnectLogRepository;
 import com.example.BlindCafe.repository.RoomLogRepository;
 import com.example.BlindCafe.utils.DateTimeUtil;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.ValueOperations;
+import org.springframework.data.redis.connection.RedisConnection;
+import org.springframework.data.redis.core.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,9 +22,11 @@ public class PresenceService {
     private final RedisTemplate<String, String> redisTemplate;
 
     private final RoomLogRepository roomLogRepository;
+    private final ConnectLogRepository connectLogRepository;
 
     private static final String SESSION_KEY = "p:session:";
     private static final String USER_KEY = "p:user:";
+    private static final String CONNECTED_COUNT_KEY = "p:connect-count";
     private static final String LOBBY = "0";
     private static final String DISCONNECT = "off";
 
@@ -31,8 +35,13 @@ public class PresenceService {
      */
     public void connect(String uid, String sessionId) {
         ValueOperations<String, String> valueOperations = redisTemplate.opsForValue();
+        if (valueOperations.get(CONNECTED_COUNT_KEY) == null)
+            valueOperations.set(CONNECTED_COUNT_KEY, "0");
+        else
+            valueOperations.set(CONNECTED_COUNT_KEY, String.valueOf(Long.parseLong(valueOperations.get(CONNECTED_COUNT_KEY)) + 1));
         valueOperations.set(USER_KEY + uid, LOBBY);
         valueOperations.set(SESSION_KEY + sessionId, uid);
+        connectLogRepository.save(ConnectLog.create(Long.parseLong(uid), LocalDateTime.now(), true));
     }
 
     /**
@@ -70,10 +79,15 @@ public class PresenceService {
      */
     public void disconnect(String sessionId) {
         ValueOperations<String, String> valueOperations = redisTemplate.opsForValue();
+        if (valueOperations.get(CONNECTED_COUNT_KEY) == null)
+            valueOperations.set(CONNECTED_COUNT_KEY, "0");
+        else
+            valueOperations.set(CONNECTED_COUNT_KEY, String.valueOf(Long.parseLong(valueOperations.get(CONNECTED_COUNT_KEY)) - 1));
         String uid = valueOperations.get(SESSION_KEY + sessionId);
         if (uid != null) {
             valueOperations.set(USER_KEY + uid, DISCONNECT);
             valueOperations.set(SESSION_KEY + sessionId, DISCONNECT);
+            connectLogRepository.save(ConnectLog.create(Long.parseLong(uid), LocalDateTime.now(), false));
         }
     }
 
@@ -93,5 +107,16 @@ public class PresenceService {
         String uid = valueOperations.get(SESSION_KEY + sessionId);
         if (uid != null && !uid.equals(DISCONNECT)) return uid;
         else return null;
+    }
+
+    /**
+     * 현재 접속해 있는 사용자의 수
+     */
+    public Long getConnectedMemberCount() {
+        ValueOperations<String, String> valueOperations = redisTemplate.opsForValue();
+        if (valueOperations.get(CONNECTED_COUNT_KEY) == null)
+            return 0L;
+        else
+            return Long.parseLong(valueOperations.get(CONNECTED_COUNT_KEY));
     }
 }
