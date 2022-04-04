@@ -1,6 +1,7 @@
 create table custom_reason
 (
-    custom_reason_id bigint auto_increment primary key,
+    custom_reason_id bigint auto_increment
+        primary key,
     created_at datetime not null,
     updated_at datetime not null,
     age int not null,
@@ -11,6 +12,15 @@ create table custom_reason
     reason varchar(255) null,
     type varchar(30) null,
     user_id bigint null
+);
+
+create table daily_connect
+(
+    daily_connect_id varchar(255) not null
+        primary key,
+    entire_count bigint null,
+    female_count bigint null,
+    male_count bigint null
 );
 
 create table drink
@@ -44,7 +54,9 @@ create table matching_topic
     matching_topic_id bigint auto_increment
         primary key,
     entire varchar(255) null,
-    remain varchar(255) null
+    remain varchar(255) null,
+    access datetime null,
+    latest varchar(255) null
 );
 
 create table matching
@@ -133,7 +145,9 @@ create table suggestion
     image varchar(255) null,
     nickname varchar(255) null,
     phone varchar(255) null,
-    user_id bigint null
+    user_id bigint null,
+    updated_at datetime not null,
+    `check` tinyint(1) null
 );
 
 create table ticket
@@ -190,6 +204,23 @@ create table user
         foreign key (notification_setting_id) references notification_setting (notification_setting_id)
 );
 
+create table avatar
+(
+    avatar_id bigint not null
+        primary key,
+    created_at datetime not null,
+    updated_at datetime not null,
+    sequence int not null,
+    src text null,
+    status varchar(255) null,
+    user_id bigint null,
+    constraint avatar_ibfk_1
+        foreign key (user_id) references user (user_id)
+);
+
+create index user_id
+	on avatar (user_id);
+
 create table notice
 (
     dtype varchar(31) not null,
@@ -204,20 +235,6 @@ create table notice
         foreign key (user_id) references user (user_id)
 );
 
-create table profile_image
-(
-    profile_image_id bigint not null
-        primary key,
-    created_at datetime not null,
-    updated_at datetime not null,
-    sequence int not null,
-    src text null,
-    status varchar(255) null,
-    user_id bigint null,
-    constraint FK7c5ge678vgxydo2sepdmrj6ge
-        foreign key (user_id) references user (user_id)
-);
-
 create table report
 (
     report_id bigint auto_increment
@@ -228,6 +245,7 @@ create table report
     reason_id bigint null,
     reported bigint null,
     reporter bigint null,
+    `check` tinyint(1) null,
     constraint FK7ak4xcyfux0igvm1j5cqud5d8
         foreign key (reason_id) references reason (reason_id),
     constraint FKf57jf06r4tjpacaou1uue4xgd
@@ -252,7 +270,7 @@ create table user_drink
 
 create table user_interest
 (
-    user_interest_id bigint not null
+    user_interest_id bigint not null, auto_increment
         primary key,
     created_at datetime not null,
     updated_at datetime not null,
