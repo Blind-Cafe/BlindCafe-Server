@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -24,9 +25,7 @@ import static me.blindcafe.blindcafe.domain.type.Platform.AOS;
 import static me.blindcafe.blindcafe.exception.CodeAndMessage.EMPTY_USER;
 import static me.blindcafe.blindcafe.exception.CodeAndMessage.INVALID_MESSAGE_TYPE;
 
-/**
- * TODO FCM 전송 로그 저장하기
- */
+// FCM 전송 로그 저장하기
 
 @Service
 @RequiredArgsConstructor
@@ -56,11 +55,11 @@ public class NotificationService {
      * (반복적인 채팅에 대한 효율 향상, 불필요한 메모리 차지 절약)
      */
     // 알림 전체 ON/OFF 설정
-    public static ConcurrentHashMap<Long, Boolean> entireNotificationSettingInMemory = new ConcurrentHashMap<>();
+    public static Map<Long, Boolean> entireNotificationSettingInMemory = new ConcurrentHashMap<>();
     // 특정 채팅방 알림 OFF 명단
-    public static ConcurrentHashMap<Long, String> roomNotificationOffInMemory = new ConcurrentHashMap<>();
+    public static Map<Long, String> roomNotificationOffInMemory = new ConcurrentHashMap<>();
     // 사용자 디바이스 정보
-    public static ConcurrentHashMap<Long, Pair<Platform, String>> deviceInfoInMemory = new ConcurrentHashMap<>();
+    public static Map<Long, Pair<Platform, String>> deviceInfoInMemory = new ConcurrentHashMap<>();
 
     /**
      * 채팅 메시지 알림 전송
