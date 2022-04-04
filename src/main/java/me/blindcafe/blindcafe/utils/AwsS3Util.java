@@ -29,15 +29,16 @@ import static me.blindcafe.blindcafe.exception.CodeAndMessage.FILE_EXTENSION_ERR
 @Component
 public class AwsS3Util {
 
-    public static String DEFAULT_IMAGE;
-
     private final AmazonS3Client amazonS3Client;
     private final Tika tika = new Tika();
     private static final String PROFILE_IMAGE_DIR = "users/profiles/";
-    public static final String SUGGESTION_IMAGE_DIR = "suggestion/";
+    private static final String SUGGESTION_IMAGE_DIR = "suggestion/";
     private static final String VOICE_DIR = "users/voice/";
     private static final String MESSAGE_DIR = "chat/";
+    private static final String SEP = "/";
+
     private static String cloudfrontUrl;
+    public static String DEFAULT_IMAGE;
 
     @Value("${cloud.aws.s3.bucket}")
     public String bucket;
@@ -50,7 +51,7 @@ public class AwsS3Util {
 
     public String uploadAvatar(MultipartFile multipartFile, Long userId) {
         File file = convertToFile(multipartFile);
-        String fileName = PROFILE_IMAGE_DIR + userId + "/" + UUID.randomUUID() + extension(multipartFile);
+        String fileName = PROFILE_IMAGE_DIR + userId + SEP + UUID.randomUUID() + extension(multipartFile);
         amazonS3Client.putObject(new PutObjectRequest(bucket, fileName, file));
         file.delete();
         return cloudfrontUrl + fileName;
@@ -61,7 +62,7 @@ public class AwsS3Util {
         AtomicInteger index = new AtomicInteger(1);
         multipartFiles.forEach(multipartFile -> {
             File file = convertToFile(multipartFile);
-            String fileName = SUGGESTION_IMAGE_DIR + suggestionId + "/" + index + extension(multipartFile);
+            String fileName = SUGGESTION_IMAGE_DIR + suggestionId + SEP + index + extension(multipartFile);
             amazonS3Client.putObject(new PutObjectRequest(bucket, fileName, file));
             sb.append(cloudfrontUrl + fileName + ",");
             file.delete();
@@ -73,7 +74,7 @@ public class AwsS3Util {
 
     public String uploadVoice(MultipartFile multipartFile, Long userId) {
         File file = convertToFile(multipartFile);
-        String fileName = VOICE_DIR + userId + "/" + UUID.randomUUID() + extension(multipartFile);
+        String fileName = VOICE_DIR + userId + SEP + UUID.randomUUID() + extension(multipartFile);
         amazonS3Client.putObject(new PutObjectRequest(bucket, fileName, file));
         file.delete();
         return cloudfrontUrl + fileName;
@@ -81,7 +82,7 @@ public class AwsS3Util {
 
     public String uploadFileFromMessage(MultipartFile multipartFile, String mid) {
         File file = convertToFile(multipartFile);
-        String fileName = MESSAGE_DIR + mid + "/" + UUID.randomUUID() + extension(multipartFile);
+        String fileName = MESSAGE_DIR + mid + SEP + UUID.randomUUID() + extension(multipartFile);
         amazonS3Client.putObject(new PutObjectRequest(bucket, fileName, file));
         file.delete();
         return cloudfrontUrl + fileName;

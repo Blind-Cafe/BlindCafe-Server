@@ -23,8 +23,8 @@ public class RedisPublisher {
     private final RedisSubscriber redisSubscriber;
     private Map<String, ChannelTopic> topics;
 
-    private final String MATCHING_TOPIC_PREFIX = "m-";
-    private final String USER_TOPIC_PREPIX = "u-";
+    private static final String MATCHING_TOPIC_PREFIX = "m-";
+    private static final String USER_TOPIC_PREPIX = "u-";
 
     @PostConstruct
     private void init() {

@@ -19,11 +19,11 @@ import static me.blindcafe.blindcafe.exception.CodeAndMessage.SEND_MESSAGE_ERROR
 public class RedisSubscriber implements MessageListener {
 
     private final ObjectMapper objectMapper;
-    private final RedisTemplate redisTemplate;
+    private final RedisTemplate<String, String> redisTemplate;
     private final SimpMessageSendingOperations messageTemplate;
 
-    private final String MATCHING_TOPIC = "/topic/chat/matching/";
-    private final String USER_TOPIC = "/topic/chat/user/";
+    private static final String MATCHING_TOPIC = "/topic/chat/matching/";
+    private static final String USER_TOPIC = "/topic/chat/user/";
 
     @Override
     public void onMessage(Message message, byte[] pattern) {
@@ -42,6 +42,6 @@ public class RedisSubscriber implements MessageListener {
     }
 
     private String getPublishMessage(Message message) {
-        return (String) redisTemplate.getStringSerializer().deserialize(message.getBody());
+        return redisTemplate.getStringSerializer().deserialize(message.getBody());
     }
 }

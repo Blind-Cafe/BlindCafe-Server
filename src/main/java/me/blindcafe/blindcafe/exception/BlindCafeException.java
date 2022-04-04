@@ -5,8 +5,8 @@ import lombok.Getter;
 @Getter
 public class BlindCafeException extends RuntimeException {
 
-    private String code;
-    private String message;
+    private final String code;
+    private final String message;
     private String nickname;
 
     public BlindCafeException(CodeAndMessage errorCode) {

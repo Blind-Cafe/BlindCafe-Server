@@ -55,11 +55,11 @@ import static me.blindcafe.blindcafe.service.NotificationService.deviceInfoInMem
 @RequiredArgsConstructor
 public class AuthService {
 
-    private final RedisTemplate redisTemplate;
+    private final RedisTemplate<String, String> redisTemplate;
     private final UserRepository userRepository;
 
-    private final String KAKAO_AUTH = "https://kapi.kakao.com/v2/user/me";
-    private final String APPLE_AUTH = "https://appleid.apple.com/auth/keys";
+    private static final String KAKAO_AUTH = "https://kapi.kakao.com/v2/user/me";
+    private static final String APPLE_AUTH = "https://appleid.apple.com/auth/keys";
 
     /**
      * 로그인
@@ -134,7 +134,7 @@ public class AuthService {
             URI uri = URI.create(KAKAO_AUTH);
             HttpHeaders headers = new HttpHeaders();
             headers.set("Authorization", "Bearer " + token);
-            MultiValueMap<String, Object> parameters = new LinkedMultiValueMap<String, Object>();
+            MultiValueMap<String, Object> parameters = new LinkedMultiValueMap<>();
             HttpEntity<MultiValueMap<String, Object>> restRequest = new HttpEntity<>(parameters, headers);
             ResponseEntity<JSONObject> apiResponse = restTemplate.postForEntity(uri, restRequest, JSONObject.class);
             JSONObject responseBody = apiResponse.getBody();
@@ -153,7 +153,7 @@ public class AuthService {
         String headerStr = new String(Base64.getDecoder().decode(decodeArray[0]));
         String payloadStr = new String(Base64.getDecoder().decode(decodeArray[1]));
         // 공개키
-        JSONObject publicKey = getApplePublicKey(headerStr);
+        // JSONObject publicKey = getApplePublicKey(headerStr);
         try {
             JSONParser parser = new JSONParser();
             JSONObject payload = (JSONObject) parser.parse(payloadStr);
