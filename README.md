@@ -6,7 +6,7 @@
 <a href="https://www.blindcafe.me/" target="_blank">https://www.blindcafe.me</a>
 </div>
 
-## 프로젝트 개요
+## 📄 프로젝트 개요
 | 구분 |내용|
 |:------:|-------|
 | 기간 |2021.09. ~ 2021.12. / 현재 업데이트 진행 중|
@@ -15,7 +15,7 @@
 
 <br>
 
-## 프로젝트 소개
+## 💼 프로젝트 소개
 - 관심사가 비슷한 사람과 3일간 대화할 수 있는 소셜 어플입니다.
 - 대화 시간이 지날수록 기능 제한이 풀리고 3일 후 프로필 교환에 성공할 시 상대방과 추가적으로 대화할 수 있습니다.
 
@@ -29,7 +29,7 @@
 
 <br>
 
-## 사용 기술
+## 🛠 사용 기술
 ### Application
 - Java 11
 - SpringBoot, Spring MVC, Spring Data JPA, Spring Security, Spring REST Docs
@@ -47,17 +47,165 @@
 
 <br>
 
-## 구성도
-> *작성 중입니다.*
+## 🔍 구성도
+![blindcafe-architecture](https://github.com/Blind-Cafe/BlindCafe/blob/main/assets/server/blindcafe-architecture.png?raw=ture)
 
 <br>
 
-## 기능 설명
-> *작성 중입니다.*
+## 🖥 기능 설명
+### 인증
+
+<details>
+<summary>Deatil</summary>
+<div markdown="1">
+
+- 회원가입/로그인
+  - 소셜 계정 인증
+  - FCM 토큰 관리
+  - 인증 토큰 발급
+
+- 토큰 갱신
+
+</div>
+</details>
+
+---
+
+### 유저
+<details>
+<summary>Deatil</summary>
+<div markdown="1">
+
+- 유저 정보 수정
+  - 나이, 성별 (초기 입력 후 수정 불가)
+  - 프로필 이미지
+  - 관심사
+  - 상대방 성별
+  - 목소리
+  - 지역
+- 유저 정보 조회
+  - 프로필 상세 정보 조회
+  - 프로필 이미지 리스트 조회
+- 탈퇴
+- 건의사항 작성
+  - Email 연동
+- 신고
+- 신고 내역 조회
+
+</div>
+</details>
+
+---
+
+### 매칭
+<details>
+<summary>Deatil</summary>
+<div markdown="1">
+
+- 매칭 요청
+- 매칭 요청 취소
+- 매칭 리스트 조회
+- 매칭 상세 정보 조회
+- 음료수 선택
+- 토픽(추천 대화 주제) 조회
+- 프로필 교환
+- 매칭 나가기
+
+</div>
+</details>
+
+### 채팅
+<details>
+<summary>Deatil</summary>
+<div markdown="1">
+
+- 메시지 수신/발신
+  - 텍스트
+  - 사진
+  - 음성
+  - 동영상
+- 메시지 내역 조회
+
+</div>
+</details>
+
+---
+
+### 알림
+<details>
+<summary>Deatil</summary>
+<div markdown="1">
+
+- 푸시 알림 전송
+  - 접속 상태를 고려해서 미접속 유저에게 알림 전송
+- 알림 설정 변경
+  - 전체 설정/해제
+  - 채팅방 별 설정/해제
+
+</div>
+</details>
+
+---
+
+### 공지
+<details>
+<summary>Deatil</summary>
+<div markdown="1">
+
+- 공지 조회
+  - 마지막 공지 조회 API 요청 시간을 바탕으로 공지 수신 여부 제공
+
+</div>
+</details>
+
+---
+
+
+### 관리자
+<details>
+<summary>Deatil</summary>
+<div markdown="1">
+
+- 실시간/전체 사용자 수 조회
+- 주간 접속자 수 및 접속자 비율 조회
+- 전체 사용자 목록 조회
+- 신고 내역 조회
+- 건의사항 조회
+- 탈퇴 / 방 나가기 사유 조회
+- 공지 작성
+
+</div>
+</details>
+
+---
+
+### 배치 작업
+<details>
+<summary>Deatil</summary>
+<div markdown="1">
+
+- 3일 채팅 확인
+  - 매칭 지속 시간 별 채팅방 내 기능 해제 메시지/알림 전송
+  - 매칭 유효 시간 임박 시 메시지/알림 전송
+  - 매칭 유효 시간 초과 시 프로필 교환 템플릿 메시지/알림 전송
+
+- 7일 채팅 확인
+  - 매칭 유효 시간 임박 시 메시지/알림 전송
+  - 매칭 유효 시간 초과 시 채팅방 비활성화
+
+- 매칭 요청 자동 취소
+  - 오래된 요청에 대해서 매칭 취소 및 소모된 매칭권 복구
+
+- 매일 밤 12시 매칭권 수 리셋
+
+- 매일 새벽 전일 하루동안 접속한 사용자 수 및 접속 비율 저장
+
+</div>
+</details>
 
 <br>
 
-## 배포
+## ⚙ 배포
 ### 환경
 - Gradle 7.x
 - JDK 11
@@ -202,6 +350,10 @@
       key2: {JWT 시그니처 2}
       key3: {JWT 시그니처 3}
       sample-token: {Security 필터 적용 후 테스트할 경우 Access token}
+  
+    admin:
+      id: {관리자 계정 ID}
+      pw: {관리자 계정 비밀번호}
     ```
 </div>
 </details>
@@ -210,19 +362,21 @@
 
 <br>
 
-## 결과물
+## 💾 결과물
 ### API
 - [API 명세서](https://www.blindcafe.me/docs)
 
+### ERD
+![ERD](https://github.com/Blind-Cafe/BlindCafe/blob/main/assets/server/blindcafe-erd.png?raw=true)
 
 <br>
 
-## 회고
+## 🎞 회고
 > *작성 중입니다.*
 
 <br>
 
-## 관련
+## 🔗 관련
 ### Team
 |Position|Name|Repository|
 |:---:|:---:|---|
@@ -231,6 +385,3 @@
 |Server|[김희동](https://sulky-branch-08e.notion.site/Heedong-Kim-f0962ce4ba2947f68ffb3c3815846f80)|https://github.com/Blind-Cafe/BlindCafe-Server|
 |AOS|[노소래](https://github.com/nosorae)|https://github.com/Blind-Cafe/BlindCafe-AOS|
 |iOS|[권하은](https://github.com/eilyri)|https://github.com/Blind-Cafe/BlindCafe-iOS|
-
-### Reference
-> *작성 중입니다.*
