@@ -73,7 +73,7 @@ public class ChatService {
             targets.remove(uid);
 
         // 채팅을 수신받을 사용자가 더 이상 없는 경우
-        if (targets.size() < 1) return;
+        if (targets.isEmpty()) return;
 
         // 메시지를 받아야 하는 사용자들이 접속해있는지 확인 후
         // 접속 유무에 따라 채팅방 리스트 정렬을 위한 퍼블리싱 또는 알림 전송

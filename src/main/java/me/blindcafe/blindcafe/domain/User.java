@@ -175,16 +175,16 @@ public class User extends BaseTimeEntity {
 
     // 메인 프로필 이미지 1장 가져오기
     public String getMainAvatar() {
-        if (this.getAvatars().size() == 0)
+        if (this.getAvatars().isEmpty())
             return null;
         return this.getAvatars().get(0).getSrc();
     }
 
     // 모든 프로필 이미지 가져오기
     public List<String> getCurrentAvatars() {
-        List<Avatar> avatars = this.getAvatars();
+        List<Avatar> avatarList = this.getAvatars();
         String[] currentAvatars = new String[3];
-        avatars.forEach(a -> currentAvatars[a.getSequence()-1] = a.getSrc());
+        avatarList.forEach(a -> currentAvatars[a.getSequence()-1] = a.getSrc());
         return Arrays.asList(currentAvatars);
     }
 

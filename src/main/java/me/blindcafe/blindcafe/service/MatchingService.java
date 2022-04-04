@@ -79,7 +79,7 @@ public class MatchingService {
                     .collect(Collectors.toList());
 
         // 매칭 요청 풀에 매칭 가능한 요청이 없는 경우 매칭 요청 풀에 저장
-        if (ableMatchingRequests.size() == 0) {
+        if (ableMatchingRequests.isEmpty()) {
             userMatchingRepository.save(myMatching);
             return;
         }
@@ -131,7 +131,7 @@ public class MatchingService {
     
     // 리스트 -> 문자열 변환
     private String stringFromList(List<Long> ids) {
-        if (ids.size() == 0) return "";
+        if (ids.isEmpty()) return "";
         StringBuilder sb = new StringBuilder();
         for (Long id: ids)
             sb.append(id).append(",");
@@ -400,7 +400,7 @@ public class MatchingService {
         if (!matching.isActive()) return;
         
         // 3일 채팅
-        if (!matching.getIsContinuous()) {
+        if (Boolean.FALSE.equals(matching.getIsContinuous())) {
             checkMatchingFunction(matching, time); // 24,48시간 기능 해제 메시지
             checkEndOfBasicMatching(matching, time); // 3일 채팅 종료 1시간 메시지
             checkExchangeProfile(matching, time); // 프로필 교환 메시지
