@@ -2,7 +2,8 @@ plugins {
 	id 'org.springframework.boot' version '2.5.5'
 	id 'io.spring.dependency-management' version '1.0.11.RELEASE'
 	id 'java'
-	id "org.asciidoctor.jvm.convert" version "3.3.2"	//asciidoctor plugin 추가
+	id "org.asciidoctor.jvm.convert" version "3.3.2"	// asciidoctor plugin 추가
+	id "org.sonarqube" version "3.3"					// SonarQube
 }
 
 group = 'com.example'
