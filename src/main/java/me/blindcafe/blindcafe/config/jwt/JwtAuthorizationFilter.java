@@ -1,6 +1,7 @@
 package me.blindcafe.blindcafe.config.jwt;
 
 
+import lombok.extern.slf4j.Slf4j;
 import me.blindcafe.blindcafe.domain.User;
 import me.blindcafe.blindcafe.exception.BlindCafeException;
 import me.blindcafe.blindcafe.repository.UserRepository;
@@ -27,6 +28,7 @@ import static me.blindcafe.blindcafe.exception.CodeAndMessage.*;
 /**
  * JWT 필터
  */
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class JwtAuthorizationFilter extends OncePerRequestFilter {
@@ -43,6 +45,7 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
         try {
             token = request.getHeader(HEADER_NAME);
         } catch (Exception ignored) {
+            ignored.printStackTrace();
         }
 
         if (token != null) {
@@ -62,9 +65,7 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
                     throw new BlindCafeException(SUSPENDED_USER, user.getNickname());
                 if (user.getStatus().equals(UserStatus.RETIRED))
                     throw new BlindCafeException(RETIRED_USER);
-                if (user != null) {
-                    return new UsernamePasswordAuthenticationToken(user, null);
-                }
+                return new UsernamePasswordAuthenticationToken(user, null);
             }
         } catch (ExpiredJwtException e) {
             throw new BlindCafeException(EXPIRED_TOKEN);

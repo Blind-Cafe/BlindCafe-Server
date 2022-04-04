@@ -53,11 +53,14 @@ public class StompChannelInterceptor implements ChannelInterceptor {
             case UNSUBSCRIBE: // 채팅방 구독 취소
                 String mid = getHeaderValue(accessor, MATCHING);
                 // 채팅방 구독 취소
-                if (mid != null) presenceService.leaveRoom(sessionId, now);
+                presenceService.leaveRoom(sessionId, now);
                 break;
                 
             case DISCONNECT: // WebSocket 연결 해제
                 presenceService.disconnect(sessionId);
+                break;
+
+            default:
                 break;
         }
         return message;
