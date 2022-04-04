@@ -33,8 +33,8 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
                 .build();
 
         byte[] responseToSend = restResponseBytes(errorResponse);
-        ((HttpServletResponse) response).setHeader("Content-Type", "application/json");
-        ((HttpServletResponse) response).setStatus(401);
+        response.setHeader("Content-Type", "application/json");
+        response.setStatus(401);
         response.getOutputStream().write(responseToSend);
     }
 

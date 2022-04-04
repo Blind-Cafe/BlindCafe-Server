@@ -46,8 +46,8 @@ public class ExceptionHandlerFilter extends OncePerRequestFilter {
                 .build();
 
         byte[] responseToSend = restResponseBytes(errorResponse);
-        ((HttpServletResponse) response).setHeader("Content-Type", "application/json");
-        ((HttpServletResponse) response).setStatus(status.value());
+        response.setHeader("Content-Type", "application/json");
+        response.setStatus(status.value());
         response.getOutputStream().write(responseToSend);
     }
 

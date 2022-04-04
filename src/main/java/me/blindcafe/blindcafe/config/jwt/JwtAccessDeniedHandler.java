@@ -32,8 +32,8 @@ public class JwtAccessDeniedHandler implements AccessDeniedHandler {
                 .build();
 
         byte[] responseToSend = restResponseBytes(errorResponse);
-        ((HttpServletResponse) response).setHeader("Content-Type", "application/json");
-        ((HttpServletResponse) response).setStatus(403);
+        response.setHeader("Content-Type", "application/json");
+        response.setStatus(403);
         response.getOutputStream().write(responseToSend);
     }
 
