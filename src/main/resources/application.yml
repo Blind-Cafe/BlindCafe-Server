@@ -1,0 +1,136 @@
+spring:
+  profiles:
+    active: local
+
+---
+
+spring:
+  profiles:
+    group:
+      "local": "local, common"
+      "dev": "dev, common"
+      "prod": "prod, common"
+
+---
+
+spring:
+  config:
+    activate:
+      on-profile: local
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: {Local RDBMS(MySQL) URL}
+    username: {Local RDBMS(MySQL) Username}
+    password: {Local RDBMS(MySQL) 비밀번호}
+  redis:
+    host: {Local Redis URL}
+    port: {Local Redis PORT}
+  data:
+    mongodb:
+      uri: {Local Mongo DB URL}
+
+---
+
+spring:
+  config:
+    activate:
+      on-profile: dev
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: {Dev RDBMS(MySQL) URL}
+    username: {Dev RDBMS(MySQL) Username}
+    password: {Dev RDBMS(MySQL) 비밀번호}
+  redis:
+    host: {Dev Redis URL}
+    port: {Dev Redis PORT}
+  data:
+    mongodb:
+      uri: {Dev Mongo DB URL}
+
+---
+
+spring:
+  config:
+    activate:
+      on-profile: prod
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: {Prod RDBMS(MySQL) URL}
+    username: {Prod RDBMS(MySQL) Username}
+    password: {Prod RDBMS(MySQL) 비밀번호}
+  redis:
+    host: {Prod Redis URL}
+    port: {Prod Redis PORT}
+  data:
+    mongodb:
+      uri: {Prod Mongo DB URL}
+
+---
+
+server:
+  port: 8000
+  tomcat:
+    uri-encoding: UTF-8
+
+spring:
+  config:
+    activate:
+      on-profile: common
+  mvc:
+    static-path-pattern: /static/**
+  jpa:
+    database: mysql
+    database-platform: org.hibernate.dialect.MySQL5InnoDBDialect
+    generate-ddl: true
+  servlet:
+    multipart:
+      max-file-size: 10MB
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: {Gmail SMTP 이용할 계정의 이메일 주소}
+    password: {Gmail SMTP 이용할 계정의 이메일의 비밀번호}
+    properties:
+      mail:
+        smtp:
+          starttls:
+            enable: true
+            required: true
+          auth: true
+  thymeleaf:
+    cache: false
+
+cloud:
+  aws:
+    credentials:
+      accessKey: {AWS Credential Access Key}
+      secretKey: {AWS Credential Secret Key}
+    s3:
+      bucket: {AWS S3 Bucket 이름}
+    region:
+      static: ap-northeast-2
+    cloudfront:
+      url: {AWS CloudFront URL}
+    stack:
+      auto: false
+
+email:
+  from: {건의사항 발신 이메일 주소}
+  to: {건의사항 수신 이메일 주소}
+
+fcm:
+  key: {Firebase Key(json) 파일 경로}
+  auth: https://www.googleapis.com/auth/cloud-platform
+  api: {FCM Send API URL}
+  firebase-create-scoped: https://www.googleapis.com/auth/firebase.messaging
+  firebase-multicast-message-size: 450
+
+secret:
+  key1: {JWT 시그니처 1}
+  key2: {JWT 시그니처 2}
+  key3: {JWT 시그니처 3}
+  sample-token: {Security 필터 적용 후 테스트할 경우 Access token}
+
+admin:
+  id: {관리자 계정 ID}
+  pw: {관리자 계정 비밀번호}
