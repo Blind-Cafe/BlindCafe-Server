@@ -36,6 +36,6 @@ out/
 ### VS Code ###
 .vscode/
 
-*yml
+application-*.yml
 
 /src/main/resources/firebase
