@@ -42,11 +42,11 @@ asciidoctor.doFirst {
 }
 
 bootJar {
-	// processResources { duplicatesStrategy = org.gradle.api.file.DuplicatesStrategy.INCLUDE }
-	dependsOn asciidoctor						// asciidoctor를 의존, bootJar 생성 전에 asciidoctor task를 수행
-	from("build/docs/asciidoc"){ 	// 문서 생성 시, Jar 파일 내 static/docs에 복사되도록 함
-		into 'BOOT-INF/classes/static/docs'
-	}
+//	 processResources { duplicatesStrategy = org.gradle.api.file.DuplicatesStrategy.INCLUDE }
+//	dependsOn asciidoctor						// asciidoctor를 의존, bootJar 생성 전에 asciidoctor task를 수행
+//	from("build/docs/asciidoc"){ 	// 문서 생성 시, Jar 파일 내 static/docs에 복사되도록 함
+//		into 'BOOT-INF/classes/static/docs'
+//	}
 }
 
 task copyDocument(type: Copy) {
