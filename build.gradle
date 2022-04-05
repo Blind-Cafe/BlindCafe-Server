@@ -56,7 +56,7 @@ task copyDocument(type: Copy) {
 }
 
 build {
-	dependsOn copyDocument
+	// dependsOn copyDocument
 }
 
 clean {
