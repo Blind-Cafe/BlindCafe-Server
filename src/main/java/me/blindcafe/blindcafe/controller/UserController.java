@@ -170,7 +170,7 @@ public class UserController {
     public ResponseEntity<Void> suggest(
             Authentication authentication,
             @RequestParam String content,
-            @RequestParam List<MultipartFile> images
+            @RequestParam(value = "images", required=false) List<MultipartFile> images
     ) {
         log.info("POST /api/user/suggestion");
         userService.suggest(getUid(authentication), content, images);
