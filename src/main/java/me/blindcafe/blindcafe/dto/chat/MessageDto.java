@@ -16,7 +16,7 @@ public class MessageDto {
     private String senderName;
     private String type;
     private String content;
-    private String destination = "0";
+    private String destination;
 
     public static MessageDto fromCollection(Message message) {
         return MessageDto.builder()

@@ -39,7 +39,7 @@ public class MatchingListResponse {
             MatchingInfo info = new MatchingInfo();
             info.setMatchingId(matching.getId());
             info.setPartner(PartnerResponse.fromEntity(partner));
-            info.setBlind(!matching.getIsContinuous());
+            info.setBlind(!matching.isContinuous());
             info.setExpiredDt(matching.getExpiredTime());
             return info;
         }

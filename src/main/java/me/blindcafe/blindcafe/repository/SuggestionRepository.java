@@ -5,6 +5,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 public interface SuggestionRepository extends JpaRepository<Suggestion, Long> {
-    @Query(value = "SELECT COUNT(*) FROM suggestion WHERE `check` = false", nativeQuery = true)
+    @Query(value = "SELECT COUNT(*) FROM suggestion WHERE `is_checked` = false", nativeQuery = true)
     Long countUncheckedSuggestion();
 }

@@ -47,7 +47,7 @@ public class MatchingDetailResponse {
         response.setBeginDt(matching.getBeginTime());
         response.setExpiredDt(matching.getExpiredTime());
         response.setTopic(topic);
-        response.setContinuous(matching.getIsContinuous());
+        response.setContinuous(matching.isContinuous());
         response.setActive(matching.isActive());
         return response;
     }
