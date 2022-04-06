@@ -34,19 +34,18 @@ test {
 
 asciidoctor {
 	inputs.dir snippetsDir	// snippets 디렉토리를 입력으로 함
-	// dependsOn test			// test task를 의존, 문서 생성 전에 test를 수행
+	dependsOn test			// test task를 의존, 문서 생성 전에 test를 수행
 }
 
 asciidoctor.doFirst {
-	delete file('src/main/resources/templates/docs')	// 기존 파일 삭제
+	// delete file('src/main/resources/templates/docs')	// 기존 파일 삭제
 }
 
 bootJar {
-//	 processResources { duplicatesStrategy = org.gradle.api.file.DuplicatesStrategy.INCLUDE }
-//	dependsOn asciidoctor						// asciidoctor를 의존, bootJar 생성 전에 asciidoctor task를 수행
-//	from("build/docs/asciidoc"){ 	// 문서 생성 시, Jar 파일 내 static/docs에 복사되도록 함
-//		into 'BOOT-INF/classes/static/docs'
-//	}
+	dependsOn asciidoctor						// asciidoctor를 의존, bootJar 생성 전에 asciidoctor task를 수행
+	from("build/docs/asciidoc"){ 	// 문서 생성 시, Jar 파일 내 static/docs에 복사되도록 함
+		into 'BOOT-INF/classes/static/docs'
+	}
 }
 
 task copyDocument(type: Copy) {
