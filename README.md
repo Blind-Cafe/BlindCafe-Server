@@ -206,10 +206,12 @@
 <br>
 
 ## ⚙ 배포
+
+![CICD](https://github.com/Blind-Cafe/BlindCafe/blob/main/assets/server/blindcafe-cicd.png?raw=true)
+
 ### 환경
 - Gradle 7.x
 - JDK 11
-- SpringBoot 2.5.5
 
 ### 추가 설정
 - `/src/main/resources`에 아래 양식을 이용하여 `application.yml`파일을 작성합니다.
