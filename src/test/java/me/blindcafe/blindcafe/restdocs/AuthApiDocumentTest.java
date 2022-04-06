@@ -4,6 +4,7 @@ import me.blindcafe.blindcafe.domain.type.Platform;
 import me.blindcafe.blindcafe.domain.type.Social;
 import me.blindcafe.blindcafe.dto.request.LoginRequest;
 import me.blindcafe.blindcafe.dto.request.RefreshTokenRequest;
+import org.junit.Ignore;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
@@ -18,7 +19,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class AuthApiDocumentTest extends ApiDocumentTest {
 
     @DisplayName("회원가입")
-    @Test
+    @Ignore
     public void 회원가입() throws Exception {
         String body = objectMapper.writeValueAsString(
                 new LoginRequest(
@@ -51,7 +52,7 @@ public class AuthApiDocumentTest extends ApiDocumentTest {
     }
 
     @DisplayName("로그인")
-    @Test
+    @Ignore
     public void 로그인() throws Exception {
         String body = objectMapper.writeValueAsString(
                 new LoginRequest(
@@ -84,7 +85,7 @@ public class AuthApiDocumentTest extends ApiDocumentTest {
     }
 
     @DisplayName("엑세스 토큰 갱신")
-    @Test
+    @Ignore
     public void 토큰_갱신() throws Exception {
         String body = objectMapper.writeValueAsString(
                 new RefreshTokenRequest(
