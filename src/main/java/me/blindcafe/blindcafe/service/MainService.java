@@ -25,7 +25,7 @@ public class MainService {
                 .orElseThrow(() -> new BlindCafeException(CodeAndMessage.EMPTY_USER));
 
         boolean request = matchingService.isMatchingRequest(user);
-        int ticketCount = matchingService.getTicketCount(user);
+        int ticketCount = user.getTicket().getCount();
         boolean unreceivedNotice = noticeService.isUnreceivedNotice(userId);
         return HomeResponse.builder()
                 .request(request)
