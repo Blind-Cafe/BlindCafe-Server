@@ -84,7 +84,7 @@ public class UserMatching extends BaseTimeEntity {
         LocalDateTime now = LocalDateTime.now();
 
         // 프로필 교환 시점이 아닌 경우
-        if (this.getMatching().getIsContinuous()
+        if (this.getMatching().isContinuous()
                 || this.getMatching().getExpiredTime().isAfter(now))
             throw new BlindCafeException(NOT_YET_EXCHANGE_PROFILE);
         

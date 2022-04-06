@@ -400,7 +400,7 @@ public class MatchingService {
         if (!matching.isActive()) return;
         
         // 3일 채팅
-        if (Boolean.FALSE.equals(matching.getIsContinuous())) {
+        if (!matching.isContinuous()) {
             checkMatchingFunction(matching, time); // 24,48시간 기능 해제 메시지
             checkEndOfBasicMatching(matching, time); // 3일 채팅 종료 1시간 메시지
             checkExchangeProfile(matching, time); // 프로필 교환 메시지

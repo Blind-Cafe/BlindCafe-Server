@@ -26,7 +26,7 @@ public class Suggestion extends BaseTimeEntity {
 
     private String image;
 
-    private boolean check;
+    private boolean isChecked;
 
     public static Suggestion create(User user, String content) {
         Suggestion suggestion = new Suggestion();
@@ -34,7 +34,7 @@ public class Suggestion extends BaseTimeEntity {
         suggestion.setNickname(user.getNickname());
         suggestion.setPhone(user.getPhone());
         suggestion.setContent(content);
-        suggestion.setCheck(false);
+        suggestion.setChecked(false);
         return suggestion;
     }
 

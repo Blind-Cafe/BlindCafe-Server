@@ -135,7 +135,7 @@ public class BatchService {
     // Step 1 : 3일 채팅 확인 : 24,48시간 기능 해제 메시지, 3일 채팅 종료 1시간 마감 임박 메시지, 72시간 경과 시 프로필 교환 메시지, 채팅방 생성 후 5분간 토픽이 없는 경우 자동 전송
     private void checkBasicMatching(LocalDateTime time, List<Matching> matchings) {
         matchings = matchings.stream()
-                .filter(m -> !m.getIsContinuous())
+                .filter(m -> !m.isContinuous())
                 .collect(Collectors.toList());
         for (Matching matching : matchings) {
             matchingService.checkMatchingTime(matching, time);
@@ -145,7 +145,7 @@ public class BatchService {
     // Step 2 : 7일 채팅 확인 : 만료 시간이 지난 경우 채팅방 비활성화
     private void checkContinuousMatching(LocalDateTime time, List<Matching> matchings) {
         matchings = matchings.stream()
-                .filter(Matching::getIsContinuous)
+                .filter(Matching::isContinuous)
                 .filter(matching -> matching.getExpiredTime().isBefore(time))
                 .collect(Collectors.toList());
         for (Matching matching: matchings) {
@@ -171,7 +171,7 @@ public class BatchService {
     // Step 5 : 7일 채팅에서 종료까지 1일 남은 경우 종료 임박 템플릿 전송
     private void checkEndOfContinuousMatching(LocalDateTime time, List<Matching> matchings) {
         matchings = matchings.stream()
-                .filter(Matching::getIsContinuous)
+                .filter(Matching::isContinuous)
                 .collect(Collectors.toList());
         for (Matching matching: matchings) {
             matchingService.checkMatchingTime(matching, time);

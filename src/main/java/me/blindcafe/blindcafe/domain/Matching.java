@@ -43,14 +43,11 @@ public class Matching extends BaseTimeEntity {
     private LocalDateTime beginTime;
     private LocalDateTime expiredTime;
 
-    @Column(columnDefinition = "boolean default false", nullable = false)
-    private Boolean isContinuous;
+    private boolean isContinuous;
 
-    @Column(columnDefinition = "boolean default false", nullable = false)
-    private Boolean isOpenProfile;
+    private boolean isOpenProfile;
 
-    @Column(columnDefinition = "boolean default false", nullable = false)
-    private Boolean isExchangeProfile;
+    private boolean isExchangeProfile;
 
     private boolean isActive;
 
@@ -93,9 +90,9 @@ public class Matching extends BaseTimeEntity {
         // 시간 설정
         matching.setBeginTime(now);
         matching.setExpiredTime(now.plusDays(3));
-        matching.setIsContinuous(false);
-        matching.setIsOpenProfile(false);
-        matching.setIsExchangeProfile(false);
+        matching.setContinuous(false);
+        matching.setOpenProfile(false);
+        matching.setExchangeProfile(false);
         matching.setActive(true);
         matching.setStatus(MatchingStatus.MATCHING);
 
@@ -178,7 +175,7 @@ public class Matching extends BaseTimeEntity {
 
     // 시간 별 채팅방 기능 허용 템플릿 전송
     public int sendMatchingFunction(LocalDateTime now) {
-        if (Boolean.TRUE.equals(this.isContinuous)) return 0;
+        if (this.isContinuous) return 0;
         if (!this.isActive) return 0;
 
         Long continuousTime = ChronoUnit.HOURS.between(this.getBeginTime(), now);
@@ -196,7 +193,7 @@ public class Matching extends BaseTimeEntity {
 
     public boolean sendFirstTopic(LocalDateTime now) {
         if (!this.isActive) return false;
-        if (Boolean.TRUE.equals(this.isContinuous)) return false;
+        if (this.isContinuous) return false;
         // 5분 지났는지 확인
         if (this.beginTime.plusMinutes(5L).isBefore(now)) return false;
         // 토픽 전송했는지 확인
@@ -206,7 +203,7 @@ public class Matching extends BaseTimeEntity {
     // 3일 채팅에서 종료 1시간 전인지 확인 -> 마감 임박 메시지 전송
     public boolean sendEndOfBasicMatching(LocalDateTime now) {
         if (!this.isActive) return false;
-        if (Boolean.TRUE.equals(this.isContinuous)) return false;
+        if (this.isContinuous) return false;
         if (this.getPush().isEndOfOneHour()) return false;
 
         Long continuousTime = ChronoUnit.HOURS.between(now, this.expiredTime);
@@ -219,7 +216,7 @@ public class Matching extends BaseTimeEntity {
 
     // 프로필 교환 템플릿 전송
     public boolean sendExchangeProfile(LocalDateTime now) {
-        if (Boolean.TRUE.equals(this.isContinuous)) return false;
+        if (this.isContinuous) return false;
         if (this.expiredTime.isAfter(now)) return false;
         if (this.getPush().isThreeDays()) return false;
         if (!this.isActive) return false;
@@ -231,7 +228,7 @@ public class Matching extends BaseTimeEntity {
     // 7일 채팅에서 종료까지 1일 남은 경우 종료 임박 템플릿 전송
     public boolean checkEndOfContinuousMatching(LocalDateTime now) {
         if(!this.isActive) return false;
-        if (Boolean.FALSE.equals(this.isContinuous)) return false;
+        if (!this.isContinuous) return false;
         if (this.getPush().isLastChat()) return false;
 
         Long continuousTime = ChronoUnit.DAYS.between(now, this.expiredTime);
@@ -245,7 +242,7 @@ public class Matching extends BaseTimeEntity {
     // 7일 채팅 만료
     public void expiry(LocalDateTime now) {
         if (!this.isActive) return;
-        if (Boolean.FALSE.equals(this.isContinuous)) return;
+        if (!this.isContinuous) return;
         if (this.expiredTime.isAfter(now))
             this.isActive = false;
     }

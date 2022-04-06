@@ -53,6 +53,7 @@ import static me.blindcafe.blindcafe.service.NotificationService.deviceInfoInMem
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
+@SuppressWarnings("unchecked")
 public class AuthService {
 
     private final RedisTemplate<String, String> redisTemplate;
