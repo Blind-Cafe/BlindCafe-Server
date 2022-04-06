@@ -37,7 +37,6 @@ public class MatchingService {
     private final MatchingRepository matchingRepository;
     private final UserMatchingRepository userMatchingRepository;
     private final MatchingHistoryRepository matchingHistoryRepository;
-    private final TicketRepository ticketRepository;
     private final DrinkRepository drinkRepository;
     private final ReasonRepository reasonRepository;
     private final CustomReasonRepository customReasonRepository;
@@ -377,12 +376,6 @@ public class MatchingService {
     /**
      * 매칭권 관련
      */
-    // 현재 가지고 있는 매칭권 수 조회
-    public int getTicketCount(User user) {
-        Ticket ticket = ticketRepository.findByUser(user)
-                .orElseThrow(() -> new BlindCafeException(EMPTY_USER));
-        return ticket.getCount();
-    }
 
     // 현재 요청 중인 매칭이 있는지 조회
     public boolean isMatchingRequest(User user) {

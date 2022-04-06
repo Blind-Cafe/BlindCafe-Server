@@ -88,8 +88,10 @@ public class NoticeService {
 
         // 최근 공지와 공지 화면 접속 기록 비교
         LocalDateTime latestNoticeDt = latestNoticeOptional.get().getCreatedAt();
-        NoticeLog log = noticeLogRepository.findByUserId(uid)
-                .orElseThrow(() -> new BlindCafeException(EMPTY_USER));
-        return latestNoticeDt.isAfter(DateTimeUtil.fromString(log.getAccessDt()));
+        Optional<NoticeLog> log = noticeLogRepository.findByUserId(uid);
+        if (log.isEmpty())
+            return false;
+
+        return latestNoticeDt.isAfter(DateTimeUtil.fromString(log.get().getAccessDt()));
     }
 }
