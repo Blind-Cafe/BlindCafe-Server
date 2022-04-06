@@ -90,7 +90,7 @@ public class NoticeService {
         LocalDateTime latestNoticeDt = latestNoticeOptional.get().getCreatedAt();
         Optional<NoticeLog> log = noticeLogRepository.findByUserId(uid);
         if (log.isEmpty())
-            return false;
+            return true;
 
         return latestNoticeDt.isAfter(DateTimeUtil.fromString(log.get().getAccessDt()));
     }
