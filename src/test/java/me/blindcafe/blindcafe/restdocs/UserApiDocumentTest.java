@@ -303,7 +303,7 @@ public class UserApiDocumentTest extends ApiDocumentTest {
     }
 
     @DisplayName("건의사항 작성")
-    @Test
+    @Ignore
     public void 건의사항_작성() throws Exception {
         MockMultipartFile image = new MockMultipartFile("images", "image.png", "image/png", "<<png data>>".getBytes());
 
