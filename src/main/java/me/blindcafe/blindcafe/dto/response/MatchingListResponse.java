@@ -65,9 +65,9 @@ public class MatchingListResponse {
             history.setMatchingId(Long.parseLong(message.getMatchingId()));
             String content;
             if (message.getType().getBody() != null)
-                content = message.getContent();
-            else
                 content = message.getType().getBody();
+            else
+                content = message.getContent();
             history.setLatestMessage(content);
             boolean received = false;
             if (access != null) {
